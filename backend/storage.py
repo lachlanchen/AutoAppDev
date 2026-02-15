@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 from dataclasses import dataclass
@@ -117,6 +118,204 @@ class Storage:
         st.setdefault("config", {})
         st["config"][key] = value
         self._write_state(st)
+
+    async def create_pipeline_script(
+        self,
+        *,
+        title: str,
+        script_text: str,
+        script_version: int = 1,
+        script_format: str = "aaps",
+        ir: Any = None,
+    ) -> dict[str, Any]:
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "insert into pipeline_scripts(title, script_text, script_version, script_format, ir) "
+                    "values($1, $2, $3, $4, $5) "
+                    "returning id, title, script_text, script_version, script_format, ir, created_at, updated_at",
+                    title,
+                    script_text,
+                    int(script_version),
+                    str(script_format),
+                    ir,
+                )
+                assert row is not None
+                return {
+                    "id": int(row["id"]),
+                    "title": str(row["title"] or ""),
+                    "script_text": str(row["script_text"] or ""),
+                    "script_version": int(row["script_version"] or 1),
+                    "script_format": str(row["script_format"] or "aaps"),
+                    "ir": row["ir"],
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+
+        st = self._read_state()
+        st.setdefault("scripts", [])
+        items = st["scripts"] if isinstance(st.get("scripts"), list) else []
+        next_id = 1
+        for it in items:
+            if isinstance(it, dict) and isinstance(it.get("id"), int):
+                next_id = max(next_id, int(it.get("id")) + 1)
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        obj = {
+            "id": next_id,
+            "title": str(title or ""),
+            "script_text": str(script_text or ""),
+            "script_version": int(script_version),
+            "script_format": str(script_format or "aaps"),
+            "ir": ir,
+            "created_at": now,
+            "updated_at": now,
+        }
+        items.append(obj)
+        st["scripts"] = items[-200:]
+        self._write_state(st)
+        return obj
+
+    async def get_pipeline_script(self, script_id: int) -> dict[str, Any] | None:
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "select id, title, script_text, script_version, script_format, ir, created_at, updated_at "
+                    "from pipeline_scripts where id=$1",
+                    int(script_id),
+                )
+                if not row:
+                    return None
+                return {
+                    "id": int(row["id"]),
+                    "title": str(row["title"] or ""),
+                    "script_text": str(row["script_text"] or ""),
+                    "script_version": int(row["script_version"] or 1),
+                    "script_format": str(row["script_format"] or "aaps"),
+                    "ir": row["ir"],
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+
+        st = self._read_state()
+        items = st.get("scripts", [])
+        if not isinstance(items, list):
+            return None
+        for it in items:
+            if isinstance(it, dict) and it.get("id") == script_id:
+                return it
+        return None
+
+    async def list_pipeline_scripts(self, limit: int = 50) -> list[dict[str, Any]]:
+        lim = max(1, min(200, int(limit)))
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "select id, title, script_version, script_format, created_at, updated_at "
+                    "from pipeline_scripts order by id desc limit $1",
+                    lim,
+                )
+                items = [
+                    {
+                        "id": int(r["id"]),
+                        "title": str(r["title"] or ""),
+                        "script_version": int(r["script_version"] or 1),
+                        "script_format": str(r["script_format"] or "aaps"),
+                        "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+                        "updated_at": r["updated_at"].isoformat() if r["updated_at"] else None,
+                    }
+                    for r in rows
+                ]
+                items.reverse()
+                return items
+
+        st = self._read_state()
+        items = st.get("scripts", [])
+        if not isinstance(items, list):
+            return []
+        # Return most-recent first, similar to DB list.
+        out = items[-lim:]
+        out.reverse()
+        return out
+
+    async def update_pipeline_script(
+        self,
+        script_id: int,
+        *,
+        title: str | None = None,
+        script_text: str | None = None,
+        script_version: int | None = None,
+        script_format: str | None = None,
+        ir: Any = None,
+        ir_set: bool = False,
+    ) -> dict[str, Any] | None:
+        cur = await self.get_pipeline_script(script_id)
+        if not cur:
+            return None
+        next_ir = ir if ir_set else cur.get("ir")
+        next_title = cur.get("title") if title is None else title
+        next_text = cur.get("script_text") if script_text is None else script_text
+        next_ver = cur.get("script_version") if script_version is None else script_version
+        next_fmt = cur.get("script_format") if script_format is None else script_format
+
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "update pipeline_scripts set title=$1, script_text=$2, script_version=$3, script_format=$4, ir=$5, updated_at=now() "
+                    "where id=$6 "
+                    "returning id, title, script_text, script_version, script_format, ir, created_at, updated_at",
+                    str(next_title or ""),
+                    str(next_text or ""),
+                    int(next_ver or 1),
+                    str(next_fmt or "aaps"),
+                    next_ir,
+                    int(script_id),
+                )
+                if not row:
+                    return None
+                return {
+                    "id": int(row["id"]),
+                    "title": str(row["title"] or ""),
+                    "script_text": str(row["script_text"] or ""),
+                    "script_version": int(row["script_version"] or 1),
+                    "script_format": str(row["script_format"] or "aaps"),
+                    "ir": row["ir"],
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+
+        st = self._read_state()
+        items = st.get("scripts", [])
+        if not isinstance(items, list):
+            return None
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        for it in items:
+            if isinstance(it, dict) and it.get("id") == script_id:
+                it["title"] = str(next_title or "")
+                it["script_text"] = str(next_text or "")
+                it["script_version"] = int(next_ver or 1)
+                it["script_format"] = str(next_fmt or "aaps")
+                it["ir"] = next_ir
+                it["updated_at"] = now
+                self._write_state(st)
+                return it
+        return None
+
+    async def delete_pipeline_script(self, script_id: int) -> bool:
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                res = await conn.execute("delete from pipeline_scripts where id=$1", int(script_id))
+                # res is like: "DELETE 1"
+                return "DELETE 1" in str(res)
+
+        st = self._read_state()
+        items = st.get("scripts", [])
+        if not isinstance(items, list):
+            return False
+        before = len(items)
+        items = [it for it in items if not (isinstance(it, dict) and it.get("id") == script_id)]
+        st["scripts"] = items
+        self._write_state(st)
+        return len(items) != before
 
     async def add_chat_message(self, role: str, content: str) -> None:
         if self._pool:

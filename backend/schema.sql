@@ -44,3 +44,16 @@ create table if not exists pipeline_state (
 );
 
 insert into pipeline_state(id, state) values (1, 'stopped') on conflict (id) do nothing;
+
+create table if not exists pipeline_scripts (
+  id bigserial primary key,
+  title text not null default '',
+  script_text text not null,
+  script_version integer not null default 1,
+  script_format text not null default 'aaps',
+  ir jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists pipeline_scripts_updated_at_idx on pipeline_scripts(updated_at);

@@ -16,6 +16,8 @@ const els = {
   canvasEmpty: document.getElementById("canvas-empty"),
   exportBtn: document.getElementById("btn-export"),
   sendPlanBtn: document.getElementById("btn-send-plan"),
+  saveScriptBtn: document.getElementById("btn-save-script"),
+  loadScriptBtn: document.getElementById("btn-load-script"),
   clearBtn: document.getElementById("btn-clear"),
   export: document.getElementById("export"),
   tabs: document.querySelectorAll(".tab"),
@@ -144,6 +146,99 @@ function programToPlan(prog) {
     block: String((b && b.type) || ""),
   }));
   return { kind: "autoappdev_plan", version: 1, steps };
+}
+
+function programToIr(prog, title = "Program") {
+  const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => {
+    const block = String((b && b.type) || "");
+    const meta = BLOCK_META[block] || { label: block || `Step ${idx + 1}` };
+    return {
+      id: `s${idx + 1}`,
+      title: meta.label,
+      block,
+      actions: [{ id: "a1", kind: "noop", params: {} }],
+    };
+  });
+  return {
+    kind: "autoappdev_ir",
+    version: 1,
+    tasks: [{ id: "t1", title: String(title || "Program"), steps }],
+  };
+}
+
+function programToAapsScript(prog, title = "Program") {
+  const lines = [];
+  lines.push("AUTOAPPDEV_PIPELINE 1");
+  lines.push("");
+  lines.push(`TASK  ${JSON.stringify({ id: "t1", title: String(title || "Program") })}`);
+  lines.push("");
+  (Array.isArray(prog) ? prog : []).forEach((b, idx) => {
+    const block = String((b && b.type) || "");
+    const meta = BLOCK_META[block] || { label: block || `Step ${idx + 1}` };
+    lines.push(`STEP  ${JSON.stringify({ id: `s${idx + 1}`, title: meta.label, block })}`);
+    lines.push(`ACTION ${JSON.stringify({ id: "a1", kind: "noop", params: {} })}`);
+    lines.push("");
+  });
+  return lines.join("\n").trimEnd() + "\n";
+}
+
+function irToProgram(ir) {
+  if (!ir || typeof ir !== "object") return null;
+  const tasks = Array.isArray(ir.tasks) ? ir.tasks : [];
+  const steps = [];
+  tasks.forEach((t) => {
+    const s = t && Array.isArray(t.steps) ? t.steps : [];
+    s.forEach((st) => {
+      if (st && typeof st.block === "string" && st.block.trim()) steps.push({ type: st.block.trim() });
+    });
+  });
+  return steps;
+}
+
+async function saveScript() {
+  if (!program.length) {
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify({ ok: false, error: "empty_program" }, null, 2);
+    return;
+  }
+  const titleRaw = window.prompt("Script title?", "Program");
+  if (titleRaw === null) return;
+  const title = String(titleRaw).trim() || "Program";
+  const script_text = programToAapsScript(program, title);
+  const ir = programToIr(program, title);
+  try {
+    const res = await api("/api/scripts", {
+      method: "POST",
+      body: JSON.stringify({ title, script_text, script_version: 1, script_format: "aaps", ir }),
+    });
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify(res, null, 2);
+  } catch (e) {
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify({ ok: false, error: e.message || String(e) }, null, 2);
+  }
+}
+
+async function loadScript() {
+  const raw = window.prompt("Load script id?", "");
+  if (raw === null) return;
+  const id = String(raw).trim();
+  if (!id) return;
+  try {
+    const res = await api(`/api/scripts/${encodeURIComponent(id)}`);
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify(res, null, 2);
+    const script = res.script || {};
+    const nextProgram = irToProgram(script.ir);
+    if (Array.isArray(nextProgram) && nextProgram.length) {
+      program = nextProgram;
+      persistProgram();
+      renderProgram();
+    }
+  } catch (e) {
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify({ ok: false, error: e.message || String(e) }, null, 2);
+  }
 }
 
 async function sendPlan() {
@@ -408,6 +503,12 @@ function bindControls() {
 
   if (els.sendPlanBtn) {
     els.sendPlanBtn.addEventListener("click", sendPlan);
+  }
+  if (els.saveScriptBtn) {
+    els.saveScriptBtn.addEventListener("click", saveScript);
+  }
+  if (els.loadScriptBtn) {
+    els.loadScriptBtn.addEventListener("click", loadScript);
   }
 
   els.clearBtn.addEventListener("click", () => {

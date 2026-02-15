@@ -223,6 +223,143 @@ class PlanHandler(BaseHandler):
         self.write_json({"ok": True})
 
 
+class ScriptsHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self) -> None:
+        limit = int(self.get_query_argument("limit", "50"))
+        items = await self.storage.list_pipeline_scripts(limit=limit)
+        self.write_json({"scripts": items})
+
+    async def post(self) -> None:
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+        title = str(body.get("title") or "").strip()
+        script_text = str(body.get("script_text") or "")
+        if not script_text.strip():
+            self.write_json({"error": "empty_script"}, status=400)
+            return
+        if len(script_text) > 200_000:
+            self.write_json({"error": "script_too_large"}, status=400)
+            return
+        script_version = body.get("script_version", 1)
+        if not isinstance(script_version, int):
+            self.write_json({"error": "invalid_script_version"}, status=400)
+            return
+        script_format = str(body.get("script_format") or "aaps")
+        ir = body.get("ir")
+        if ir is not None and not isinstance(ir, (dict, list)):
+            self.write_json({"error": "invalid_ir"}, status=400)
+            return
+        script = await self.storage.create_pipeline_script(
+            title=title,
+            script_text=script_text,
+            script_version=script_version,
+            script_format=script_format,
+            ir=ir,
+        )
+        self.write_json({"ok": True, "script": script})
+
+
+class ScriptHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self, script_id: str) -> None:
+        try:
+            sid = int(script_id)
+        except Exception:
+            self.write_json({"error": "invalid_id"}, status=400)
+            return
+        script = await self.storage.get_pipeline_script(sid)
+        if not script:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+        self.write_json({"script": script})
+
+    async def put(self, script_id: str) -> None:
+        try:
+            sid = int(script_id)
+        except Exception:
+            self.write_json({"error": "invalid_id"}, status=400)
+            return
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+
+        fields = {"title", "script_text", "script_version", "script_format", "ir"}
+        if not any(k in body for k in fields):
+            self.write_json({"error": "no_fields"}, status=400)
+            return
+
+        title = body.get("title") if "title" in body else None
+        if title is not None and not isinstance(title, str):
+            self.write_json({"error": "invalid_title"}, status=400)
+            return
+
+        script_text = body.get("script_text") if "script_text" in body else None
+        if script_text is not None and not isinstance(script_text, str):
+            self.write_json({"error": "invalid_script_text"}, status=400)
+            return
+        if isinstance(script_text, str) and script_text and len(script_text) > 200_000:
+            self.write_json({"error": "script_too_large"}, status=400)
+            return
+
+        script_version = body.get("script_version") if "script_version" in body else None
+        if script_version is not None and not isinstance(script_version, int):
+            self.write_json({"error": "invalid_script_version"}, status=400)
+            return
+
+        script_format = body.get("script_format") if "script_format" in body else None
+        if script_format is not None and not isinstance(script_format, str):
+            self.write_json({"error": "invalid_script_format"}, status=400)
+            return
+
+        ir_set = "ir" in body
+        ir = body.get("ir")
+        if ir_set and ir is not None and not isinstance(ir, (dict, list)):
+            self.write_json({"error": "invalid_ir"}, status=400)
+            return
+
+        script = await self.storage.update_pipeline_script(
+            sid,
+            title=(title.strip() if isinstance(title, str) else None),
+            script_text=script_text,
+            script_version=script_version,
+            script_format=script_format,
+            ir=ir,
+            ir_set=ir_set,
+        )
+        if not script:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+        self.write_json({"ok": True, "script": script})
+
+    async def delete(self, script_id: str) -> None:
+        try:
+            sid = int(script_id)
+        except Exception:
+            self.write_json({"error": "invalid_id"}, status=400)
+            return
+        ok = await self.storage.delete_pipeline_script(sid)
+        if not ok:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+        self.write_json({"ok": True})
+
+
 class ChatHandler(BaseHandler):
     def initialize(self, storage: Storage, runtime_dir: Path) -> None:
         self.storage = storage
@@ -619,6 +756,8 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/version", VersionHandler),
             (r"/api/config", ConfigHandler, {"storage": storage}),
             (r"/api/plan", PlanHandler, {"storage": storage}),
+            (r"/api/scripts", ScriptsHandler, {"storage": storage}),
+            (r"/api/scripts/([0-9]+)", ScriptHandler, {"storage": storage}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),

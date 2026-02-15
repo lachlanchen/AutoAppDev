@@ -95,6 +95,77 @@ Response (error examples):
 { "error": "steps_must_be_list" }
 ```
 
+## Scripts
+
+Pipeline scripts are persisted in Postgres for later reload.
+
+### GET /api/scripts?limit=N
+Lists recent scripts (metadata only).
+
+Response:
+```json
+{
+  "scripts": [
+    {
+      "id": 1,
+      "title": "My script",
+      "script_version": 1,
+      "script_format": "aaps",
+      "created_at": "2026-02-15T12:00:00+00:00",
+      "updated_at": "2026-02-15T12:00:00+00:00"
+    }
+  ]
+}
+```
+
+### POST /api/scripts
+Creates a new script record.
+
+Request:
+```json
+{
+  "title": "My script",
+  "script_text": "AUTOAPPDEV_PIPELINE 1\\n\\nTASK {\"id\":\"t1\",\"title\":\"Demo\"}\\n",
+  "script_version": 1,
+  "script_format": "aaps",
+  "ir": { "kind": "autoappdev_ir", "version": 1, "tasks": [] }
+}
+```
+
+Response:
+```json
+{ "ok": true, "script": { "id": 1, "title": "My script", "script_text": "...", "ir": { } } }
+```
+
+### GET /api/scripts/<id>
+Fetches a single script by id.
+
+Response:
+```json
+{ "script": { "id": 1, "title": "My script", "script_text": "...", "ir": { } } }
+```
+
+### PUT /api/scripts/<id>
+Updates a script (partial updates supported).
+
+Request:
+```json
+{ "title": "Renamed", "ir": null }
+```
+
+Response:
+```json
+{ "ok": true, "script": { "id": 1, "title": "Renamed", "script_text": "...", "ir": null } }
+```
+
+### DELETE /api/scripts/<id>
+Deletes a script.
+
+Response:
+```json
+{ "ok": true }
+```
+
 ## Inbox Messages
 The UI refers to “Chat/Inbox”.
 
