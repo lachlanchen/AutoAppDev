@@ -67,6 +67,9 @@ SESSION_FILE="$SELFDEV_DIR/.codex_session_id"
 
 mkdir -p "$LOG_DIR" "$PROMPT_DIR"
 
+# Avoid hanging on any interactive git prompt.
+export GIT_TERMINAL_PROMPT=0
+
 log() {
   local msg="$1"
   printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$msg" >&2
@@ -93,6 +96,22 @@ git_push_best_effort() {
     sleep "$backoff"
     backoff=$((backoff * 2))
   done
+}
+
+git_commit_push_if_needed() {
+  local msg="$1"
+
+  if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+    return 0
+  fi
+
+  git add -A
+  if git diff --cached --quiet; then
+    return 0
+  fi
+
+  git commit -m "$msg" || true
+  git_push_best_effort || true
 }
 
 extract_session_id_from_jsonl() {
@@ -163,8 +182,8 @@ Hard guardrails (must remember for all subsequent turns):
 - Every step is **small** and **linear**. No parallel execution between steps.
 - Each \`codex exec\` call completes one small phase and then exits cleanly.
 - Do not leave behind background processes when a phase ends.
-- Always run \`git status\`, then \`git commit\` and \`git push\` for any real change.
-- If \`git push\` fails due to network/DNS, report it and still exit cleanly.
+- Do NOT run git commands (\`git add/commit/push\`). This driver script will commit+push after each phase.
+- If you need to communicate what changed, write it into the phase notes file; the driver will commit.
 
 Important:
 - For this initialization step: do NOT run commands; do NOT read/write files.
@@ -198,7 +217,7 @@ Task (MUST complete fully in this single turn):
 1) Design a first batch of small, incremental tasks that make the controller app real and usable.
 2) Write tasks to: $TASKS_FILE (create/overwrite it).
 3) Verify the file is non-empty (e.g. \`wc -l\`, \`sed -n '1,5p'\`).
-4) \`git add\` ONLY this tasks file, then commit and push.
+4) Do NOT run git commands; the driver script will commit+push.
 
 TSV format (NO header, 5 columns):
 1) seq (1-based int)
@@ -211,13 +230,13 @@ Rules:
 - Tasks must be small and ordered from global-to-local.
 - Include explicit tasks for: Postgres wiring, .env handling, light theme PWA, scratch-like blocks, chat/inbox, pipeline start/stop/pause, logs view.
 - Do not modify code in this step. Only write the tasks list file.
-- Do NOT commit any other files (logs/prompts/session ids). Only tasks.tsv.
+- Do NOT commit any files; the driver script handles git.
 
 Final response: DONE_TASKS
 EOF
   log "Generating initial task list"
   run_codex_resume "$session_id" "$order_prompt" "$order_json"
-  git_push_best_effort || true
+  git_commit_push_if_needed "Add initial selfdev tasks list"
 
   # Retry once with an even more forceful prompt if Codex didn't write the file.
   if [ ! -s "$TASKS_FILE" ]; then
@@ -234,15 +253,13 @@ Do not inspect the repo further. Do not change any code.
 Do:
 1) Write at least 12 TSV lines (NO header, 5 tab-separated fields per line).
 2) Verify it is non-empty (wc -l).
-3) \`git add\` ONLY $TASKS_FILE
-4) \`git commit -m "Add AutoAppDev selfdev task list"\`
-5) \`git push\`
+3) Do NOT run git commands; the driver script will commit+push.
 
 Final response: DONE_TASKS_RETRY
 EOF
     log "Retrying task list generation (tasks.tsv missing)"
     run_codex_resume "$session_id" "$retry_prompt" "$retry_json"
-    git_push_best_effort || true
+    git_commit_push_if_needed "Add initial selfdev tasks list"
   fi
 
   # Last-resort fallback: seed a minimal tasks.tsv so the pipeline can proceed.
@@ -262,9 +279,7 @@ EOF
 11	light_theme_polish	pwa	Polish default light theme	Improve typography/spacing; keep light default and accessible contrast
 12	readme_quickstart	docs	Add quickstart docs	README includes env setup, tmux run, and API endpoints
 TSV
-    git add "$TASKS_FILE"
-    git commit -m "Seed AutoAppDev selfdev task list"
-    git_push_best_effort || true
+    git_commit_push_if_needed "Seed AutoAppDev selfdev task list"
   fi
 fi
 
@@ -331,7 +346,7 @@ Runtime directories (design targets):
 
 Important:
 - Each phase below is ONE \`codex exec\` call and must remain linear.
-- End each phase with \`git status\`, \`git commit\`, \`git push\`.
+- Do NOT run git commands (\`git add/commit/push\`). The driver script commits+pushes after each phase.
 EOF
 
   # Phase 1: plan
@@ -352,17 +367,17 @@ Constraints:
 - Keep changes minimal and incremental (small step).
 - Keep default PWA theme light.
 - Postgres + .env rules apply to the overall system.
+- Do NOT run git add/commit/push; the driver script will commit+push.
 
 Write plan to:
 $plan_file
 
 Do NOT implement code in this phase.
-Commit and push the plan.
 
 Final response: DONE_PLAN $seq $slug
 EOF
   run_codex_resume "$session_id" "$plan_prompt" "$plan_json"
-  git_push_best_effort || true
+  git_commit_push_if_needed "Selfdev: $seq $slug plan"
 
   # Phase 2: work
   work_notes="$step_dir/02_work_notes.md"
@@ -382,15 +397,14 @@ Requirements:
 - Keep the architecture consistent with the overall system.
 - Do not start background processes; keep commands linear.
 - Update docs if needed.
+- Do NOT run git add/commit/push; the driver script will commit+push.
 - Write implementation notes + commands run to:
 $work_notes
-
-Commit and push changes.
 
 Final response: DONE_WORK $seq $slug
 EOF
   run_codex_resume "$session_id" "$work_prompt" "$work_json"
-  git_push_best_effort || true
+  git_commit_push_if_needed "Selfdev: $seq $slug work"
 
   # Phase 3: debug/verify
   dbg_notes="$step_dir/03_debug_notes.md"
@@ -405,17 +419,17 @@ Goal:
 - Run the smallest possible verification for this task (build/run/smoke).
 - Use timeouts for anything that could hang.
 - Record exact commands and results.
+- Do NOT run git add/commit/push; the driver script will commit+push.
 
 Write debug notes to:
 $dbg_notes
 
 If issues found, implement minimal fixes in this same phase.
-Then commit and push.
 
 Final response: DONE_DEBUG $seq $slug
 EOF
   run_codex_resume "$session_id" "$dbg_prompt" "$dbg_json"
-  git_push_best_effort || true
+  git_commit_push_if_needed "Selfdev: $seq $slug verify"
 
   # Phase 4: summary
   sum_file="$step_dir/04_summary.md"
@@ -427,14 +441,14 @@ $context
 
 Phase: SUMMARY
 Write a concise summary of what changed, why, and how to verify.
+Do NOT run git add/commit/push; the driver script will commit+push.
 Write summary to:
 $sum_file
 
-Commit and push the summary file.
 Final response: DONE_SUMMARY $seq $slug
 EOF
   run_codex_resume "$session_id" "$sum_prompt" "$sum_json"
-  git_push_best_effort || true
+  git_commit_push_if_needed "Selfdev: $seq $slug summary"
 
   mark_done "$seq"
   processed=$((processed + 1))

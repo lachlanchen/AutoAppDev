@@ -14,3 +14,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# AutoAppDev selfdev artifacts:
+# - keep: references/selfdev/tasks.tsv, references/selfdev/tasks/**/(plan/work_notes/debug_notes/summary).md
+# - ignore: Codex session ids, prompts, raw JSONL logs, and local resume state
+references/selfdev/.codex_session_id
+references/selfdev/state.tsv
+references/selfdev/logs/
+references/selfdev/prompts/
+references/selfdev/**/*.jsonl
+references/selfdev/tasks/**/*_prompt.md
