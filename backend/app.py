@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 import os
 import signal
@@ -17,6 +18,8 @@ from .storage import Storage, safe_env
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_DIR: Path | None = None
 LOG_DIR: Path | None = None
+STARTED_AT_ISO = datetime.datetime.now(datetime.timezone.utc).isoformat()
+BUILD_ID = STARTED_AT_ISO
 
 
 def _write_inbox_message(runtime_dir: Path, content: str) -> None:
@@ -46,8 +49,32 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class HealthHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
     async def get(self) -> None:
-        self.write_json({"ok": True, "service": "autoappdev-backend"})
+        db: dict[str, Any]
+        try:
+            t = await self.storage.get_server_time_iso()
+            db = {"ok": True, "time": t}
+        except Exception as e:
+            db = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+        self.write_json({"ok": True, "service": "autoappdev-backend", "db": db})
+
+
+class VersionHandler(BaseHandler):
+    async def get(self) -> None:
+        version = safe_env("AUTOAPPDEV_VERSION", "dev")
+        self.write_json(
+            {
+                "ok": True,
+                "app": "autoappdev",
+                "service": "autoappdev-backend",
+                "version": version,
+                "build": BUILD_ID,
+                "started_at": STARTED_AT_ISO,
+            }
+        )
 
 
 class ConfigHandler(BaseHandler):
@@ -291,7 +318,8 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
 
     app = tornado.web.Application(
         [
-            (r"/api/health", HealthHandler),
+            (r"/api/health", HealthHandler, {"storage": storage}),
+            (r"/api/version", VersionHandler),
             (r"/api/config", ConfigHandler, {"storage": storage}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline/status", PipelineStatusHandler, {"storage": storage}),
