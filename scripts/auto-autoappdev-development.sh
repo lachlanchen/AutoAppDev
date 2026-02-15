@@ -107,12 +107,92 @@ git_push_best_effort() {
   done
 }
 
+has_pending_changes() {
+  if ! git diff --quiet; then
+    return 0
+  fi
+  if ! git diff --cached --quiet; then
+    return 0
+  fi
+  if [ -n "$(git ls-files --others --exclude-standard)" ]; then
+    return 0
+  fi
+  return 1
+}
+
+update_readme_autogen() {
+  local msg="$1"
+  python3 - "$ROOT_DIR/README.md" "$TASKS_FILE" "$STATE_FILE" "$SESSION_FILE" "$msg" <<'PY'
+import datetime
+import pathlib
+import sys
+
+readme_path = pathlib.Path(sys.argv[1])
+tasks_path = pathlib.Path(sys.argv[2])
+state_path = pathlib.Path(sys.argv[3])
+session_path = pathlib.Path(sys.argv[4])
+commit_msg = sys.argv[5]
+
+now = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+total = 0
+if tasks_path.exists():
+  for line in tasks_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+    if line.count("\t") >= 4:
+      total += 1
+
+done = 0
+if state_path.exists():
+  for line in state_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+    parts = line.split("\t")
+    if len(parts) >= 2 and parts[1] == "done":
+      done += 1
+
+sid = ""
+if session_path.exists():
+  sid = session_path.read_text(encoding="utf-8", errors="ignore").strip()
+
+begin = "<!-- AUTOAPPDEV:STATUS:BEGIN -->"
+end = "<!-- AUTOAPPDEV:STATUS:END -->"
+block = f"""{begin}
+## Self-Dev Status (Auto-Updated)
+
+- Updated: {now}
+- Phase commit: `{commit_msg}`
+- Progress: {done} / {total} tasks done
+- Codex session: `{sid}`
+- Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
+
+This section is updated by `scripts/auto-autoappdev-development.sh`.
+Do not edit content between the markers.
+
+{end}
+"""
+
+if readme_path.exists():
+  text = readme_path.read_text(encoding="utf-8", errors="ignore")
+else:
+  text = "# AutoAppDev\n"
+
+if begin in text and end in text:
+  pre, rest = text.split(begin, 1)
+  _, post = rest.split(end, 1)
+  new_text = pre.rstrip() + "\n\n" + block + "\n" + post.lstrip()
+else:
+  new_text = text.rstrip() + "\n\n" + block + "\n"
+
+readme_path.write_text(new_text, encoding="utf-8")
+PY
+}
+
 git_commit_push_if_needed() {
   local msg="$1"
 
-  if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+  if ! has_pending_changes; then
     return 0
   fi
+
+  update_readme_autogen "$msg" || true
 
   git add -A
   if git diff --cached --quiet; then

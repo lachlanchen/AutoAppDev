@@ -2,6 +2,20 @@
 
 Reusable scripts + guides for building apps step-by-step from screenshots/markdown with Codex as a non-interactive tool.
 
+<!-- AUTOAPPDEV:STATUS:BEGIN -->
+<!-- AUTOAPPDEV:STATUS:END -->
+
+## Philosophy
+AutoAppDev treats agents as tools and keeps work stable via a strict, resumable loop:
+1. Plan
+2. Implement
+3. Debug/verify (with timeouts)
+4. Fix
+5. Summarize + log
+6. Commit + push
+
+The controller app aims to embody the same concepts as Scratch-like blocks/actions (including a common `update_readme` action) so each workspace stays current and reproducible.
+
 ## Contents
 - `docs/auto-development-guide.md`: Bilingual (EN/ZH) philosophy and requirements for a long-running, resumable auto-development agent.
 - `docs/ORDERING_RATIONALE.md`: Example rationale for sequencing screenshot-driven steps.
