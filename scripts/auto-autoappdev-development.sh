@@ -163,24 +163,46 @@ fi
 if [ -z "$session_id" ]; then
   init_prompt="$PROMPT_DIR/000_init.md"
   init_json="$LOG_DIR/000_init.jsonl"
-  cat >"$init_prompt" <<EOF
-Session initialization only.
+	cat >"$init_prompt" <<EOF
+	Session initialization only.
 
-You are developing **AutoAppDev**, a long-running stable agent system.
-Repo root: $ROOT_DIR
-This driver script: $ROOT_DIR/scripts/auto-autoappdev-development.sh
+	You are developing **AutoAppDev**, a long-running stable agent system.
+	Repo root: $ROOT_DIR
+	This driver script: $ROOT_DIR/scripts/auto-autoappdev-development.sh
 
-High-level product goal:
-- Build a Scratch-like PWA to control and observe an auto-development pipeline.
-- Provide chat/inbox to inject user guidance into the running pipeline.
-- Provide start/stop/pause/resume buttons and settings for agent/model selection.
-- Backend: Python Tornado. Database: PostgreSQL. Secrets in .env.
-- Frontend: PWA (static HTML/CSS/JS). Default theme: light.
+	High-level product goal (AutoAppDev app):
+	- Build a Scratch-like PWA to control and observe a long-running auto-development pipeline.
+	- Provide start/stop/pause/resume + settings (agent SDK + LLM/vision models).
+	- Provide a persistent chat/inbox to inject guidance into a running pipeline.
+	- Backend: Python Tornado. Database: PostgreSQL. Secrets in .env.
+	- Frontend: PWA (static HTML/CSS/JS). Default theme: light.
 
-Hard guardrails (must remember for all subsequent turns):
-- Work only inside this repository ($ROOT_DIR).
-- Every step is **small** and **linear**. No parallel execution between steps.
-- Each \`codex exec\` call completes one small phase and then exits cleanly.
+	Core missing module (must be built):
+	- **Pipeline Script Visualization + Writer**
+	  - Define a standardized, formatted pipeline script (human-editable) that represents:
+	    TASKS -> STEPS -> ACTIONS (+ tools, models, materials/paths, logs, locks, acceptance).
+	  - Import an existing pipeline shell script (written by other agents/tools) and parse it into
+	    the standardized IR, then visualize it as Scratch-like blocks.
+	  - Export blocks/IR back into the standardized formatted script and generate a runnable shell
+	    driver script (Codex non-interactive steps, reusable actions, skills/tools).
+	  - Round-trip conversion should be a first-class feature (script <-> blocks).
+
+	Standardization targets (workspace contract):
+	- Standardize and document these concepts and paths so pipelines are portable/resumable:
+	  - input materials, user interactions, outputs, docs, references, scripts, tools, logs
+	  - place to store generated apps: auto-apps/
+	  - task management and resume state (DB-backed where possible)
+
+	Important clarification (do not confuse two "pipelines"):
+	- This driver script's development loop (plan -> work -> debug/fix -> summary/log -> commit/push)
+	  is how we build AutoAppDev itself.
+	- AutoAppDev the product models a generic TASK/STEP/ACTION pipeline and can embody the same
+	  philosophy, but it must remain configurable and scriptable (via the standardized script format).
+
+	Hard guardrails (must remember for all subsequent turns):
+	- Work only inside this repository ($ROOT_DIR).
+	- Every step is **small** and **linear**. No parallel execution between steps.
+	- Each \`codex exec\` call completes one small phase and then exits cleanly.
 - Do not leave behind background processes when a phase ends.
 - Do NOT run git commands (\`git add/commit/push\`). This driver script will commit+push after each phase.
 - If you need to communicate what changed, write it into the phase notes file; the driver will commit.
@@ -206,18 +228,18 @@ if [ ! -s "$TASKS_FILE" ]; then
   repo_files="$(cd "$ROOT_DIR" && find . -maxdepth 3 -type f | sort || true)"
   order_prompt="$PROMPT_DIR/001_generate_tasks.md"
   order_json="$LOG_DIR/001_generate_tasks.jsonl"
-  cat >"$order_prompt" <<EOF
-You are developing AutoAppDev (Scratch-like PWA + Tornado backend).
-Driver script: $ROOT_DIR/scripts/auto-autoappdev-development.sh (this script).
+	cat >"$order_prompt" <<EOF
+	You are developing AutoAppDev (Scratch-like PWA + Tornado backend + Postgres).
+	Driver script: $ROOT_DIR/scripts/auto-autoappdev-development.sh (this script).
 
-Current repo file list (use this; do NOT spend tool-calls on extra repo inspection):
-$repo_files
+	Current repo file list (use this; do NOT spend tool-calls on extra repo inspection):
+	$repo_files
 
-Task (MUST complete fully in this single turn):
-1) Design a first batch of small, incremental tasks that make the controller app real and usable.
-2) Write tasks to: $TASKS_FILE (create/overwrite it).
-3) Verify the file is non-empty (e.g. \`wc -l\`, \`sed -n '1,5p'\`).
-4) Do NOT run git commands; the driver script will commit+push.
+	Task (MUST complete fully in this single turn):
+	1) Design a first batch of small, incremental tasks that make the controller app real and usable.
+	2) Write tasks to: $TASKS_FILE (create/overwrite it).
+	3) Verify the file is non-empty (e.g. \`wc -l\`, \`sed -n '1,5p'\`).
+	4) Do NOT run git commands; the driver script will commit+push.
 
 TSV format (NO header, 5 columns):
 1) seq (1-based int)
@@ -226,11 +248,20 @@ TSV format (NO header, 5 columns):
 4) title (short)
 5) acceptance_criteria (short but testable)
 
-Rules:
-- Tasks must be small and ordered from global-to-local.
-- Include explicit tasks for: Postgres wiring, .env handling, light theme PWA, scratch-like blocks, chat/inbox, pipeline start/stop/pause, logs view.
-- Do not modify code in this step. Only write the tasks list file.
-- Do NOT commit any files; the driver script handles git.
+	Rules:
+	- Tasks must be small and ordered from global-to-local.
+	- Include explicit tasks for: Postgres wiring, .env handling, light theme PWA, scratch-like blocks, chat/inbox, pipeline start/stop/pause, logs view.
+	- MUST include explicit tasks for the **pipeline script visualization + writer** module:
+	  - Define standardized formatted script + IR schema (docs + code).
+	  - Parse existing pipeline shell scripts into IR (best-effort; with clear limitations).
+	  - Render IR as blocks and allow editing.
+	  - Export IR/blocks back to formatted script and generate a runnable shell driver script.
+	  - Round-trip acceptance checks (script <-> blocks) for at least one example script.
+	- MUST include tasks to standardize workspace paths/contracts:
+	  - materials/, interactions/, outputs/, docs/, references/, scripts/, tools/, logs/, auto-apps/
+	  - resume/task-management behavior and persistence.
+	- Do not modify code in this step. Only write the tasks list file.
+	- Do NOT commit any files; the driver script handles git.
 
 Final response: DONE_TASKS
 EOF
@@ -331,22 +362,32 @@ for row in "${tasks[@]}"; do
 - title: $title
 - acceptance: $acceptance
 
-Overall goal:
-- Build AutoAppDev controller (Scratch-like PWA + Tornado backend + Postgres).
-- Default theme: light.
-- Provide chat/inbox, pipeline control, logs, and block-based task builder.
+	Overall goal:
+	- Build AutoAppDev controller (Scratch-like PWA + Tornado backend + Postgres).
+	- Default theme: light.
+	- Provide chat/inbox, pipeline control, logs, and block-based task builder.
+	- Build the pipeline script visualization + writer module (script <-> IR <-> blocks):
+	  - standard formatted script (TASKS -> STEPS -> ACTIONS)
+	  - import/parse existing pipeline shell scripts into IR
+	  - export/generate standardized scripts and runnable drivers
+	- Standardize workspace contract: materials/interactions/outputs/docs/references/scripts/tools/logs/auto-apps + resumable tasks.
 
-This driver script:
-- $ROOT_DIR/scripts/auto-autoappdev-development.sh
+	This driver script:
+	- $ROOT_DIR/scripts/auto-autoappdev-development.sh
 
-Runtime directories (design targets):
-- runtime/inbox/ (user messages for pipeline)
-- runtime/logs/ (backend + pipeline logs)
-- references/selfdev/ (tasks, prompts, summaries, state)
+	Runtime directories (design targets):
+	- runtime/inbox/ (user messages for pipeline)
+	- runtime/logs/ (backend + pipeline logs)
+	- references/selfdev/ (tasks, prompts, summaries, state)
+	- auto-apps/ (generated apps/workspaces managed by AutoAppDev)
+	- materials/ (input materials for a pipeline/workspace; repo or user-provided)
+	- interactions/ (user messages, decisions, approvals captured during runs)
+	- outputs/ (exported artifacts, reports, built packages; not necessarily committed)
+	- tools/ (reusable scripts/tools/skills invoked by pipelines)
 
-Important:
-- Each phase below is ONE \`codex exec\` call and must remain linear.
-- Do NOT run git commands (\`git add/commit/push\`). The driver script commits+pushes after each phase.
+	Important:
+	- Each phase below is ONE \`codex exec\` call and must remain linear.
+	- Do NOT run git commands (\`git add/commit/push\`). The driver script commits+pushes after each phase.
 EOF
 
   # Phase 1: plan
