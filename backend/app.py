@@ -235,6 +235,20 @@ class PipelineStartHandler(BaseHandler):
         self.storage = storage
 
     async def post(self) -> None:
+        ps = await self.storage.get_pipeline_state()
+        cur = str(ps.get("state") or "stopped")
+        if cur != "stopped":
+            self.write_json(
+                {
+                    "ok": False,
+                    "error": "invalid_transition",
+                    "from": cur,
+                    "action": "start",
+                    "detail": f"cannot start when {cur}",
+                },
+                status=400,
+            )
+            return
         body = json.loads(self.request.body or b"{}")
         script = str(body.get("script") or safe_env("AUTOAPPDEV_PIPELINE_SCRIPT", "scripts/auto-autoappdev-development.sh"))
         cwd = str(body.get("cwd") or safe_env("AUTOAPPDEV_PIPELINE_CWD", str(REPO_ROOT)))
@@ -264,11 +278,25 @@ class PipelineStopHandler(BaseHandler):
         self.storage = storage
 
     async def post(self) -> None:
+        ps = await self.storage.get_pipeline_state()
+        cur = str(ps.get("state") or "stopped")
+        if cur not in ("running", "paused"):
+            self.write_json(
+                {
+                    "ok": False,
+                    "error": "invalid_transition",
+                    "from": cur,
+                    "action": "stop",
+                    "detail": f"cannot stop when {cur}",
+                },
+                status=400,
+            )
+            return
         res = await self.controller.stop()
         if res.get("ok"):
             pid = self.controller.proc.pid if self.controller.proc else None
             await self.storage.set_pipeline_state(state="stopped", pid=None, run_id=self.controller.run_id, ts_kind="stop")
-        self.write_json(res, status=200 if res.get("ok") else 409)
+        self.write_json(res, status=200 if res.get("ok") else 500)
 
 
 class PipelinePauseHandler(BaseHandler):
@@ -277,6 +305,20 @@ class PipelinePauseHandler(BaseHandler):
         self.storage = storage
 
     async def post(self) -> None:
+        ps = await self.storage.get_pipeline_state()
+        cur = str(ps.get("state") or "stopped")
+        if cur != "running":
+            self.write_json(
+                {
+                    "ok": False,
+                    "error": "invalid_transition",
+                    "from": cur,
+                    "action": "pause",
+                    "detail": f"cannot pause when {cur}",
+                },
+                status=400,
+            )
+            return
         res = await self.controller.pause()
         if res.get("ok"):
             pid = self.controller.proc.pid if self.controller.proc else None
@@ -290,6 +332,20 @@ class PipelineResumeHandler(BaseHandler):
         self.storage = storage
 
     async def post(self) -> None:
+        ps = await self.storage.get_pipeline_state()
+        cur = str(ps.get("state") or "stopped")
+        if cur != "paused":
+            self.write_json(
+                {
+                    "ok": False,
+                    "error": "invalid_transition",
+                    "from": cur,
+                    "action": "resume",
+                    "detail": f"cannot resume when {cur}",
+                },
+                status=400,
+            )
+            return
         res = await self.controller.resume()
         if res.get("ok"):
             pid = self.controller.proc.pid if self.controller.proc else None

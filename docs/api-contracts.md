@@ -213,6 +213,17 @@ Response:
 { "ok": true }
 ```
 
+Response (invalid transition example):
+```json
+{
+  "ok": false,
+  "error": "invalid_transition",
+  "from": "stopped",
+  "action": "stop",
+  "detail": "cannot stop when stopped"
+}
+```
+
 ### POST /api/pipeline/pause
 Pauses the pipeline (implemented as a runtime pause flag).
 
