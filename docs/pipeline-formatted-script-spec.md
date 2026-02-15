@@ -95,6 +95,15 @@ Limitations:
 - Unannotated shell code is ignored.
 - No shell parsing or execution; only the embedded AAPS is validated.
 
+### 1.8 Numbering + Placeholders (Conventions v0)
+Some pipelines want the formatted script to feel more Scratch-like in text form:
+- display-only numbering and indentation for readability
+- simple `{{...}}` placeholders inside prompt/cmd strings to pass task/runtime context between actions
+
+These are **conventions** that do not change the AAPS v1 grammar.
+Reference:
+- `docs/aaps-numbering-placeholders.md`
+
 ## 2) Canonical IR Schema (autoappdev_ir v1)
 
 ### 2.1 Top-Level Shape

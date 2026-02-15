@@ -1,0 +1,42 @@
+AUTOAPPDEV_PIPELINE 1
+
+# 1 Meta-round controller (for-loops via meta_round_v0)
+TASK {"id":"meta","title":"Meta-round: derive task list","meta":{"meta_round_v0":{"n_round":2,"goal":"Implement feature X in small steps","shared_context_paths":["docs/pipeline-formatted-script-spec.md","docs/meta-round-templates.md","docs/aaps-numbering-placeholders.md"],"task_list_path":"references/meta_round/tasks_v0.json","task_limit":5,"language":"en","target_languages":["zh-Hans","zh-Hant","en","ja","ko","vi","ar","fr","es"]}}}
+
+# 1.1 Round 1: draft tasks
+  STEP {"id":"r1","title":"Round 1: draft tasks","block":"plan","meta":{"round":1}}
+    ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"Round 1: From goal+context, write references/meta_round/tasks_v0.json (autoappdev_task_list v0)."}}
+
+# 1.2 Round 2: refine tasks
+  STEP {"id":"r2","title":"Round 2: refine tasks","block":"plan","meta":{"round":2}}
+    ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"Round 2: Refine the existing task list; keep tasks small and testable."}}
+
+# 2 Example expanded task (one task from the final task list)
+TASK {"id":"t1","title":"Feature X: add numbered AAPS docs (small step)","meta":{"acceptance":"Docs define numbering + placeholders; the example script parses as AAPS v1 and includes meta_round_v0 + conditional fix steps."}}
+
+# 2.1 Plan
+  STEP {"id":"p","title":"Plan","block":"plan"}
+    ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"Task: {{task.title}}\nAcceptance: {{task.acceptance}}\nRuntime dir: {{runtime_dir}}\nWrite a plan and exact verification commands (with timeouts)."}}
+
+# 2.2 Work
+  STEP {"id":"w","title":"Work","block":"work"}
+    ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"Implement the smallest changes to satisfy acceptance for: {{task.title}}"}}
+
+# 2.3 Debug/Verify
+  STEP {"id":"d","title":"Debug/Verify","block":"debug"}
+    ACTION {"id":"a1","kind":"run","params":{"cmd":"timeout 10s python3 -m py_compile backend/pipeline_parser.py"}}
+
+# 2.4 Fix (conditional)
+  STEP {"id":"f","title":"Fix (if needed)","block":"fix","meta":{"conditional":"on_debug_failure"}}
+    ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"If debug fails, implement minimal fixes and re-run verification for: {{task.title}}"}}
+
+# 2.5 Translate + Summary
+  STEP {"id":"s","title":"Translate + Summary","block":"summary"}
+    ACTION {"id":"t1","kind":"codex_exec","meta":{"slot":"translate"},"params":{"prompt":"(Optional) Translate summary for: {{task.title}}"}}
+    ACTION {"id":"s1","kind":"codex_exec","meta":{"slot":"summary"},"params":{"prompt":"Write a concise summary for: {{task.title}}\nInclude how to verify."}}
+
+# 2.6 Log + Commit
+  STEP {"id":"c","title":"Log + Commit","block":"commit_push"}
+    ACTION {"id":"l1","kind":"run","meta":{"slot":"log"},"params":{"cmd":"mkdir -p {{runtime_dir}}/outbox && printf 'Task {{task.title}} complete\\\\n' > {{runtime_dir}}/outbox/.tmp && mv {{runtime_dir}}/outbox/.tmp {{runtime_dir}}/outbox/$(date +%s%3N)_pipeline.md"}}
+    ACTION {"id":"g1","kind":"note","meta":{"slot":"commit"},"params":{"text":"Commit is policy-driven; external drivers may handle git."}}
+
