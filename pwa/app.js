@@ -24,6 +24,7 @@ const els = {
   chatInput: document.getElementById("chat-input"),
   chatSend: document.getElementById("chat-send"),
   logSelect: document.getElementById("log-select"),
+  logFollow: document.getElementById("log-follow"),
   logRefresh: document.getElementById("log-refresh"),
   logview: document.getElementById("logview"),
 };
@@ -40,6 +41,12 @@ const BLOCK_META = {
 };
 
 let program = [];
+
+const LOG_WINDOW_LIMIT = 400;
+const LOG_RESET_LIMIT = 2000;
+const logSince = { pipeline: 0, backend: 0 };
+const logInitialized = { pipeline: false, backend: false };
+let logFollow = true;
 
 function setTheme(next) {
   document.body.dataset.theme = next;
@@ -250,6 +257,8 @@ function bindTabs() {
     els.tabStatus.hidden = key !== "status";
     els.tabChat.hidden = key !== "chat";
     els.tabLogs.hidden = key !== "logs";
+    if (key === "logs") refreshLogs();
+    if (key === "chat") loadChat();
   };
 
   els.tabs.forEach((t) => {
@@ -286,13 +295,67 @@ async function sendChat() {
   await loadChat();
 }
 
-async function refreshLogs() {
-  const name = els.logSelect.value || "pipeline";
+function scrollLogsToBottom() {
+  const candidates = [els.tabLogs, els.logview];
+  candidates.forEach((el) => {
+    if (!el) return;
+    try {
+      el.scrollTop = el.scrollHeight;
+    } catch {}
+  });
+}
+
+function appendLogText(text) {
+  if (!els.logview) return;
+  els.logview.insertAdjacentText("beforeend", String(text || ""));
+}
+
+function setLogFollow(on) {
+  logFollow = Boolean(on);
+  if (els.logFollow) {
+    els.logFollow.textContent = logFollow ? "Pause" : "Follow";
+    els.logFollow.setAttribute("aria-pressed", logFollow ? "true" : "false");
+  }
+  if (logFollow) scrollLogsToBottom();
+}
+
+async function refreshLogs({ reset } = {}) {
+  const sourceRaw = String((els.logSelect && els.logSelect.value) || "pipeline");
+  const source = sourceRaw === "backend" ? "backend" : "pipeline";
+  const shouldReset = Boolean(reset) || !logInitialized[source];
+
   try {
-    const data = await api(`/api/logs/tail?name=${encodeURIComponent(name)}&lines=400`);
-    els.logview.textContent = (data.lines || []).join("\n");
+    if (shouldReset) {
+      els.logview.textContent = "";
+      logSince[source] = 0;
+      const data = await api(
+        `/api/logs?source=${encodeURIComponent(source)}&since=0&limit=${LOG_RESET_LIMIT}`
+      );
+      const items = Array.isArray(data.lines) ? data.lines : [];
+      const slice = items.slice(-LOG_WINDOW_LIMIT);
+      const text = slice.map((it) => String((it && it.line) || "")).join("\n");
+      els.logview.textContent = text;
+      if (text) appendLogText("\n");
+      const next = Number.isFinite(data.next) ? Number(data.next) : 0;
+      logSince[source] = next;
+      logInitialized[source] = true;
+      if (logFollow) scrollLogsToBottom();
+      return;
+    }
+
+    const since = logSince[source] || 0;
+    const data = await api(
+      `/api/logs?source=${encodeURIComponent(source)}&since=${since}&limit=${LOG_WINDOW_LIMIT}`
+    );
+    const items = Array.isArray(data.lines) ? data.lines : [];
+    if (items.length) {
+      appendLogText(items.map((it) => String((it && it.line) || "")).join("\n") + "\n");
+      if (logFollow) scrollLogsToBottom();
+    }
+    const next = Number.isFinite(data.next) ? Number(data.next) : since;
+    logSince[source] = next;
   } catch (e) {
-    els.logview.textContent = String(e.message || e);
+    els.logview.textContent = String((e && e.message) || e);
   }
 }
 
@@ -323,7 +386,13 @@ function bindControls() {
     if (ev.key === "Enter") sendChat();
   });
 
-  els.logRefresh.addEventListener("click", refreshLogs);
+  if (els.logFollow) {
+    els.logFollow.addEventListener("click", () => setLogFollow(!logFollow));
+  }
+  if (els.logSelect) {
+    els.logSelect.addEventListener("change", () => refreshLogs({ reset: true }));
+  }
+  els.logRefresh.addEventListener("click", () => refreshLogs({ reset: true }));
 
   els.start.addEventListener("click", () =>
     doPipelineAction("start", () => api("/api/pipeline/start", { method: "POST", body: JSON.stringify({}) }))
@@ -347,6 +416,7 @@ function boot() {
   bindTabs();
   bindControls();
   updateActionButtons("stopped");
+  setLogFollow(true);
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js").catch((e) => {
@@ -360,7 +430,7 @@ function boot() {
   refreshHealth();
   refreshStatus();
   loadChat();
-  refreshLogs();
+  refreshLogs({ reset: true });
 
   window.setInterval(refreshHealth, 2000);
   window.setInterval(refreshStatus, 2000);

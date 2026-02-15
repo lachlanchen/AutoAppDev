@@ -130,6 +130,15 @@
               <option value="pipeline">pipeline.log</option>
               <option value="backend">backend.log</option>
             </select>
+            <button
+              class="btn btn--ghost"
+              id="log-follow"
+              aria-label="Auto-scroll follow"
+              aria-pressed="true"
+              title="Toggle auto-scroll (pause to select/copy)"
+            >
+              Pause
+            </button>
             <button class="btn btn--ghost" id="log-refresh">Refresh</button>
           </div>
           <pre class="logview" id="logview"></pre>

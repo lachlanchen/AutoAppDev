@@ -416,7 +416,7 @@ body[data-theme="dark"] .canvas {
 
 .logbar {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 10px;
   margin-bottom: 10px;
 }
@@ -431,6 +431,7 @@ body[data-theme="dark"] .canvas {
   font-size: 11px;
   overflow: auto;
   white-space: pre-wrap;
+  user-select: text;
 }
 
 @media (max-width: 1200px) {
