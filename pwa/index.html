@@ -9,9 +9,12 @@
     <meta name="theme-color" content="#2767ff" />
     <link rel="stylesheet" href="styles.css" />
     <script>
-      window.__AUTOAPPDEV_CONFIG__ = {
-        API_BASE_URL: "http://127.0.0.1:8788",
-      };
+      window.__AUTOAPPDEV_CONFIG__ = window.__AUTOAPPDEV_CONFIG__ || {};
+    </script>
+    <script src="config.local.js"></script>
+    <script>
+      window.__AUTOAPPDEV_CONFIG__.API_BASE_URL =
+        window.__AUTOAPPDEV_CONFIG__.API_BASE_URL || "http://127.0.0.1:8788";
     </script>
     <script src="api-client.js" defer></script>
     <script src="app.js" defer></script>
