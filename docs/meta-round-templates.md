@@ -69,6 +69,14 @@ For each round `r`:
 After the final round:
 - Execute the per-task template for each task in the final artifact, in-order.
 
+### Runner Support (Optional)
+Some engines/runners may implement the controller + template loop directly, without expanding the final task list into static `TASK` entries in the script/IR.
+
+Convention (v0):
+- Controller: `TASK.meta.meta_round_v0.task_list_path` points to the `autoappdev_task_list` v0 JSON file.
+- Template: a single task marked with `TASK.meta.task_template_v0` is applied once per produced task list item.
+- Resume: runners may persist a runtime-scoped resume file so reruns can skip already completed task ids (default under `AUTOAPPDEV_RUNTIME_DIR`).
+
 ## Per-task Template (v0)
 
 ### Phase Ordering (Standard)
@@ -168,4 +176,3 @@ ACTION {"id":"g1","kind":"note","meta":{"slot":"commit"},"params":{"text":"Commi
 Notes:
 - `translate`/`log`/`commit` are modeled as **action slots**, not as new `STEP.block` values.
 - Engines can bind these slots to an action registry using `ACTION.meta.action_ref` (see `docs/pipeline-formatted-script-spec.md`).
-

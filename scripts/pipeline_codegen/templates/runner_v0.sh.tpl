@@ -55,6 +55,175 @@ step_should_run() {
   esac
 }
 
+META_ROUND_RESUME_FILE="${AUTOAPPDEV_META_ROUND_RESUME_FILE:-$RUNTIME_DIR/meta_round_v0_resume.json}"
+
+meta_round_read_task_list() {
+  local task_list_path="${1:-}"
+  python3 - "$task_list_path" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+def die(msg: str) -> None:
+    sys.stderr.write(f"[runner] meta_round: {msg}\n")
+    raise SystemExit(2)
+
+if len(sys.argv) < 2 or not sys.argv[1]:
+    die("missing task_list_path")
+
+p = Path(sys.argv[1])
+try:
+    obj = json.loads(p.read_text(encoding="utf-8"))
+except FileNotFoundError:
+    die(f"task list not found: {p}")
+except json.JSONDecodeError as e:
+    die(f"invalid JSON in task list {p}: {e}")
+
+if not isinstance(obj, dict):
+    die(f"task list must be an object: {p}")
+
+if obj.get("kind") != "autoappdev_task_list" or obj.get("version") != 0:
+    die(f"unexpected task list kind/version (expected autoappdev_task_list v0): {p}")
+
+tasks = obj.get("tasks")
+if not isinstance(tasks, list):
+    die(f"task list .tasks must be an array: {p}")
+
+out = sys.stdout.buffer
+for i, t in enumerate(tasks):
+    if not isinstance(t, dict):
+        die(f"task list tasks[{i}] must be an object: {p}")
+    tid = t.get("id")
+    title = t.get("title")
+    acc = t.get("acceptance") if t.get("acceptance") is not None else ""
+    if not isinstance(tid, str) or not tid:
+        die(f"task list tasks[{i}].id must be a non-empty string: {p}")
+    if not isinstance(title, str) or not title:
+        die(f"task list tasks[{i}].title must be a non-empty string: {p}")
+    if not isinstance(acc, str):
+        die(f"task list tasks[{i}].acceptance must be a string: {p}")
+
+    out.write(tid.encode("utf-8") + b"\0")
+    out.write(title.encode("utf-8") + b"\0")
+    out.write(acc.encode("utf-8") + b"\0")
+PY
+}
+
+meta_round_is_completed() {
+  local task_id="${1:-}"
+  local resume_file="${2:-$META_ROUND_RESUME_FILE}"
+  set +e
+  python3 - "$resume_file" "$task_id" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+resume = Path(sys.argv[1])
+task_id = sys.argv[2]
+
+if not resume.exists():
+    raise SystemExit(1)
+
+try:
+    obj = json.loads(resume.read_text(encoding="utf-8"))
+except Exception as e:
+    sys.stderr.write(f"[runner] meta_round: invalid resume JSON {resume}: {type(e).__name__}: {e}\n")
+    raise SystemExit(2)
+
+if not isinstance(obj, dict):
+    sys.stderr.write(f"[runner] meta_round: resume must be an object: {resume}\n")
+    raise SystemExit(2)
+
+ids = obj.get("completed_task_ids", [])
+if not isinstance(ids, list):
+    sys.stderr.write(f"[runner] meta_round: resume completed_task_ids must be an array: {resume}\n")
+    raise SystemExit(2)
+
+if task_id in ids:
+    raise SystemExit(0)
+raise SystemExit(1)
+PY
+  local rc=$?
+  set -e
+  if [ "$rc" -eq 2 ]; then
+    exit 2
+  fi
+  return "$rc"
+}
+
+meta_round_mark_completed() {
+  local task_id="${1:-}"
+  local resume_file="${2:-$META_ROUND_RESUME_FILE}"
+  python3 - "$resume_file" "$task_id" <<'PY'
+import datetime
+import json
+import sys
+from pathlib import Path
+
+resume = Path(sys.argv[1])
+task_id = sys.argv[2]
+
+resume.parent.mkdir(parents=True, exist_ok=True)
+
+obj = {"kind": "autoappdev_meta_round_resume", "version": 0, "completed_task_ids": []}
+if resume.exists():
+    try:
+        loaded = json.loads(resume.read_text(encoding="utf-8"))
+    except Exception as e:
+        sys.stderr.write(f"[runner] meta_round: invalid resume JSON {resume}: {type(e).__name__}: {e}\n")
+        raise SystemExit(2)
+    if isinstance(loaded, dict):
+        obj = loaded
+    else:
+        sys.stderr.write(f"[runner] meta_round: resume must be an object: {resume}\n")
+        raise SystemExit(2)
+
+ids = obj.get("completed_task_ids")
+if ids is None:
+    ids = []
+if not isinstance(ids, list):
+    sys.stderr.write(f"[runner] meta_round: resume completed_task_ids must be an array: {resume}\n")
+    raise SystemExit(2)
+
+if task_id not in ids:
+    ids.append(task_id)
+obj["completed_task_ids"] = ids
+obj["updated_at"] = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+tmp = resume.with_suffix(resume.suffix + ".tmp")
+tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+tmp.replace(resume)
+PY
+}
+
+meta_round_run_template_tasks() {
+  local task_list_path="${1:-}"
+  if [ -z "$task_list_path" ]; then
+    echo "[runner] meta_round: missing task_list_path" >&2
+    exit 2
+  fi
+
+  local tmp_tasks=""
+  tmp_tasks="$(mktemp "$RUNTIME_DIR/.meta_round_tasks.XXXXXX")"
+  meta_round_read_task_list "$task_list_path" > "$tmp_tasks"
+
+  while IFS= read -r -d '' task_id \
+    && IFS= read -r -d '' task_title \
+    && IFS= read -r -d '' task_acceptance; do
+    if meta_round_is_completed "$task_id" "$META_ROUND_RESUME_FILE"; then
+      log "SKIP META_TASK $task_id: already completed"
+      continue
+    fi
+
+    log "META_TASK $task_id: start"
+    run_task_template_v0 "$task_id" "$task_title" "$task_acceptance"
+    meta_round_mark_completed "$task_id" "$META_ROUND_RESUME_FILE"
+    log "META_TASK $task_id: done"
+  done < "$tmp_tasks"
+
+  rm -f "$tmp_tasks"
+}
+
 subst_placeholders() {
   python3 - 3<&0 <<'PY'
 import os

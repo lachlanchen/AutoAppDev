@@ -1,0 +1,57 @@
+{
+  "kind": "autoappdev_ir",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "meta",
+      "title": "Meta-round controller v0 (demo)",
+      "meta": {
+        "meta_round_v0": {
+          "n_round": 1,
+          "goal": "Demo meta_round_v0 looping in a generated runner",
+          "task_list_path": "task_list.json"
+        }
+      },
+      "steps": [
+        {
+          "id": "r1",
+          "title": "Round 1: write demo task list",
+          "block": "plan",
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "run",
+              "params": {
+                "cmd": "python3 -c 'import json; obj={\"kind\":\"autoappdev_task_list\",\"version\":0,\"round\":1,\"goal\":\"demo\",\"tasks\":[{\"id\":\"t1\",\"title\":\"Demo task 1\",\"acceptance\":\"A1\"},{\"id\":\"t2\",\"title\":\"Demo task 2\",\"acceptance\":\"A2\"}]}; open(\"task_list.json\",\"w\",encoding=\"utf-8\").write(json.dumps(obj,ensure_ascii=False,indent=2)+\"\\n\")'"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "template",
+      "title": "Per-task template v0 (demo)",
+      "meta": {
+        "task_template_v0": true
+      },
+      "steps": [
+        {
+          "id": "p",
+          "title": "Plan (demo)",
+          "block": "plan",
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "run",
+              "params": {
+                "cmd": "echo TEMPLATE_RUN id={{task.id}} title={{task.title}} acceptance={{task.acceptance}}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

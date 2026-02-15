@@ -91,3 +91,23 @@ Supported conditionals:
 
 Behavior:
 - Unknown conditional values cause the runner to exit non-zero (fail fast).
+
+## Meta-round Loops (meta_round_v0) (v0)
+Generated runners may implement the `meta_round_v0` convention (see `docs/meta-round-templates.md`):
+- A controller task defines `TASK.meta.meta_round_v0.task_list_path` (string).
+- A template task is marked with `TASK.meta.task_template_v0` (boolean/object).
+
+Runner behavior (v0, minimal):
+1. Run the controller task steps in-order (typically writing/updating `task_list_path`).
+2. Read `task_list_path` as an `autoappdev_task_list` v0 JSON file.
+3. For each task list item `{id,title,acceptance}`:
+   - export `AUTOAPPDEV_CTX_TASK_ID/TITLE/ACCEPTANCE` from the task list item
+   - run the template task steps/actions (placeholders apply as usual)
+4. Persist resume state under the runtime dir so reruns skip already completed task ids:
+   - default: `$AUTOAPPDEV_RUNTIME_DIR/meta_round_v0_resume.json`
+   - override: `AUTOAPPDEV_META_ROUND_RESUME_FILE=/path/to/resume.json`
+
+Notes:
+- Resume keys off task list `id`; stable ids are required for meaningful skipping.
+- Unknown/missing task list shape is a hard error (fail fast).
+- Current generator limitation: meta-round mode expects exactly 2 tasks in IR: the controller + the template.
