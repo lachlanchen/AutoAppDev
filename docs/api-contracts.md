@@ -42,14 +42,61 @@ Response:
 { "ok": true }
 ```
 
-## Inbox Messages (Chat)
-The UI refers to “Chat/Inbox”. The API endpoint is `/api/chat`.
+## Inbox Messages
+The UI refers to “Chat/Inbox”.
+
+- `/api/inbox` is the first-class inbox persistence API.
+- `/api/chat` is the chat log API used by the current PWA.
 
 Side effect:
-- When a user posts a message, the backend also writes a `runtime/inbox/*_user.md` file so pipeline scripts can consume guidance.
+- When a user posts to `/api/inbox` or `/api/chat`, the backend also writes a `runtime/inbox/*_user.md` file so pipeline scripts can consume guidance.
+
+### GET /api/inbox?limit=N
+Lists recent inbox messages.
+
+Request:
+- Query string: `limit` (default 50)
+
+Response:
+```json
+{
+  "messages": [
+    {
+      "id": 123,
+      "role": "user",
+      "content": "hello inbox",
+      "created_at": "2026-02-15T12:34:56.789+00:00"
+    }
+  ]
+}
+```
+
+### POST /api/inbox
+Adds an inbox message.
+
+Request:
+```json
+{ "content": "hello inbox" }
+```
+
+Response:
+```json
+{ "ok": true }
+```
+
+Response (error examples):
+```json
+{ "error": "invalid_body" }
+```
+```json
+{ "error": "empty" }
+```
+```json
+{ "error": "too_long" }
+```
 
 ### GET /api/chat?limit=N
-Lists recent messages.
+Lists recent chat messages.
 
 Request:
 - Query string: `limit` (default 50)
@@ -69,7 +116,7 @@ Response:
 ```
 
 ### POST /api/chat
-Adds a message.
+Adds a chat message.
 
 Request:
 ```json

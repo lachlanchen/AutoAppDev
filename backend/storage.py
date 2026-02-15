@@ -133,6 +133,21 @@ class Storage:
         st["chat"] = st["chat"][-200:]
         self._write_state(st)
 
+    async def add_inbox_message(self, role: str, content: str) -> None:
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                await conn.execute(
+                    "insert into inbox_messages(role, content) values($1, $2)",
+                    role,
+                    content,
+                )
+            return
+        st = self._read_state()
+        st.setdefault("inbox", [])
+        st["inbox"].append({"role": role, "content": content})
+        st["inbox"] = st["inbox"][-200:]
+        self._write_state(st)
+
     async def list_chat_messages(self, limit: int = 50) -> list[dict[str, Any]]:
         lim = max(1, min(500, int(limit)))
         if self._pool:
@@ -157,6 +172,31 @@ class Storage:
         if not isinstance(chat, list):
             return []
         return chat[-lim:]
+
+    async def list_inbox_messages(self, limit: int = 50) -> list[dict[str, Any]]:
+        lim = max(1, min(500, int(limit)))
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "select id, role, content, created_at from inbox_messages order by id desc limit $1",
+                    lim,
+                )
+                items = [
+                    {
+                        "id": int(r["id"]),
+                        "role": r["role"],
+                        "content": r["content"],
+                        "created_at": r["created_at"].isoformat(),
+                    }
+                    for r in rows
+                ]
+                items.reverse()
+                return items
+        st = self._read_state()
+        inbox = st.get("inbox", [])
+        if not isinstance(inbox, list):
+            return []
+        return inbox[-lim:]
 
     async def create_run(self, script: str, cwd: str, args: list[str], pid: Optional[int]) -> int:
         if self._pool:

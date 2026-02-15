@@ -116,6 +116,33 @@ class ChatHandler(BaseHandler):
         self.write_json({"ok": True})
 
 
+class InboxHandler(BaseHandler):
+    def initialize(self, storage: Storage, runtime_dir: Path) -> None:
+        self.storage = storage
+        self.runtime_dir = runtime_dir
+
+    async def get(self) -> None:
+        limit = int(self.get_query_argument("limit", "50"))
+        items = await self.storage.list_inbox_messages(limit=limit)
+        self.write_json({"messages": items})
+
+    async def post(self) -> None:
+        body = json.loads(self.request.body or b"{}")
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+        content = str(body.get("content") or "").strip()
+        if not content:
+            self.write_json({"error": "empty"}, status=400)
+            return
+        if len(content) > 10_000:
+            self.write_json({"error": "too_long"}, status=400)
+            return
+        await self.storage.add_inbox_message("user", content)
+        _write_inbox_message(self.runtime_dir, content)
+        self.write_json({"ok": True})
+
+
 class PipelineStatusHandler(BaseHandler):
     def initialize(self, storage: Storage) -> None:
         self.storage = storage
@@ -322,6 +349,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/version", VersionHandler),
             (r"/api/config", ConfigHandler, {"storage": storage}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
+            (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline/status", PipelineStatusHandler, {"storage": storage}),
             (r"/api/pipeline/start", PipelineStartHandler, {"controller": controller, "storage": storage}),
             (r"/api/pipeline/stop", PipelineStopHandler, {"controller": controller}),

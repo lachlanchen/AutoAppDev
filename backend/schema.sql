@@ -13,6 +13,13 @@ create table if not exists chat_messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists inbox_messages (
+  id bigserial primary key,
+  role text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists pipeline_runs (
   id bigserial primary key,
   status text not null,
@@ -23,4 +30,3 @@ create table if not exists pipeline_runs (
   cwd text not null,
   args jsonb not null default '[]'::jsonb
 );
-
