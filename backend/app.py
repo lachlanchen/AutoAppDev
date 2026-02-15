@@ -3,6 +3,7 @@ import json
 import os
 import signal
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +15,8 @@ from .storage import Storage, safe_env
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RUNTIME_DIR = Path(safe_env("AUTOAPPDEV_RUNTIME_DIR", str(REPO_ROOT / "runtime"))).resolve()
-LOG_DIR = RUNTIME_DIR / "logs"
-LOG_DIR.mkdir(parents=True, exist_ok=True)
+RUNTIME_DIR: Path | None = None
+LOG_DIR: Path | None = None
 
 
 def _write_inbox_message(runtime_dir: Path, content: str) -> None:
@@ -69,8 +69,9 @@ class ConfigHandler(BaseHandler):
 
 
 class ChatHandler(BaseHandler):
-    def initialize(self, storage: Storage) -> None:
+    def initialize(self, storage: Storage, runtime_dir: Path) -> None:
         self.storage = storage
+        self.runtime_dir = runtime_dir
 
     async def get(self) -> None:
         limit = int(self.get_query_argument("limit", "50"))
@@ -84,7 +85,7 @@ class ChatHandler(BaseHandler):
             self.write_json({"error": "empty"}, status=400)
             return
         await self.storage.add_chat_message("user", content)
-        _write_inbox_message(RUNTIME_DIR, content)
+        _write_inbox_message(self.runtime_dir, content)
         self.write_json({"ok": True})
 
 
@@ -98,12 +99,12 @@ class PipelineStatusHandler(BaseHandler):
 
 
 class PipelineControl:
-    def __init__(self, storage: Storage):
+    def __init__(self, storage: Storage, runtime_dir: Path, log_dir: Path):
         self.storage = storage
         self.proc: subprocess.Popen | None = None
         self.run_id: int | None = None
-        self.log_path = LOG_DIR / "pipeline.log"
-        self.pause_flag = RUNTIME_DIR / "PAUSE"
+        self.log_path = log_dir / "pipeline.log"
+        self.pause_flag = runtime_dir / "PAUSE"
 
     async def refresh_from_storage(self) -> None:
         st = await self.storage.get_latest_status()
@@ -218,13 +219,16 @@ class PipelineResumeHandler(BaseHandler):
 
 
 class LogsTailHandler(BaseHandler):
+    def initialize(self, log_dir: Path) -> None:
+        self.log_dir = log_dir
+
     async def get(self) -> None:
         name = self.get_query_argument("name", "pipeline")
         n = int(self.get_query_argument("lines", "200"))
         n = max(10, min(2000, n))
         allowed = {
-            "pipeline": LOG_DIR / "pipeline.log",
-            "backend": LOG_DIR / "backend.log",
+            "pipeline": self.log_dir / "pipeline.log",
+            "backend": self.log_dir / "backend.log",
         }
         p = allowed.get(name)
         if not p:
@@ -240,30 +244,59 @@ class LogsTailHandler(BaseHandler):
         self.write_json({"lines": data, "name": name})
 
 
-async def make_app() -> tornado.web.Application:
+def _load_env() -> None:
     load_dotenv(dotenv_path=REPO_ROOT / ".env", override=False)
+
+
+def _compute_paths() -> tuple[Path, Path]:
+    runtime_dir = Path(safe_env("AUTOAPPDEV_RUNTIME_DIR", str(REPO_ROOT / "runtime"))).resolve()
+    log_dir = runtime_dir / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return runtime_dir, log_dir
+
+
+def _require_env() -> None:
+    missing: list[str] = []
+    if not safe_env("DATABASE_URL", "").strip():
+        missing.append("DATABASE_URL")
+    if missing:
+        print(f"ERROR: missing required env: {', '.join(missing)}", file=sys.stderr)
+        print("Hint: cp .env.example .env and set required values (see docs/env.md).", file=sys.stderr)
+        raise SystemExit(2)
+
+
+def _listen_port() -> int:
+    # Prefer AUTOAPPDEV_PORT (current convention), but allow PORT as an alias.
+    raw = safe_env("AUTOAPPDEV_PORT", "").strip() or safe_env("PORT", "8788").strip()
+    try:
+        return int(raw)
+    except Exception:
+        return 8788
+
+
+async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
     host = safe_env("AUTOAPPDEV_HOST", "127.0.0.1")
-    port = int(safe_env("AUTOAPPDEV_PORT", "8788"))
+    port = _listen_port()
     db_url = safe_env("DATABASE_URL", "")
 
-    storage = Storage(database_url=db_url, runtime_dir=RUNTIME_DIR)
+    storage = Storage(database_url=db_url, runtime_dir=runtime_dir)
     await storage.start()
     schema_path = Path(__file__).with_name("schema.sql")
     await storage.ensure_schema(schema_path.read_text("utf-8"))
 
-    controller = PipelineControl(storage=storage)
+    controller = PipelineControl(storage=storage, runtime_dir=runtime_dir, log_dir=log_dir)
 
     app = tornado.web.Application(
         [
             (r"/api/health", HealthHandler),
             (r"/api/config", ConfigHandler, {"storage": storage}),
-            (r"/api/chat", ChatHandler, {"storage": storage}),
+            (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline/status", PipelineStatusHandler, {"storage": storage}),
             (r"/api/pipeline/start", PipelineStartHandler, {"controller": controller, "storage": storage}),
             (r"/api/pipeline/stop", PipelineStopHandler, {"controller": controller}),
             (r"/api/pipeline/pause", PipelinePauseHandler, {"controller": controller}),
             (r"/api/pipeline/resume", PipelineResumeHandler, {"controller": controller}),
-            (r"/api/logs/tail", LogsTailHandler),
+            (r"/api/logs/tail", LogsTailHandler, {"log_dir": log_dir}),
         ],
         debug=True,
     )
@@ -272,18 +305,22 @@ async def make_app() -> tornado.web.Application:
 
 
 def main() -> None:
-    # Redirect tornado logs to file for easier tailing in the PWA.
-    backend_log = (LOG_DIR / "backend.log").open("a", encoding="utf-8")
-    import sys
+    _load_env()
+    _require_env()
+    runtime_dir, log_dir = _compute_paths()
+    global RUNTIME_DIR, LOG_DIR
+    RUNTIME_DIR = runtime_dir
+    LOG_DIR = log_dir
 
+    # Redirect tornado logs to file for easier tailing in the PWA.
+    backend_log = (log_dir / "backend.log").open("a", encoding="utf-8")
     sys.stdout = backend_log  # type: ignore[assignment]
     sys.stderr = backend_log  # type: ignore[assignment]
 
     loop = asyncio.get_event_loop()
-    loop.create_task(make_app())
+    loop.create_task(make_app(runtime_dir=runtime_dir, log_dir=log_dir))
     tornado.ioloop.IOLoop.current().start()
 
 
 if __name__ == "__main__":
     main()
-
