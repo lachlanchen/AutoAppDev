@@ -14,6 +14,7 @@ import tornado.ioloop
 import tornado.web
 
 from .storage import Storage, safe_env
+from .pipeline_parser import ParseError, parse_aaps_v1
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -358,6 +359,31 @@ class ScriptHandler(BaseHandler):
             self.write_json({"error": "not_found"}, status=404)
             return
         self.write_json({"ok": True})
+
+
+class ScriptsParseHandler(BaseHandler):
+    async def post(self) -> None:
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"ok": False, "error": "invalid_body"}, status=400)
+            return
+        script_text = body.get("script_text")
+        if not isinstance(script_text, str):
+            self.write_json({"ok": False, "error": "invalid_script_text"}, status=400)
+            return
+        if len(script_text) > 200_000:
+            self.write_json({"ok": False, "error": "script_too_large"}, status=400)
+            return
+        try:
+            ir = parse_aaps_v1(script_text)
+        except ParseError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        self.write_json({"ok": True, "ir": ir})
 
 
 class ChatHandler(BaseHandler):
@@ -758,6 +784,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/plan", PlanHandler, {"storage": storage}),
             (r"/api/scripts", ScriptsHandler, {"storage": storage}),
             (r"/api/scripts/([0-9]+)", ScriptHandler, {"storage": storage}),
+            (r"/api/scripts/parse", ScriptsParseHandler),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),

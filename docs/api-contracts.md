@@ -166,6 +166,24 @@ Response:
 { "ok": true }
 ```
 
+### POST /api/scripts/parse
+Parses a formatted pipeline script (AAPS v1) into canonical IR (`autoappdev_ir` v1).
+
+Request:
+```json
+{ "script_text": "AUTOAPPDEV_PIPELINE 1\\n\\nTASK {\"id\":\"t1\",\"title\":\"Demo\"}\\n" }
+```
+
+Response:
+```json
+{ "ok": true, "ir": { "kind": "autoappdev_ir", "version": 1, "tasks": [ ... ] } }
+```
+
+Response (error example):
+```json
+{ "ok": false, "error": "invalid_header", "line": 1, "detail": "expected header: AUTOAPPDEV_PIPELINE 1" }
+```
+
 ## Inbox Messages
 The UI refers to “Chat/Inbox”.
 
