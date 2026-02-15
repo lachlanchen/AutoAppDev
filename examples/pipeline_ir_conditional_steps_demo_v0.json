@@ -1,0 +1,81 @@
+{
+  "kind": "autoappdev_ir",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "t_cond_pass",
+      "title": "Conditional_fix_skipped_when_debug_passes",
+      "steps": [
+        {
+          "id": "d1",
+          "title": "Debug_ok",
+          "block": "debug",
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "run",
+              "params": {
+                "cmd": "echo DEBUG_OK"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f1",
+          "title": "Fix_if_needed",
+          "block": "fix",
+          "meta": {
+            "conditional": "on_debug_failure"
+          },
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "run",
+              "params": {
+                "cmd": "echo FIX_RAN_UNEXPECTED"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t_cond_fail",
+      "title": "Conditional_fix_runs_when_debug_fails",
+      "steps": [
+        {
+          "id": "d1",
+          "title": "Debug_fails",
+          "block": "debug",
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "run",
+              "params": {
+                "cmd": "echo DEBUG_FAIL && false"
+              }
+            }
+          ]
+        },
+        {
+          "id": "f1",
+          "title": "Fix_expected",
+          "block": "fix",
+          "meta": {
+            "conditional": "on_debug_failure"
+          },
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "run",
+              "params": {
+                "cmd": "echo FIX_RAN_EXPECTED"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

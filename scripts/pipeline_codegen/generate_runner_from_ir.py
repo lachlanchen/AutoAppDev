@@ -107,6 +107,7 @@ def _generate_body(ir: dict[str, Any]) -> str:
         lines.append(f"export AUTOAPPDEV_CTX_TASK_TITLE={_bash_sq(t_title)}")
         lines.append(f"export AUTOAPPDEV_CTX_TASK_ACCEPTANCE={_bash_sq(t_acceptance)}")
         lines.append(f"log {_bash_sq(f'TASK {t_id}: {t_title}')}")
+        lines.append("AUTOAPPDEV_TASK_LAST_DEBUG_FAILED=0")
 
         steps = _as_list(t.get("steps"), f"tasks[{t_i}].steps")
         for s_i, s_any in enumerate(steps):
@@ -121,15 +122,43 @@ def _generate_body(ir: dict[str, Any]) -> str:
             lines.append(f"export AUTOAPPDEV_CTX_STEP_BLOCK={_bash_sq(s_block)}")
             lines.append(f"log {_bash_sq(f'STEP {s_id} ({s_block}): {s_title}')}")
 
+            s_meta_any = s.get("meta")
+            if s_meta_any is None:
+                s_meta = {}
+            else:
+                s_meta = s_meta_any
+            if not isinstance(s_meta, dict):
+                _die(f"invalid tasks[{t_i}].steps[{s_i}].meta (expected object)")
+
+            s_cond_any = s_meta.get("conditional")
+            if s_cond_any is None:
+                s_cond = ""
+            elif isinstance(s_cond_any, str):
+                s_cond = s_cond_any
+            else:
+                _die(f"invalid tasks[{t_i}].steps[{s_i}].meta.conditional (expected string)")
+
+            if s_cond:
+                lines.append(f"if step_should_run {_bash_sq(s_cond)}; then")
+
             actions = _as_list(s.get("actions"), f"tasks[{t_i}].steps[{s_i}].actions")
+
+            in_debug = s_block == "debug"
+            if in_debug:
+                if s_cond:
+                    lines.append("  step_failed=0")
+                else:
+                    lines.append("step_failed=0")
+
             for a_i, a_any in enumerate(actions):
                 a = _as_dict(a_any, f"tasks[{t_i}].steps[{s_i}].actions[{a_i}]")
                 a_id = _req_str(a, "id", f"tasks[{t_i}].steps[{s_i}].actions[{a_i}]")
                 a_kind = _req_str(a, "kind", f"tasks[{t_i}].steps[{s_i}].actions[{a_i}]")
 
-                lines.append(f"# ACTION {a_id}: kind={_comment_safe(a_kind)}")
-                lines.append(f"export AUTOAPPDEV_CTX_ACTION_ID={_bash_sq(a_id)}")
-                lines.append(f"export AUTOAPPDEV_CTX_ACTION_KIND={_bash_sq(a_kind)}")
+                pfx = "  " if s_cond else ""
+                lines.append(f"{pfx}# ACTION {a_id}: kind={_comment_safe(a_kind)}")
+                lines.append(f"{pfx}export AUTOAPPDEV_CTX_ACTION_ID={_bash_sq(a_id)}")
+                lines.append(f"{pfx}export AUTOAPPDEV_CTX_ACTION_KIND={_bash_sq(a_kind)}")
 
                 params = a.get("params") or {}
                 if not isinstance(params, dict):
@@ -139,12 +168,15 @@ def _generate_body(ir: dict[str, Any]) -> str:
                     text = params.get("text")
                     if not isinstance(text, str):
                         _die(f"missing/invalid params.text for note action {t_id}/{s_id}/{a_id}")
-                    lines.append(f"action_note {_bash_sq(text)}")
+                    lines.append(f"{pfx}action_note {_bash_sq(text)}")
                 elif a_kind == "run":
                     cmd = params.get("cmd")
                     if not isinstance(cmd, str):
                         _die(f"missing/invalid params.cmd for run action {t_id}/{s_id}/{a_id}")
-                    lines.append(f"action_run {_bash_sq(cmd)}")
+                    if in_debug:
+                        lines.append(f"{pfx}if ! action_run {_bash_sq(cmd)}; then step_failed=1; fi")
+                    else:
+                        lines.append(f"{pfx}action_run {_bash_sq(cmd)}")
                 elif a_kind == "codex_exec":
                     prompt = params.get("prompt")
                     if not isinstance(prompt, str):
@@ -161,9 +193,25 @@ def _generate_body(ir: dict[str, Any]) -> str:
                             # Keep positional args stable: model then reasoning.
                             parts.append(_bash_sq(""))
                         parts.append(_bash_sq(reasoning))
-                    lines.append(" ".join(parts))
+                    if in_debug:
+                        lines.append(f"{pfx}if ! {' '.join(parts)}; then step_failed=1; fi")
+                    else:
+                        lines.append(f"{pfx}{' '.join(parts)}")
                 else:
                     _die(f"unsupported action kind {a_kind!r} for action {t_id}/{s_id}/{a_id}")
+
+            if in_debug:
+                if s_cond:
+                    lines.append('  AUTOAPPDEV_TASK_LAST_DEBUG_FAILED="$step_failed"')
+                else:
+                    lines.append('AUTOAPPDEV_TASK_LAST_DEBUG_FAILED="$step_failed"')
+
+            if s_cond:
+                lines.append("else")
+                lines.append(
+                    f"  log {_bash_sq(f'SKIP STEP {s_id} ({s_block}): conditional={s_cond}')}"
+                )
+                lines.append("fi")
 
     # Indent for inclusion inside the template's main() block.
     indented = []

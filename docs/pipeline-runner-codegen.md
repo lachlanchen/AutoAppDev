@@ -80,3 +80,14 @@ Supported keys:
 Behavior:
 - Unknown placeholder keys are an error (fail fast).
 - `AUTOAPPDEV_CODEX_DISABLE=1` skips invoking `codex` and prints the substituted prompt (useful for smoke tests).
+
+## Conditional Steps (v0)
+Generated runners may interpret `STEP.meta.conditional` (engine convention) to decide whether to run a step.
+
+Supported conditionals:
+- `on_debug_failure`
+  - Meaning: run the step only if the most recent `STEP.block="debug"` in the same task had any action exit non-zero.
+  - Runner behavior: debug-step action failures are captured so the runner can continue to a conditional fix step.
+
+Behavior:
+- Unknown conditional values cause the runner to exit non-zero (fail fast).

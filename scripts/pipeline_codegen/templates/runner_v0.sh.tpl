@@ -36,6 +36,25 @@ wait_if_paused() {
   fi
 }
 
+AUTOAPPDEV_TASK_LAST_DEBUG_FAILED=0
+
+step_should_run() {
+  local cond="${1:-}"
+  if [ -z "$cond" ]; then
+    return 0
+  fi
+
+  case "$cond" in
+    on_debug_failure)
+      [ "${AUTOAPPDEV_TASK_LAST_DEBUG_FAILED:-0}" = "1" ]
+      ;;
+    *)
+      echo "[runner] unknown step conditional: $cond" >&2
+      exit 2
+      ;;
+  esac
+}
+
 subst_placeholders() {
   python3 - 3<&0 <<'PY'
 import os
