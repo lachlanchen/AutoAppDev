@@ -1,0 +1,22 @@
+1	define_controller_mvp_scope	docs	Define MVP controller scope	Add a short section to docs listing required screens (blocks, chat, controls, logs, settings) and the minimal backend APIs; doc is readable in <5 minutes
+2	standardize_env_conventions	docs	Standardize .env conventions	Docs specify required env vars (DATABASE_URL or PG* vars, PORT, SECRET_KEY) and how to copy from .env.example; includes one command to validate env
+3	add_env_loader_backend	backend	Backend .env loading	Backend loads .env in dev (without committing secrets); starting backend without DB prints a clear error listing missing vars
+4	postgres_connection_smoketest	backend	Postgres wiring + smoke test	A CLI or startup check can connect to Postgres using env config and run `SELECT 1`; fails fast with actionable error
+5	apply_schema_sql_migration	backend	Apply schema.sql to DB	Add a small script/command to apply `backend/schema.sql` to the configured DB; running it twice is idempotent or clearly warns without crashing
+6	storage_layer_pg_pool	backend	Storage uses a PG pool	Storage module exposes a single shared connection/pool and simple query helpers; backend starts and can fetch server time from DB
+7	health_and_version_endpoints	backend	Health + version endpoints	`GET /api/health` returns ok with DB connectivity status; `GET /api/version` returns app name + git-less build/version string
+8	define_api_contracts	docs	API contract doc	Docs list request/response shapes for: inbox messages, pipeline controls, logs, and settings; includes example JSON payloads
+9	inbox_messages_table_and_api	backend	Chat/inbox persistence API	Create DB table for inbox messages; implement `GET /api/inbox` (latest N) and `POST /api/inbox` (create) with basic validation
+10	pipeline_state_table_and_api	backend	Pipeline state API	Create DB table for pipeline state; implement `GET /api/pipeline` to return state (stopped/running/paused) and timestamps
+11	pipeline_control_endpoints	backend	Start/stop/pause/resume endpoints	Implement `POST /api/pipeline/start|stop|pause|resume`; state transitions are enforced (e.g. cannot pause if stopped) and return 400 with reason on invalid transitions
+12	run_pipeline_subprocess_manager	backend	Subprocess manager for pipeline	Backend can start the driver/pipeline as a subprocess, stop it, and detect exit; no orphan processes after stop
+13	log_capture_and_storage	backend	Capture logs for viewing	Backend captures subprocess stdout/stderr into a rolling buffer and optionally persists last N lines in DB; `GET /api/logs?since=<id>` returns incremental lines
+14	pwa_shell_light_theme	pwa	Light theme PWA shell	PWA loads offline-friendly shell with a clean light theme; includes top bar, left blocks palette, center workspace, right inspector/logs panel
+15	pwa_api_client_and_status	pwa	PWA API client + status badges	PWA has a small API client module; shows health, DB status, and pipeline state badge; updates at least every 2 seconds or via push
+16	pwa_chat_inbox_ui	pwa	Chat/inbox UI	PWA shows inbox list and compose box; sending a message posts to backend and appears in list without full page reload
+17	scratch_like_block_palette	pwa	Block palette + draggable blocks	PWA renders a minimal block palette (3-6 blocks) and supports dragging blocks into a workspace; workspace serializes to JSON
+18	blocks_to_plan_payload	pwa	Convert blocks to pipeline plan payload	Workspace JSON can be transformed into a backend-recognized plan payload; add a UI button that posts the plan to backend and gets an ack
+19	controls_buttons_wiring	pwa	Start/stop/pause/resume buttons	Buttons call the pipeline control endpoints; UI disables invalid actions based on current state and shows error text on 400
+20	logs_panel_incremental_view	pwa	Logs view panel	Logs panel polls or streams incremental logs and auto-scrolls with a pause toggle; user can copy selected text
+21	settings_model_agent_selection	pwa	Settings for agent/model selection	Settings panel lets user pick agent/model options (persisted via backend); selection survives reload
+22	end_to_end_happy_path_demo	docs	End-to-end demo checklist	Docs include a deterministic manual test: start backend, apply schema, open PWA, send inbox msg, drag blocks, start pipeline, see logs, pause/resume, stop
