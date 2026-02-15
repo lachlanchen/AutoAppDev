@@ -281,15 +281,21 @@ if [ -z "$session_id" ]; then
 	- Backend: Python Tornado. Database: PostgreSQL. Secrets in .env.
 	- Frontend: PWA (static HTML/CSS/JS). Default theme: light.
 
-	Core missing module (must be built):
-	- **Pipeline Script Visualization + Writer**
-	  - Define a standardized, formatted pipeline script (human-editable) that represents:
-	    TASKS -> STEPS -> ACTIONS (+ action definitions, tools/skills, models, languages, materials/paths, logs, locks, acceptance).
-	  - Support "rounds" / meta-loops:
-	    For N_ROUND: generate/refine tasks from a goal + shared context, then for each task run a standard action template.
-	  - Import an existing pipeline shell script (written by other agents/tools) and parse it into
-	    the standardized IR, then visualize it as Scratch-like blocks.
-	  - Export blocks/IR back into the standardized formatted script and generate a runnable shell
+		Core missing module (must be built):
+		- **Pipeline Script Visualization + Writer**
+		  - Define a standardized, formatted pipeline script (human-editable) that represents:
+		    TASKS -> STEPS -> ACTIONS (+ action definitions, tools/skills, models, languages, materials/paths, logs, locks, acceptance).
+		  - The formatted script must feel **Scratch-like** in text form:
+		    - Optional numbering prefixes + indentation for readability (still deterministically parseable).
+		    - Minimal placeholder syntax to pass context/outputs between actions (e.g. {{task.title}}, {{task.acceptance}}, {{runtime_dir}}).
+		  - Control-flow must be expressible and executable:
+		    - for-loops via meta_round_v0 (N_ROUND + task list artifact + per-task template).
+		    - if/else via STEP.meta.conditional (e.g. on_debug_failure) and runner state.
+		  - Support "rounds" / meta-loops:
+		    For N_ROUND: generate/refine tasks from a goal + shared context, then for each task run a standard action template.
+		  - Import an existing pipeline shell script (written by other agents/tools) and parse it into
+		    the standardized IR, then visualize it as Scratch-like blocks.
+		  - Export blocks/IR back into the standardized formatted script and generate a runnable shell
 	    driver script (Codex non-interactive steps, reusable actions, skills/tools).
 	  - Round-trip conversion should be a first-class feature (script <-> blocks).
 
