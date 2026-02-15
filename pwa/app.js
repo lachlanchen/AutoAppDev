@@ -257,6 +257,12 @@ function boot() {
   bindTabs();
   bindControls();
 
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js").catch((e) => {
+      console.warn("service worker registration failed", e);
+    });
+  }
+
   const savedTheme = localStorage.getItem("autoappdev_theme");
   setTheme(savedTheme === "dark" ? "dark" : "light");
 
@@ -275,4 +281,3 @@ function boot() {
 }
 
 boot();
-
