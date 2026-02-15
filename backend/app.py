@@ -15,6 +15,7 @@ import tornado.web
 
 from .storage import Storage, safe_env
 from .pipeline_parser import ParseError, parse_aaps_v1
+from .pipeline_shell_import import ShellImportError, import_shell_annotated_to_ir
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -384,6 +385,39 @@ class ScriptsParseHandler(BaseHandler):
             self.write_json(e.to_dict(), status=400)
             return
         self.write_json({"ok": True, "ir": ir})
+
+
+class ScriptsImportShellHandler(BaseHandler):
+    async def post(self) -> None:
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"ok": False, "error": "invalid_body"}, status=400)
+            return
+        shell_text = body.get("shell_text")
+        if not isinstance(shell_text, str):
+            self.write_json({"ok": False, "error": "invalid_shell_text"}, status=400)
+            return
+        if len(shell_text) > 200_000:
+            self.write_json({"ok": False, "error": "shell_too_large"}, status=400)
+            return
+        try:
+            res = import_shell_annotated_to_ir(shell_text)
+        except ShellImportError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        self.write_json(
+            {
+                "ok": True,
+                "script_format": "aaps",
+                "script_text": res.get("aaps_text") or "",
+                "ir": res.get("ir") or {},
+                "warnings": res.get("warnings") or [],
+            }
+        )
 
 
 class ChatHandler(BaseHandler):
@@ -785,6 +819,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/scripts", ScriptsHandler, {"storage": storage}),
             (r"/api/scripts/([0-9]+)", ScriptHandler, {"storage": storage}),
             (r"/api/scripts/parse", ScriptsParseHandler),
+            (r"/api/scripts/import-shell", ScriptsImportShellHandler),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),

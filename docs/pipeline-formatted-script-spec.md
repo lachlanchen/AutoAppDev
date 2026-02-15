@@ -71,6 +71,25 @@ Validation:
 - `params` (object, optional): action parameters.
 - `meta` (object, optional)
 
+### 1.7 Shell Annotations v0 (Import Helper)
+To import from a `.sh` file without parsing bash, embed AAPS lines as structured comments:
+
+```bash
+# AAPS: AUTOAPPDEV_PIPELINE 1
+# AAPS:
+# AAPS: TASK {"id":"t1","title":"Demo"}
+# AAPS: STEP {"id":"s1","title":"Plan","block":"plan"}
+# AAPS: ACTION {"id":"a1","kind":"noop"}
+```
+
+Extraction rule:
+- For each line matching `^\s*#\s*AAPS:\s*(.*)$`, capture the remainder as one AAPS line.
+- Join captured lines with `\n` to produce the AAPS `script_text`, then parse as AAPS v1.
+
+Limitations:
+- Unannotated shell code is ignored.
+- No shell parsing or execution; only the embedded AAPS is validated.
+
 ## 2) Canonical IR Schema (autoappdev_ir v1)
 
 ### 2.1 Top-Level Shape
@@ -170,4 +189,3 @@ ACTION {"id":"a1","kind":"note","params":{"text":"Commit/push is handled by driv
 
 ### 4.2 Equivalent IR (`examples/pipeline_ir_v1.json`)
 See `examples/pipeline_ir_v1.json` (valid JSON).
-

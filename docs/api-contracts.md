@@ -184,6 +184,34 @@ Response (error example):
 { "ok": false, "error": "invalid_header", "line": 1, "detail": "expected header: AUTOAPPDEV_PIPELINE 1" }
 ```
 
+### POST /api/scripts/import-shell
+Best-effort import from an annotated shell script into canonical IR.
+
+Notes:
+- Only `# AAPS:` comment lines are extracted (no bash parsing).
+- On error, `line` refers to the original **shell** line number.
+
+Request:
+```json
+{ "shell_text": "#!/usr/bin/env bash\\n# AAPS: AUTOAPPDEV_PIPELINE 1\\n# AAPS: TASK {\"id\":\"t1\",\"title\":\"Demo\"}\\n" }
+```
+
+Response:
+```json
+{
+  "ok": true,
+  "script_format": "aaps",
+  "script_text": "AUTOAPPDEV_PIPELINE 1\\n\\nTASK {\"id\":\"t1\",\"title\":\"Demo\"}\\n",
+  "ir": { "kind": "autoappdev_ir", "version": 1, "tasks": [ ... ] },
+  "warnings": []
+}
+```
+
+Response (error example):
+```json
+{ "ok": false, "error": "missing_annotations", "line": 1, "detail": "expected at least one \"# AAPS:\" annotation line" }
+```
+
 ## Inbox Messages
 The UI refers to “Chat/Inbox”.
 
