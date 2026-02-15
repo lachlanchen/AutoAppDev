@@ -37,6 +37,8 @@ const els = {
   scriptParse: document.getElementById("script-parse"),
   scriptImportShell: document.getElementById("script-import-shell"),
   scriptFromBlocks: document.getElementById("script-from-blocks"),
+  scriptDownloadAaps: document.getElementById("script-download-aaps"),
+  scriptDownloadRunner: document.getElementById("script-download-runner"),
   scriptMsg: document.getElementById("script-msg"),
 };
 
@@ -336,6 +338,132 @@ function fillScriptFromBlocks() {
   setScriptMsg(`ok: generated script from ${program.length} block(s)`);
 }
 
+function sanitizeFileBase(name) {
+  const raw = String(name || "").trim().toLowerCase();
+  const cleaned = raw
+    .replace(/[^a-z0-9_-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 60);
+  return cleaned || "program";
+}
+
+function downloadTextFile({ filename, content, mime }) {
+  const fn = String(filename || "download.txt");
+  const body = String(content || "");
+  const type = String(mime || "text/plain") + ";charset=utf-8";
+  const blob = new Blob([body], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fn;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function aapsToShellAnnotations(aapsText) {
+  const lines = String(aapsText || "").replace(/\r\n?/g, "\n").split("\n");
+  return lines.map((l) => (l ? `# AAPS: ${l}` : "# AAPS:")).join("\n");
+}
+
+function generateRunnerScript(prog, { title, aapsText } = {}) {
+  const steps = Array.isArray(prog) ? prog : [];
+  const safeTitle = String(title || "Program").replace(/\"/g, '\\"');
+  const embedded = aapsToShellAnnotations(String(aapsText || ""));
+  const out = [];
+  out.push("#!/usr/bin/env bash");
+  out.push("set -euo pipefail");
+  out.push("");
+  out.push('ROOT_DIR="$(pwd)"');
+  out.push('RUNTIME_DIR="${AUTOAPPDEV_RUNTIME_DIR:-$ROOT_DIR/runtime}"');
+  out.push('PAUSE_FLAG="$RUNTIME_DIR/PAUSE"');
+  out.push("");
+  out.push("cleanup() {");
+  out.push('  echo "[autoappdev] received stop signal, exiting"');
+  out.push("  exit 0");
+  out.push("}");
+  out.push("trap cleanup INT TERM");
+  out.push("");
+  out.push("pause_if_needed() {");
+  out.push('  if [ -f "$PAUSE_FLAG" ]; then');
+  out.push('    echo "[autoappdev] paused (remove $PAUSE_FLAG to resume)"');
+  out.push('    while [ -f "$PAUSE_FLAG" ]; do');
+  out.push("      sleep 0.5");
+  out.push("    done");
+  out.push('    echo "[autoappdev] resumed"');
+  out.push("  fi");
+  out.push("}");
+  out.push("");
+  out.push('mkdir -p "$RUNTIME_DIR"');
+  out.push("");
+  out.push('echo "[autoappdev] runner starting"');
+  out.push(`echo "[autoappdev] title: ${safeTitle}"`);
+  out.push('echo "[autoappdev] time: $(date -Iseconds)"');
+  out.push('echo "[autoappdev] runtime_dir: $RUNTIME_DIR"');
+  out.push(`echo "[autoappdev] steps: ${steps.length}"`);
+  out.push("");
+
+  if (embedded.trim()) {
+    out.push("# Embedded AAPS v1 (importable via /api/scripts/import-shell):");
+    out.push(embedded);
+    out.push("# End embedded AAPS");
+    out.push("");
+  }
+
+  steps.forEach((b, idx) => {
+    const block = String((b && b.type) || "").trim();
+    const meta = BLOCK_META[block] || { label: block || `Step ${idx + 1}` };
+    const label = String(meta.label || block || `Step ${idx + 1}`);
+    out.push(`echo \"[autoappdev] step ${idx + 1}/${steps.length}: ${label} (${block || "unknown"})\"`);
+    out.push("pause_if_needed");
+    if (block === "commit_push") {
+      out.push('echo "[autoappdev] note: commit/push is not performed by this generated runner"');
+      out.push("sleep 1");
+    } else {
+      out.push("sleep 1");
+    }
+    out.push("");
+  });
+
+  out.push('echo "[autoappdev] done"');
+  out.push("");
+  return out.join("\n");
+}
+
+function exportAapsFile() {
+  if (!els.scriptText) return;
+  if (!program.length) {
+    setScriptMsg("no blocks on canvas", { error: true });
+    return;
+  }
+  const titleRaw = window.prompt("Script title?", "Program");
+  if (titleRaw === null) return;
+  const title = String(titleRaw).trim() || "Program";
+  const aaps = programToAapsScript(program, title);
+  els.scriptText.value = aaps;
+  const base = sanitizeFileBase(title);
+  downloadTextFile({ filename: `${base}.aaps`, content: aaps, mime: "text/plain" });
+  setScriptMsg(`ok: downloaded ${base}.aaps`);
+}
+
+function exportRunnerFile() {
+  if (!program.length) {
+    setScriptMsg("no blocks on canvas", { error: true });
+    return;
+  }
+  const titleRaw = window.prompt("Runner title?", "program-runner");
+  if (titleRaw === null) return;
+  const title = String(titleRaw).trim() || "program-runner";
+  const aaps = programToAapsScript(program, title);
+  if (els.scriptText) els.scriptText.value = aaps;
+  const runner = generateRunnerScript(program, { title, aapsText: aaps });
+  const base = sanitizeFileBase(title);
+  downloadTextFile({ filename: `${base}.sh`, content: runner, mime: "text/x-shellscript" });
+  setScriptMsg(`ok: downloaded ${base}.sh (run with: bash ${base}.sh)`);
+}
+
 async function sendPlan() {
   if (!program.length) {
     els.export.hidden = false;
@@ -614,6 +742,12 @@ function bindControls() {
   }
   if (els.scriptFromBlocks) {
     els.scriptFromBlocks.addEventListener("click", fillScriptFromBlocks);
+  }
+  if (els.scriptDownloadAaps) {
+    els.scriptDownloadAaps.addEventListener("click", exportAapsFile);
+  }
+  if (els.scriptDownloadRunner) {
+    els.scriptDownloadRunner.addEventListener("click", exportRunnerFile);
   }
   if (els.scriptFile) {
     els.scriptFile.addEventListener("change", async () => {

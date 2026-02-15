@@ -84,6 +84,13 @@ Optional shell import:
 Expected:
 - Blocks appear on the canvas; the textarea is replaced with the extracted AAPS script.
 
+Optional export:
+1. Click `Download AAPS` and confirm a `.aaps` file downloads.
+2. Click `Download Runner` and confirm a `.sh` file downloads.
+
+Expected:
+- The downloaded runner contains pause logic using `runtime/PAUSE` and embedded `# AAPS:` lines.
+
 ## 6) Start Pipeline
 1. Click **Start** in the top bar.
 2. Watch the Status panel.
