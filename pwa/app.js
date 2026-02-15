@@ -492,9 +492,11 @@ function programToAapsScript(prog, title = "Program") {
   const task = { id: "t1", title: String(title || "Program") };
   const meta = workspaceTaskMeta();
   if (meta) task.meta = meta;
+  lines.push("# 1 Task");
   lines.push(`TASK  ${JSON.stringify(task)}`);
   lines.push("");
   (Array.isArray(prog) ? prog : []).forEach((b, idx) => {
+    const stepNo = idx + 1;
     const type = b && typeof b === "object" ? String(b.type || "") : "";
     const stepTitle = canonicalBlockTitle(type, idx);
     let block = type;
@@ -514,8 +516,10 @@ function programToAapsScript(prog, title = "Program") {
       const ref = normalizeActionRef(b && b.action_ref);
       if (ref) action.meta = { action_ref: ref };
     }
-    lines.push(`STEP  ${JSON.stringify({ id: `s${idx + 1}`, title: stepTitle, block })}`);
-    lines.push(`ACTION ${JSON.stringify(action)}`);
+    lines.push(`# 1.${stepNo} Step`);
+    lines.push(`  STEP  ${JSON.stringify({ id: `s${stepNo}`, title: stepTitle, block })}`);
+    lines.push(`# 1.${stepNo}.1 Action`);
+    lines.push(`    ACTION ${JSON.stringify(action)}`);
     lines.push("");
   });
   return lines.join("\n").trimEnd() + "\n";
