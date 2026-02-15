@@ -9,6 +9,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUNTIME_DIR="${AUTOAPPDEV_RUNTIME_DIR:-$ROOT_DIR/runtime}"
+export AUTOAPPDEV_RUNTIME_DIR_RESOLVED="$RUNTIME_DIR"
 LOG_DIR="$RUNTIME_DIR/logs"
 PAUSE_FLAG="$RUNTIME_DIR/PAUSE"
 
@@ -35,6 +36,41 @@ wait_if_paused() {
   fi
 }
 
+subst_placeholders() {
+  python3 - <<'PY'
+import os
+import re
+import sys
+
+text = sys.stdin.read()
+
+mapping = {
+    "runtime_dir": os.environ.get("AUTOAPPDEV_RUNTIME_DIR_RESOLVED", ""),
+    "task.id": os.environ.get("AUTOAPPDEV_CTX_TASK_ID", ""),
+    "task.title": os.environ.get("AUTOAPPDEV_CTX_TASK_TITLE", ""),
+    "task.acceptance": os.environ.get("AUTOAPPDEV_CTX_TASK_ACCEPTANCE", ""),
+    "step.id": os.environ.get("AUTOAPPDEV_CTX_STEP_ID", ""),
+    "step.title": os.environ.get("AUTOAPPDEV_CTX_STEP_TITLE", ""),
+    "step.block": os.environ.get("AUTOAPPDEV_CTX_STEP_BLOCK", ""),
+    "action.id": os.environ.get("AUTOAPPDEV_CTX_ACTION_ID", ""),
+    "action.kind": os.environ.get("AUTOAPPDEV_CTX_ACTION_KIND", ""),
+}
+
+pattern = re.compile(r"\\{\\{\\s*([^{}]+?)\\s*\\}\\}")
+
+
+def repl(m: re.Match[str]) -> str:
+    key = m.group(1).strip()
+    if key in mapping:
+        return mapping[key]
+    sys.stderr.write(f"[runner] unknown placeholder key: {key!r}\\n")
+    raise SystemExit(2)
+
+
+sys.stdout.write(pattern.sub(repl, text))
+PY
+}
+
 action_note() {
   local text="${1:-}"
   wait_if_paused
@@ -44,6 +80,7 @@ action_note() {
 action_run() {
   local cmd="${1:-}"
   wait_if_paused
+  cmd="$(printf '%s' "$cmd" | subst_placeholders)"
   log "RUN: $cmd"
   bash -lc "$cmd"
 }
@@ -87,11 +124,7 @@ action_codex_exec() {
   local reasoning="${3:-$CODEX_REASONING_DEFAULT}"
 
   wait_if_paused
-
-  if ! command -v codex >/dev/null 2>&1; then
-    echo "[runner] codex not found on PATH" >&2
-    exit 1
-  fi
+  prompt="$(printf '%s' "$prompt" | subst_placeholders)"
 
   CODEX_ACTION_COUNTER=$((CODEX_ACTION_COUNTER + 1))
   local n="$CODEX_ACTION_COUNTER"
@@ -105,6 +138,17 @@ action_codex_exec() {
   fi
 
   printf '%s\n' "$prompt" > "$prompt_file"
+
+  if [ "${AUTOAPPDEV_CODEX_DISABLE:-0}" = "1" ]; then
+    log "CODEX(disabled): wrote prompt to $prompt_file"
+    cat "$prompt_file"
+    return 0
+  fi
+
+  if ! command -v codex >/dev/null 2>&1; then
+    echo "[runner] codex not found on PATH" >&2
+    exit 1
+  fi
 
   local -a cmd
   if [ -n "$sid" ]; then
