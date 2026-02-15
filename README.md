@@ -5,8 +5,8 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T10:49:55Z
-- Phase commit: `Selfdev: 22 end_to_end_happy_path_demo plan`
+- Updated: 2026-02-15T10:51:13Z
+- Phase commit: `Selfdev: 22 end_to_end_happy_path_demo work`
 - Progress: 21 / 34 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
@@ -31,6 +31,7 @@ The controller app aims to embody the same concepts as Scratch-like blocks/actio
 - `docs/auto-development-guide.md`: Bilingual (EN/ZH) philosophy and requirements for a long-running, resumable auto-development agent.
 - `docs/ORDERING_RATIONALE.md`: Example rationale for sequencing screenshot-driven steps.
 - `docs/controller-mvp-scope.md`: Controller MVP scope (screens + minimal APIs).
+- `docs/end-to-end-demo-checklist.md`: Deterministic manual end-to-end demo checklist (backend + PWA happy path).
 - `docs/env.md`: Environment variables (.env) conventions.
 - `docs/api-contracts.md`: API request/response contracts for the controller.
 - `scripts/app-auto-development.sh`: The linear pipeline driver (plan -> backend -> PWA -> Android -> iOS -> review -> summary), with resume/state support.
