@@ -262,14 +262,31 @@ if [ -z "$session_id" ]; then
 	High-level product goal (AutoAppDev app):
 	- Build a Scratch-like PWA to control and observe a long-running auto-development pipeline.
 	- Provide start/stop/pause/resume + settings (agent SDK + LLM/vision models).
-	- Provide a persistent chat/inbox to inject guidance into a running pipeline.
+	- Provide a persistent chat/inbox for user -> pipeline guidance, plus a way for pipelines to report back
+	  (outbox/messages/logs) via HTTP/DB and/or files.
+	- Make **Actions** first-class and editable:
+	  - Each ACTION can be defined as:
+	    - prompt-based: (agent SDK like Codex) + (model) + (prompt template) + (allowed tools/skills)
+	    - command-based: shell script / binary / other tool invocation
+	    - hybrid: Codex runs a script/bin as part of the action with strict guardrails
+	  - Users can edit actions in the UI (prompts, toolchains, skills, scripts used) and reuse them across pipelines.
+	- Make **Workspace / Materials / Shared Context** first-class:
+	  - Each pipeline/workspace can point at a materials folder and a shared context file(s) that all tasks can use.
+	  - These paths must follow a standard workspace contract and be safe (no arbitrary path writes).
+	- Make **Multilingual** support first-class:
+	  - AutoAppDev UI supports multiple languages and can switch at runtime.
+	  - Actions can include a language parameter and/or language-specific prompt variants.
+	  - Default language pack: zh-Hans (Chinese Simplified), zh-Hant (Chinese Traditional), en, ja, ko, vi, ar, fr, es.
+	  - Include a standard pipeline action for translation/localization that runs before summary/log steps by default.
 	- Backend: Python Tornado. Database: PostgreSQL. Secrets in .env.
 	- Frontend: PWA (static HTML/CSS/JS). Default theme: light.
 
 	Core missing module (must be built):
 	- **Pipeline Script Visualization + Writer**
 	  - Define a standardized, formatted pipeline script (human-editable) that represents:
-	    TASKS -> STEPS -> ACTIONS (+ tools, models, materials/paths, logs, locks, acceptance).
+	    TASKS -> STEPS -> ACTIONS (+ action definitions, tools/skills, models, languages, materials/paths, logs, locks, acceptance).
+	  - Support "rounds" / meta-loops:
+	    For N_ROUND: generate/refine tasks from a goal + shared context, then for each task run a standard action template.
 	  - Import an existing pipeline shell script (written by other agents/tools) and parse it into
 	    the standardized IR, then visualize it as Scratch-like blocks.
 	  - Export blocks/IR back into the standardized formatted script and generate a runnable shell
@@ -281,6 +298,8 @@ if [ -z "$session_id" ]; then
 	  - input materials, user interactions, outputs, docs, references, scripts, tools, logs
 	  - place to store generated apps: auto-apps/
 	  - task management and resume state (DB-backed where possible)
+	  - action registry (prompt- and command-based actions) + safe execution constraints
+	  - multilingual language packs + per-workspace language defaults
 
 	Important clarification (do not confuse two "pipelines"):
 	- This driver script's development loop (plan -> work -> debug/fix -> summary/log -> commit/push)
@@ -292,9 +311,9 @@ if [ -z "$session_id" ]; then
 	- Work only inside this repository ($ROOT_DIR).
 	- Every step is **small** and **linear**. No parallel execution between steps.
 	- Each \`codex exec\` call completes one small phase and then exits cleanly.
-- Do not leave behind background processes when a phase ends.
-- Do NOT run git commands (\`git add/commit/push\`). This driver script will commit+push after each phase.
-- If you need to communicate what changed, write it into the phase notes file; the driver will commit.
+	- Do not leave behind background processes when a phase ends.
+	- Do NOT run git commands (\`git add/commit/push\`). This driver script will commit+push after each phase.
+	- If you need to communicate what changed, write it into the phase notes file; the driver will commit.
 
 Important:
 - For this initialization step: do NOT run commands; do NOT read/write files.
@@ -340,6 +359,10 @@ TSV format (NO header, 5 columns):
 	Rules:
 	- Tasks must be small and ordered from global-to-local.
 	- Include explicit tasks for: Postgres wiring, .env handling, light theme PWA, scratch-like blocks, chat/inbox, pipeline start/stop/pause, logs view.
+	- Include explicit tasks for:
+	  - Action registry/editor (prompt actions + command/script/bin actions + hybrid actions) with guardrails.
+	  - Workspace/materials/shared-context configuration (standard contract; safe paths).
+	  - Multilingual UI + language packs + language-aware actions (default languages listed in init prompt).
 	- MUST include explicit tasks for the **pipeline script visualization + writer** module:
 	  - Define standardized formatted script + IR schema (docs + code).
 	  - Parse existing pipeline shell scripts into IR (best-effort; with clear limitations).
@@ -454,7 +477,17 @@ for row in "${tasks[@]}"; do
 	Overall goal:
 	- Build AutoAppDev controller (Scratch-like PWA + Tornado backend + Postgres).
 	- Default theme: light.
-	- Provide chat/inbox, pipeline control, logs, and block-based task builder.
+	- Provide chat/inbox + pipeline control + logs + block-based task builder.
+	- Provide a configurable action/skill toolchain:
+	  - Actions can be prompt-based (agent+model+prompt), command/script/bin-based, or hybrid.
+	  - Actions must be editable in the UI and reusable across pipelines.
+	- Provide workspace/materials/shared-context support:
+	  - Each pipeline/workspace can reference materials folder(s) and shared context visible to all tasks.
+	  - Follow a standard workspace contract and enforce safe paths (no arbitrary path writes).
+	- Provide multilingual support in AutoAppDev itself and in actions:
+	  - UI language switching.
+	  - Actions can be language-aware; default languages: zh-Hans, zh-Hant, en, ja, ko, vi, ar, fr, es.
+	  - Include translation/localization action before summary/log steps by default in pipeline templates.
 	- Build the pipeline script visualization + writer module (script <-> IR <-> blocks):
 	  - standard formatted script (TASKS -> STEPS -> ACTIONS)
 	  - import/parse existing pipeline shell scripts into IR
@@ -466,6 +499,7 @@ for row in "${tasks[@]}"; do
 
 	Runtime directories (design targets):
 	- runtime/inbox/ (user messages for pipeline)
+	- runtime/outbox/ (pipeline messages back to UI; design target)
 	- runtime/logs/ (backend + pipeline logs)
 	- references/selfdev/ (tasks, prompts, summaries, state)
 	- auto-apps/ (generated apps/workspaces managed by AutoAppDev)
