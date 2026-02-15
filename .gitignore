@@ -1,0 +1,16 @@
+.DS_Store
+._*
+
+# Local env/secrets
+.env
+.env.*
+!.env.example
+
+# Runtime state/logs (generated)
+runtime/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+

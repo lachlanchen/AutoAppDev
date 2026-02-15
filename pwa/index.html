@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AutoAppDev Studio</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      window.__AUTOAPPDEV_CONFIG__ = {
+        API_BASE_URL: "http://127.0.0.1:8788",
+      };
+    </script>
+    <script src="app.js" defer></script>
+  </head>
+  <body data-theme="light">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">AA</div>
+        <div class="brand-text">
+          <div class="brand-name">AutoAppDev Studio</div>
+          <div class="brand-sub">Scratch-like pipeline controller</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="select">
+          <label>Agent</label>
+          <select id="agent-select">
+            <option value="codex">Codex</option>
+            <option value="copilot" disabled>Copilot (coming)</option>
+            <option value="gemini" disabled>Gemini (coming)</option>
+            <option value="claude" disabled>Claude (coming)</option>
+          </select>
+        </div>
+        <div class="select">
+          <label>Model</label>
+          <select id="model-select">
+            <option value="gpt-5.3-codex">gpt-5.3-codex</option>
+            <option value="gpt-5.3-codex-mini" disabled>gpt-5.3-codex-mini</option>
+          </select>
+        </div>
+
+        <button class="btn btn--primary" id="btn-start">Start</button>
+        <button class="btn" id="btn-pause">Pause</button>
+        <button class="btn" id="btn-resume">Resume</button>
+        <button class="btn btn--danger" id="btn-stop">Stop</button>
+
+        <button class="btn btn--ghost" id="btn-theme">Light</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel panel--toolbox">
+        <div class="panel-head">
+          <div class="panel-title">Blocks</div>
+          <div class="panel-hint">Drag to canvas</div>
+        </div>
+        <div class="toolbox" id="toolbox">
+          <div class="block block--plan" draggable="true" data-block="plan">Plan</div>
+          <div class="block block--work" draggable="true" data-block="work">Work</div>
+          <div class="block block--debug" draggable="true" data-block="debug">Debug</div>
+          <div class="block block--fix" draggable="true" data-block="fix">Fix</div>
+          <div class="block block--summary" draggable="true" data-block="summary">Summary</div>
+          <div class="block block--release" draggable="true" data-block="commit_push">Commit+Push</div>
+          <div class="divider"></div>
+          <div class="block block--loop" draggable="true" data-block="while_loop">While</div>
+          <div class="block block--input" draggable="true" data-block="wait_input">Wait Input</div>
+        </div>
+      </section>
+
+      <section class="panel panel--canvas">
+        <div class="panel-head">
+          <div class="panel-title">Program</div>
+          <div class="panel-actions">
+            <button class="btn btn--ghost" id="btn-clear">Clear</button>
+            <button class="btn btn--ghost" id="btn-export">Export JSON</button>
+          </div>
+        </div>
+        <div class="canvas" id="canvas" aria-label="Program canvas">
+          <div class="canvas-empty" id="canvas-empty">
+            Drop blocks here to build a pipeline.
+          </div>
+        </div>
+        <pre class="export" id="export" hidden></pre>
+      </section>
+
+      <section class="panel panel--right">
+        <div class="tabs">
+          <button class="tab is-active" data-tab="status">Status</button>
+          <button class="tab" data-tab="chat">Chat</button>
+          <button class="tab" data-tab="logs">Logs</button>
+        </div>
+
+        <div class="tabview" id="tab-status">
+          <div class="kv">
+            <div class="k">Backend</div>
+            <div class="v" id="backend-health">unknown</div>
+          </div>
+          <div class="kv">
+            <div class="k">Pipeline</div>
+            <div class="v" id="pipeline-status">idle</div>
+          </div>
+          <div class="kv">
+            <div class="k">PID</div>
+            <div class="v" id="pipeline-pid">-</div>
+          </div>
+          <div class="hintbox">
+            Use Chat to inject guidance while the pipeline runs. Messages are written to a runtime inbox that scripts can consume.
+          </div>
+        </div>
+
+        <div class="tabview" id="tab-chat" hidden>
+          <div class="chatlog" id="chatlog"></div>
+          <div class="chatbar">
+            <input class="input" id="chat-input" placeholder="Type guidance for the running pipeline..." />
+            <button class="btn btn--primary" id="chat-send">Send</button>
+          </div>
+        </div>
+
+        <div class="tabview" id="tab-logs" hidden>
+          <div class="logbar">
+            <select class="input" id="log-select">
+              <option value="pipeline">pipeline.log</option>
+              <option value="backend">backend.log</option>
+            </select>
+            <button class="btn btn--ghost" id="log-refresh">Refresh</button>
+          </div>
+          <pre class="logview" id="logview"></pre>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
+

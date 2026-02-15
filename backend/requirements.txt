@@ -1,0 +1,4 @@
+tornado>=6.4
+python-dotenv>=1.0.1
+asyncpg>=0.29.0
+

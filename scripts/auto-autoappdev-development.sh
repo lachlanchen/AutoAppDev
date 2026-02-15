@@ -1,0 +1,400 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: auto-autoappdev-development.sh [options]
+
+Self-development driver for AutoAppDev. This script uses Codex non-interactively
+to iteratively implement the AutoAppDev controller app (Tornado backend + PWA),
+one small task at a time, with a consistent session and strict guardrails.
+
+Options:
+  --model <name>            Codex model (default: gpt-5.3-codex)
+  --reasoning <effort>      Reasoning effort: low|medium|high|extra_high (default: medium)
+  --sandbox <mode>          Codex sandbox: danger-full-access (default), etc.
+  --approval <mode>         Codex approval: never (default), etc.
+  --new-session             Start a fresh Codex session (ignore saved session id)
+  --start-at <n>            Start at task sequence n (1-based)
+  --max-tasks <n>           Run at most n tasks
+  --stop-file <path>        If this file exists, stop after finishing current task
+  --verbose                 Print extra logs
+  -h, --help                Show help
+
+Notes:
+- This script is intentionally redundant in prompts. Each codex call owns only one
+  tiny phase, but must be aware of the overall architecture.
+- It is designed to be used together with the controller app:
+  - backend: AutoAppDev/backend (Tornado)
+  - pwa:     AutoAppDev/pwa (Scratch-like UI, light theme default)
+USAGE
+}
+
+model="gpt-5.3-codex"
+reasoning="medium"
+sandbox="danger-full-access"
+approval="never"
+new_session=0
+start_at=1
+max_tasks=0
+stop_file=""
+verbose=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --model) model="${2:-}"; shift ;;
+    --reasoning) reasoning="${2:-}"; shift ;;
+    --sandbox) sandbox="${2:-}"; shift ;;
+    --approval) approval="${2:-}"; shift ;;
+    --new-session) new_session=1 ;;
+    --start-at) start_at="${2:-}"; shift ;;
+    --max-tasks) max_tasks="${2:-}"; shift ;;
+    --stop-file) stop_file="${2:-}"; shift ;;
+    --verbose) verbose=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;
+  esac
+  shift
+done
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SELFDEV_DIR="$ROOT_DIR/references/selfdev"
+LOG_DIR="$SELFDEV_DIR/logs"
+PROMPT_DIR="$SELFDEV_DIR/prompts"
+TASKS_FILE="$SELFDEV_DIR/tasks.tsv"
+STATE_FILE="$SELFDEV_DIR/state.tsv"
+SESSION_FILE="$SELFDEV_DIR/.codex_session_id"
+
+mkdir -p "$LOG_DIR" "$PROMPT_DIR"
+
+log() {
+  local msg="$1"
+  printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$msg" >&2
+}
+
+vlog() {
+  if [ "$verbose" -eq 1 ]; then
+    log "$1"
+  fi
+}
+
+git_push_best_effort() {
+  local tries=0
+  local max=6
+  local backoff=2
+  while true; do
+    if git push; then
+      return 0
+    fi
+    tries=$((tries + 1))
+    if [ "$tries" -ge "$max" ]; then
+      return 1
+    fi
+    sleep "$backoff"
+    backoff=$((backoff * 2))
+  done
+}
+
+extract_session_id_from_jsonl() {
+  local json_file="$1"
+  python3 - "$json_file" <<'PY'
+import json, sys
+sid = ""
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+  for line in f:
+    try:
+      obj = json.loads(line)
+    except Exception:
+      continue
+    if not isinstance(obj, dict):
+      continue
+    sid = obj.get("thread_id") or obj.get("session_id") or sid
+    if not sid:
+      th = obj.get("thread")
+      if isinstance(th, dict):
+        sid = th.get("id") or sid
+    if sid:
+      break
+print(sid)
+PY
+}
+
+run_codex_new_session_init() {
+  local prompt_file="$1"
+  local json_file="$2"
+  local cmd=(codex -s "$sandbox" -a "$approval" exec --json -m "$model" -c "model_reasoning_effort=\"$reasoning\"")
+  cmd+=(-)
+  "${cmd[@]}" < "$prompt_file" > "$json_file"
+}
+
+run_codex_resume() {
+  local sid="$1"
+  local prompt_file="$2"
+  local json_file="$3"
+  local cmd=(codex -s "$sandbox" -a "$approval" exec resume "$sid" --json --full-auto -m "$model" -c "model_reasoning_effort=\"$reasoning\"")
+  cmd+=(-)
+  "${cmd[@]}" < "$prompt_file" > "$json_file"
+}
+
+session_id=""
+if [ "$new_session" -eq 0 ] && [ -f "$SESSION_FILE" ]; then
+  session_id="$(tr -d ' \t\r\n' < "$SESSION_FILE")"
+fi
+
+if [ -z "$session_id" ]; then
+  init_prompt="$PROMPT_DIR/000_init.md"
+  init_json="$LOG_DIR/000_init.jsonl"
+  cat >"$init_prompt" <<EOF
+Session initialization only.
+
+You are developing **AutoAppDev**, a long-running stable agent system.
+Repo root: $ROOT_DIR
+This driver script: $ROOT_DIR/scripts/auto-autoappdev-development.sh
+
+High-level product goal:
+- Build a Scratch-like PWA to control and observe an auto-development pipeline.
+- Provide chat/inbox to inject user guidance into the running pipeline.
+- Provide start/stop/pause/resume buttons and settings for agent/model selection.
+- Backend: Python Tornado. Database: PostgreSQL. Secrets in .env.
+- Frontend: PWA (static HTML/CSS/JS). Default theme: light.
+
+Hard guardrails (must remember for all subsequent turns):
+- Work only inside this repository ($ROOT_DIR).
+- Every step is **small** and **linear**. No parallel execution between steps.
+- Each \`codex exec\` call completes one small phase and then exits cleanly.
+- Do not leave behind background processes when a phase ends.
+- Always run \`git status\`, then \`git commit\` and \`git push\` for any real change.
+- If \`git push\` fails due to network/DNS, report it and still exit cleanly.
+
+Important:
+- For this initialization step: do NOT run commands; do NOT read/write files.
+- Reply with exactly: READY_AUTOAPPDEV_SESSION
+EOF
+  log "Initializing Codex session"
+  run_codex_new_session_init "$init_prompt" "$init_json"
+  if ! grep -q "READY_AUTOAPPDEV_SESSION" "$init_json"; then
+    echo "Init missing READY_AUTOAPPDEV_SESSION marker." >&2
+    exit 1
+  fi
+  session_id="$(extract_session_id_from_jsonl "$init_json")"
+  [ -n "$session_id" ] || { echo "Failed to get session id." >&2; exit 1; }
+  printf '%s\n' "$session_id" > "$SESSION_FILE"
+fi
+
+log "Using session ID: $session_id"
+
+if [ ! -s "$TASKS_FILE" ]; then
+  order_prompt="$PROMPT_DIR/001_generate_tasks.md"
+  order_json="$LOG_DIR/001_generate_tasks.jsonl"
+  cat >"$order_prompt" <<EOF
+You are developing AutoAppDev (Scratch-like PWA + Tornado backend).
+Driver script: $ROOT_DIR/scripts/auto-autoappdev-development.sh (this script).
+
+Task:
+1) Inspect the current repo structure and existing files.
+2) Design a first batch of small, incremental tasks that make the controller app real and usable.
+3) Write tasks to: $TASKS_FILE
+
+TSV format (NO header, 5 columns):
+1) seq (1-based int)
+2) task_slug (snake_case)
+3) area (backend|pwa|scripts|docs)
+4) title (short)
+5) acceptance_criteria (short but testable)
+
+Rules:
+- Tasks must be small and ordered from global-to-local.
+- Include explicit tasks for: Postgres wiring, .env handling, light theme PWA, scratch-like blocks, chat/inbox, pipeline start/stop/pause, logs view.
+- Do not implement code in this step. Only write tasks list.
+- Commit and push the tasks file.
+
+Final response: DONE_TASKS
+EOF
+  log "Generating initial task list"
+  run_codex_resume "$session_id" "$order_prompt" "$order_json"
+  git_push_best_effort || true
+  if [ ! -s "$TASKS_FILE" ]; then
+    echo "Expected tasks file: $TASKS_FILE" >&2
+    exit 1
+  fi
+fi
+
+mapfile -t tasks < <(awk -F '\t' 'NF>=5 {print $0}' "$TASKS_FILE")
+if [ "${#tasks[@]}" -eq 0 ]; then
+  echo "No tasks found in $TASKS_FILE" >&2
+  exit 1
+fi
+
+touch "$STATE_FILE"
+
+done_task() {
+  local seq="$1"
+  awk -F '\t' -v s="$seq" '$1==s && $2=="done"{found=1} END{exit(found?0:1)}' "$STATE_FILE"
+}
+
+mark_done() {
+  local seq="$1"
+  printf '%s\tdone\t%s\n' "$seq" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" >> "$STATE_FILE"
+}
+
+processed=0
+
+for row in "${tasks[@]}"; do
+  IFS=$'\t' read -r seq slug area title acceptance <<<"$row"
+  [ -z "${seq:-}" ] && continue
+  if [ "$seq" -lt "$start_at" ]; then
+    continue
+  fi
+  if [ "$max_tasks" -gt 0 ] && [ "$processed" -ge "$max_tasks" ]; then
+    break
+  fi
+  if done_task "$seq"; then
+    vlog "Skipping already-done task $seq $slug"
+    continue
+  fi
+
+  log "Task $seq $slug ($area): planning"
+  step_dir="$SELFDEV_DIR/tasks/$(printf '%03d' "$seq")_$slug"
+  mkdir -p "$step_dir"
+
+  context="$step_dir/context.md"
+  cat >"$context" <<EOF
+# AutoAppDev Self-Development Task Context
+
+- task_seq: $seq
+- task_slug: $slug
+- area: $area
+- title: $title
+- acceptance: $acceptance
+
+Overall goal:
+- Build AutoAppDev controller (Scratch-like PWA + Tornado backend + Postgres).
+- Default theme: light.
+- Provide chat/inbox, pipeline control, logs, and block-based task builder.
+
+This driver script:
+- $ROOT_DIR/scripts/auto-autoappdev-development.sh
+
+Runtime directories (design targets):
+- runtime/inbox/ (user messages for pipeline)
+- runtime/logs/ (backend + pipeline logs)
+- references/selfdev/ (tasks, prompts, summaries, state)
+
+Important:
+- Each phase below is ONE \`codex exec\` call and must remain linear.
+- End each phase with \`git status\`, \`git commit\`, \`git push\`.
+EOF
+
+  # Phase 1: plan
+  plan_file="$step_dir/01_plan.md"
+  plan_prompt="$step_dir/01_plan_prompt.md"
+  plan_json="$step_dir/01_plan.jsonl"
+  cat >"$plan_prompt" <<EOF
+Current task context:
+$context
+
+Phase: PLAN
+Goal:
+- Produce a detailed, step-specific plan to implement this task, explicitly referencing existing files and where changes will go.
+- Include commands to run and acceptance checks.
+
+Constraints:
+- Work only under $ROOT_DIR.
+- Keep changes minimal and incremental (small step).
+- Keep default PWA theme light.
+- Postgres + .env rules apply to the overall system.
+
+Write plan to:
+$plan_file
+
+Do NOT implement code in this phase.
+Commit and push the plan.
+
+Final response: DONE_PLAN $seq $slug
+EOF
+  run_codex_resume "$session_id" "$plan_prompt" "$plan_json"
+  git_push_best_effort || true
+
+  # Phase 2: work
+  work_notes="$step_dir/02_work_notes.md"
+  work_prompt="$step_dir/02_work_prompt.md"
+  work_json="$step_dir/02_work.jsonl"
+  cat >"$work_prompt" <<EOF
+Current task context:
+$context
+
+Phase: WORK
+Use this plan:
+$plan_file
+
+Implement the task now.
+Requirements:
+- Make only the changes needed for this task.
+- Keep the architecture consistent with the overall system.
+- Do not start background processes; keep commands linear.
+- Update docs if needed.
+- Write implementation notes + commands run to:
+$work_notes
+
+Commit and push changes.
+
+Final response: DONE_WORK $seq $slug
+EOF
+  run_codex_resume "$session_id" "$work_prompt" "$work_json"
+  git_push_best_effort || true
+
+  # Phase 3: debug/verify
+  dbg_notes="$step_dir/03_debug_notes.md"
+  dbg_prompt="$step_dir/03_debug_prompt.md"
+  dbg_json="$step_dir/03_debug.jsonl"
+  cat >"$dbg_prompt" <<EOF
+Current task context:
+$context
+
+Phase: DEBUG/VERIFY
+Goal:
+- Run the smallest possible verification for this task (build/run/smoke).
+- Use timeouts for anything that could hang.
+- Record exact commands and results.
+
+Write debug notes to:
+$dbg_notes
+
+If issues found, implement minimal fixes in this same phase.
+Then commit and push.
+
+Final response: DONE_DEBUG $seq $slug
+EOF
+  run_codex_resume "$session_id" "$dbg_prompt" "$dbg_json"
+  git_push_best_effort || true
+
+  # Phase 4: summary
+  sum_file="$step_dir/04_summary.md"
+  sum_prompt="$step_dir/04_summary_prompt.md"
+  sum_json="$step_dir/04_summary.jsonl"
+  cat >"$sum_prompt" <<EOF
+Current task context:
+$context
+
+Phase: SUMMARY
+Write a concise summary of what changed, why, and how to verify.
+Write summary to:
+$sum_file
+
+Commit and push the summary file.
+Final response: DONE_SUMMARY $seq $slug
+EOF
+  run_codex_resume "$session_id" "$sum_prompt" "$sum_json"
+  git_push_best_effort || true
+
+  mark_done "$seq"
+  processed=$((processed + 1))
+
+  if [ -n "$stop_file" ] && [ -f "$stop_file" ]; then
+    log "Stop file present ($stop_file). Stopping after task $seq."
+    break
+  fi
+done
+
+log "Selfdev run complete."
+
