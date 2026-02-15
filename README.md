@@ -5,9 +5,9 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T11:16:50Z
-- Phase commit: `Selfdev: 25 pipeline_script_parser_v0 summary`
-- Progress: 24 / 34 tasks done
+- Updated: 2026-02-15T11:21:43Z
+- Phase commit: `Selfdev: 26 pipeline_shell_script_import_v0 plan`
+- Progress: 25 / 34 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
 
