@@ -212,6 +212,49 @@ Response (error example):
 { "ok": false, "error": "missing_annotations", "line": 1, "detail": "expected at least one \"# AAPS:\" annotation line" }
 ```
 
+### POST /api/scripts/parse-llm (optional)
+LLM-assisted parse fallback for arbitrary “pipeline-like” text/scripts.
+
+Notes:
+- **Disabled by default.** Requires `AUTOAPPDEV_ENABLE_LLM_PARSE=1`.
+- Uses `codex exec` non-interactively with a strict timeout.
+- Stores provenance artifacts under `AUTOAPPDEV_RUNTIME_DIR/logs/llm_parse/<id>/` (prompt, input, raw JSONL, extracted AAPS, provenance JSON).
+- The LLM output is post-validated by the deterministic AAPS parser (`parse_aaps_v1`); invalid output returns a parse error.
+
+Request:
+```json
+{
+  "source_text": "#!/usr/bin/env bash\\necho hello\\n",
+  "source_format": "shell",
+  "save": false
+}
+```
+
+Response:
+```json
+{
+  "ok": true,
+  "script_format": "aaps",
+  "script_text": "AUTOAPPDEV_PIPELINE 1\\n\\nTASK {\"id\":\"t1\",\"title\":\"Imported\"}\\n...",
+  "ir": { "kind": "autoappdev_ir", "version": 1, "tasks": [ ... ] },
+  "warnings": [],
+  "provenance": {
+    "id": "20260215T123456Z_abcd1234",
+    "artifacts": { "dir": ".../runtime/logs/llm_parse/20260215T123456Z_abcd1234", "prompt": "...", "codex_jsonl": "..." }
+  }
+}
+```
+
+Response (error: disabled):
+```json
+{ "ok": false, "error": "disabled" }
+```
+
+Response (error: timeout):
+```json
+{ "ok": false, "error": "timeout", "detail": "codex exec exceeded timeout_s=45.0" }
+```
+
 ## Inbox Messages
 The UI refers to “Chat/Inbox”.
 

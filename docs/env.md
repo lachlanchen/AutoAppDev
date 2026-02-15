@@ -30,6 +30,10 @@ These keys are required by convention for running the controller reliably (some 
   - Overrides the runtime directory (defaults to `./runtime`).
 - `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT`
   - Defaults for pipeline runner.
+- `AUTOAPPDEV_ENABLE_LLM_PARSE`
+  - Optional/unsafe-by-default: set to `1` to enable `POST /api/scripts/parse-llm` (Codex-powered parse fallback).
+- `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK`
+  - Optional defaults for Codex-powered actions/endpoints (model, reasoning effort, and whether to pass `--skip-git-repo-check`).
 - `AI_API_BASE_URL`, `AI_API_KEY`
   - Reserved for future AI integrations.
 

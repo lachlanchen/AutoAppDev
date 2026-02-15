@@ -1,6 +1,7 @@
 import asyncio
 from collections import deque
 import datetime
+import hashlib
 import json
 import os
 import signal
@@ -16,6 +17,7 @@ import tornado.web
 from .storage import Storage, safe_env
 from .pipeline_parser import ParseError, parse_aaps_v1
 from .pipeline_shell_import import ShellImportError, import_shell_annotated_to_ir
+from .llm_assisted_parse import LlmParseError, build_prompt, extract_aaps, make_request_id, run_codex_to_jsonl, write_artifacts
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -420,6 +422,195 @@ class ScriptsImportShellHandler(BaseHandler):
         )
 
 
+class ScriptsParseLlmHandler(BaseHandler):
+    def initialize(self, storage: Storage, runtime_dir: Path) -> None:
+        self.storage = storage
+        self.runtime_dir = runtime_dir
+
+    async def post(self) -> None:
+        if safe_env("AUTOAPPDEV_ENABLE_LLM_PARSE", "0").strip() != "1":
+            self.write_json({"ok": False, "error": "disabled"}, status=403)
+            return
+
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"ok": False, "error": "invalid_body"}, status=400)
+            return
+
+        source_text = body.get("source_text")
+        if not isinstance(source_text, str) or not source_text.strip():
+            self.write_json({"ok": False, "error": "invalid_source_text"}, status=400)
+            return
+        if len(source_text) > 100_000:
+            self.write_json({"ok": False, "error": "source_too_large"}, status=400)
+            return
+
+        source_format = body.get("source_format", "unknown")
+        if not isinstance(source_format, str):
+            self.write_json({"ok": False, "error": "invalid_source_format"}, status=400)
+            return
+
+        save = body.get("save", False)
+        if not isinstance(save, bool):
+            self.write_json({"ok": False, "error": "invalid_save"}, status=400)
+            return
+
+        title = str(body.get("title") or "").strip()
+
+        req_model = body.get("model")
+        if req_model is not None and not isinstance(req_model, str):
+            self.write_json({"ok": False, "error": "invalid_model"}, status=400)
+            return
+
+        req_reasoning = body.get("reasoning")
+        if req_reasoning is not None and not isinstance(req_reasoning, str):
+            self.write_json({"ok": False, "error": "invalid_reasoning"}, status=400)
+            return
+
+        timeout_s = body.get("timeout_s", 45)
+        if not isinstance(timeout_s, (int, float)):
+            self.write_json({"ok": False, "error": "invalid_timeout_s"}, status=400)
+            return
+        timeout_s = float(timeout_s)
+        timeout_s = max(5.0, min(120.0, timeout_s))
+
+        cfg = await self.storage.get_config()
+        cfg_model = cfg.get("model") if isinstance(cfg, dict) and isinstance(cfg.get("model"), str) else ""
+        model = str(req_model or cfg_model or safe_env("AUTOAPPDEV_CODEX_MODEL", "gpt-5.3-codex"))
+        reasoning = str(req_reasoning or safe_env("AUTOAPPDEV_CODEX_REASONING", "medium"))
+        skip_git_check = safe_env("AUTOAPPDEV_CODEX_SKIP_GIT_CHECK", "0").strip() == "1"
+
+        req_id = make_request_id(source_text=source_text)
+        artifacts_dir = self.runtime_dir / "logs" / "llm_parse" / req_id
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+        prompt = build_prompt(source_text=source_text, source_format=source_format)
+        warnings: list[str] = []
+
+        provenance: dict[str, Any] = {
+            "id": req_id,
+            "model": model,
+            "reasoning": reasoning,
+            "timeout_s": timeout_s,
+            "source_format": source_format,
+            "source_sha256": hashlib.sha256(source_text.encode("utf-8", errors="replace")).hexdigest(),
+        }
+
+        # Precompute artifact paths for provenance (write_artifacts uses these names).
+        provenance["artifacts"] = {
+            "dir": str(artifacts_dir),
+            "source": str(artifacts_dir / "source.txt"),
+            "prompt": str(artifacts_dir / "prompt.txt"),
+            "codex_jsonl": str(artifacts_dir / "codex.jsonl"),
+            "codex_stderr": str(artifacts_dir / "codex.stderr.log"),
+            "assistant": str(artifacts_dir / "assistant.txt"),
+            "aaps": str(artifacts_dir / "result.aaps"),
+            "provenance": str(artifacts_dir / "provenance.json"),
+        }
+
+        assistant_text = ""
+        codex_jsonl = ""
+        codex_stderr = ""
+        rc = 0
+        script_text: str | None = None
+
+        try:
+            assistant_text, codex_jsonl, codex_stderr, rc = await run_codex_to_jsonl(
+                prompt=prompt,
+                model=model,
+                reasoning=reasoning,
+                timeout_s=timeout_s,
+                cwd=artifacts_dir,
+                skip_git_check=skip_git_check,
+            )
+            provenance["codex_exit_code"] = rc
+            if rc != 0:
+                warnings.append("codex_nonzero_exit")
+            if not assistant_text.strip():
+                tail = (codex_stderr or "").strip().splitlines()[-5:]
+                hint = "\n".join(tail).strip()
+                raise LlmParseError("missing_assistant_text", hint or "no agent_message found in codex JSONL output")
+
+            script_text, w2 = extract_aaps(assistant_text)
+            warnings.extend(w2)
+            provenance["aaps_sha256"] = hashlib.sha256(script_text.encode("utf-8", errors="replace")).hexdigest()
+
+            ir = parse_aaps_v1(script_text)
+            provenance["ok"] = True
+            provenance["warnings"] = warnings
+        except ParseError as e:
+            provenance["ok"] = False
+            provenance["warnings"] = warnings
+            provenance["parse_error"] = e.to_dict()
+            write_artifacts(
+                artifacts_dir=artifacts_dir,
+                source_text=source_text,
+                prompt=prompt,
+                codex_jsonl=codex_jsonl,
+                codex_stderr=codex_stderr,
+                assistant_text=assistant_text,
+                script_text=script_text,
+                provenance=provenance,
+            )
+            self.write_json({**e.to_dict(), "provenance": provenance}, status=400)
+            return
+        except LlmParseError as e:
+            provenance["ok"] = False
+            provenance["warnings"] = warnings
+            provenance["llm_error"] = e.to_dict()
+            write_artifacts(
+                artifacts_dir=artifacts_dir,
+                source_text=source_text,
+                prompt=prompt,
+                codex_jsonl=codex_jsonl,
+                codex_stderr=codex_stderr,
+                assistant_text=assistant_text,
+                script_text=script_text,
+                provenance=provenance,
+            )
+            status = 504 if e.code == "timeout" else 503 if e.code == "codex_not_found" else 400
+            self.write_json({**e.to_dict(), "provenance": provenance}, status=status)
+            return
+
+        # Success path: always write artifacts.
+        write_artifacts(
+            artifacts_dir=artifacts_dir,
+            source_text=source_text,
+            prompt=prompt,
+            codex_jsonl=codex_jsonl,
+            codex_stderr=codex_stderr,
+            assistant_text=assistant_text,
+            script_text=script_text,
+            provenance=provenance,
+        )
+
+        script_obj: dict[str, Any] | None = None
+        if save:
+            script_obj = await self.storage.create_pipeline_script(
+                title=title or f"llm_import_{req_id}",
+                script_text=script_text or "",
+                script_version=1,
+                script_format="aaps",
+                ir=ir,
+            )
+
+        self.write_json(
+            {
+                "ok": True,
+                "script_format": "aaps",
+                "script_text": script_text or "",
+                "ir": ir,
+                "warnings": warnings,
+                "provenance": provenance,
+                "script": script_obj,
+            }
+        )
+
+
 class ChatHandler(BaseHandler):
     def initialize(self, storage: Storage, runtime_dir: Path) -> None:
         self.storage = storage
@@ -820,6 +1011,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/scripts/([0-9]+)", ScriptHandler, {"storage": storage}),
             (r"/api/scripts/parse", ScriptsParseHandler),
             (r"/api/scripts/import-shell", ScriptsImportShellHandler),
+            (r"/api/scripts/parse-llm", ScriptsParseLlmHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),
