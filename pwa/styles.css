@@ -109,7 +109,7 @@ body[data-theme="dark"] {
   color: var(--muted);
 }
 
-select, input {
+select, input, textarea {
   border: 1px solid var(--stroke);
   background: var(--panel);
   color: var(--text);
@@ -311,7 +311,7 @@ body[data-theme="dark"] .canvas {
 
 .tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   border-bottom: 1px solid var(--stroke);
 }
 
@@ -433,6 +433,34 @@ body[data-theme="dark"] .canvas {
   white-space: pre-wrap;
   user-select: text;
 }
+
+.scriptbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.script-text {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.script-msg {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+.script-msg:empty { display: none; }
+
+.script-msg.is-error { color: var(--red); }
 
 @media (max-width: 1200px) {
   .layout { grid-template-columns: 260px 1fr; grid-template-rows: 1fr 420px; }

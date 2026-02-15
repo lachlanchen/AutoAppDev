@@ -94,6 +94,7 @@
           <button class="tab is-active" data-tab="status">Status</button>
           <button class="tab" data-tab="chat">Inbox</button>
           <button class="tab" data-tab="logs">Logs</button>
+          <button class="tab" data-tab="script">Script</button>
         </div>
 
         <div class="tabview" id="tab-status">
@@ -144,6 +145,40 @@
             <button class="btn btn--ghost" id="log-refresh">Refresh</button>
           </div>
           <pre class="logview" id="logview"></pre>
+        </div>
+
+        <div class="tabview" id="tab-script" hidden>
+          <div class="scriptbar">
+            <input class="input" id="script-file" type="file" accept=".aaps,.sh,.txt" />
+            <button class="btn btn--ghost" id="script-parse" title="Parse AAPS v1 formatted script into blocks">
+              Parse AAPS -> Blocks
+            </button>
+            <button
+              class="btn btn--ghost"
+              id="script-import-shell"
+              title="Import a shell script annotated with # AAPS: lines"
+            >
+              Import Shell -> Blocks
+            </button>
+            <button
+              class="btn btn--ghost"
+              id="script-from-blocks"
+              title="Generate an AAPS v1 script from the current blocks"
+            >
+              From Blocks
+            </button>
+          </div>
+          <textarea
+            class="script-text"
+            id="script-text"
+            spellcheck="false"
+            placeholder="Paste AAPS v1 here (AUTOAPPDEV_PIPELINE 1 ...), or paste an annotated .sh (lines starting with # AAPS:) and click Import..."
+          ></textarea>
+          <div class="script-msg" id="script-msg" aria-live="polite"></div>
+          <div class="hintbox">
+            Canvas visualization is step-level only: STEP.block values become blocks. TASK/STEP titles and ACTIONs are not
+            visualized (yet).
+          </div>
         </div>
       </section>
     </main>

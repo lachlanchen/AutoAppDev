@@ -24,6 +24,7 @@ const els = {
   tabStatus: document.getElementById("tab-status"),
   tabChat: document.getElementById("tab-chat"),
   tabLogs: document.getElementById("tab-logs"),
+  tabScript: document.getElementById("tab-script"),
   chatlog: document.getElementById("chatlog"),
   chatInput: document.getElementById("chat-input"),
   chatSend: document.getElementById("chat-send"),
@@ -31,6 +32,12 @@ const els = {
   logFollow: document.getElementById("log-follow"),
   logRefresh: document.getElementById("log-refresh"),
   logview: document.getElementById("logview"),
+  scriptText: document.getElementById("script-text"),
+  scriptFile: document.getElementById("script-file"),
+  scriptParse: document.getElementById("script-parse"),
+  scriptImportShell: document.getElementById("script-import-shell"),
+  scriptFromBlocks: document.getElementById("script-from-blocks"),
+  scriptMsg: document.getElementById("script-msg"),
 };
 
 const BLOCK_META = {
@@ -241,6 +248,94 @@ async function loadScript() {
   }
 }
 
+function setScriptMsg(text, { error } = {}) {
+  if (!els.scriptMsg) return;
+  const msg = String(text || "");
+  els.scriptMsg.textContent = msg;
+  els.scriptMsg.classList.toggle("is-error", Boolean(error) && Boolean(msg));
+}
+
+function applyIrToCanvas(ir) {
+  const nextProgram = irToProgram(ir);
+  if (!Array.isArray(nextProgram)) return { ok: false, error: "invalid_ir" };
+  program = nextProgram;
+  persistProgram();
+  renderProgram();
+  return { ok: true, steps: nextProgram.length };
+}
+
+function formatScriptApiError(e) {
+  const data = e && e.data && typeof e.data === "object" ? e.data : {};
+  const line = typeof data.line === "number" ? data.line : null;
+  const code = typeof data.error === "string" ? data.error : "";
+  const detail = typeof data.detail === "string" ? data.detail : "";
+  const msg = detail || code || (e && e.message) || String(e);
+  return line ? `line ${line}: ${msg}` : msg;
+}
+
+async function parseAapsToBlocks() {
+  if (!els.scriptText) return;
+  const script_text = String(els.scriptText.value || "");
+  if (!script_text.trim()) {
+    setScriptMsg("empty script", { error: true });
+    return;
+  }
+  setScriptMsg("parsing...");
+  try {
+    const res = await api("/api/scripts/parse", { method: "POST", body: JSON.stringify({ script_text }) });
+    const applied = applyIrToCanvas(res.ir || {});
+    if (!applied.ok) {
+      setScriptMsg("invalid IR returned from backend", { error: true });
+      return;
+    }
+    setScriptMsg(`ok: parsed ${applied.steps} step(s) into blocks`);
+  } catch (e) {
+    setScriptMsg(formatScriptApiError(e), { error: true });
+  }
+}
+
+async function importShellToBlocks() {
+  if (!els.scriptText) return;
+  const shell_text = String(els.scriptText.value || "");
+  if (!shell_text.trim()) {
+    setScriptMsg("empty shell text", { error: true });
+    return;
+  }
+  setScriptMsg("importing...");
+  try {
+    const res = await api("/api/scripts/import-shell", { method: "POST", body: JSON.stringify({ shell_text }) });
+    const extracted = typeof res.script_text === "string" ? res.script_text : "";
+    if (extracted) els.scriptText.value = extracted;
+
+    const applied = applyIrToCanvas(res.ir || {});
+    if (!applied.ok) {
+      setScriptMsg("invalid IR returned from backend", { error: true });
+      return;
+    }
+    const warnings = Array.isArray(res.warnings) ? res.warnings : [];
+    if (warnings.length) {
+      setScriptMsg(`ok: imported ${applied.steps} step(s) (warnings: ${warnings.length})`);
+    } else {
+      setScriptMsg(`ok: imported ${applied.steps} step(s) into blocks`);
+    }
+  } catch (e) {
+    setScriptMsg(formatScriptApiError(e), { error: true });
+  }
+}
+
+function fillScriptFromBlocks() {
+  if (!els.scriptText) return;
+  if (!program.length) {
+    setScriptMsg("no blocks on canvas", { error: true });
+    return;
+  }
+  const titleRaw = window.prompt("Script title?", "Program");
+  if (titleRaw === null) return;
+  const title = String(titleRaw).trim() || "Program";
+  els.scriptText.value = programToAapsScript(program, title);
+  setScriptMsg(`ok: generated script from ${program.length} block(s)`);
+}
+
 async function sendPlan() {
   if (!program.length) {
     els.export.hidden = false;
@@ -385,6 +480,7 @@ function bindTabs() {
     els.tabStatus.hidden = key !== "status";
     els.tabChat.hidden = key !== "chat";
     els.tabLogs.hidden = key !== "logs";
+    if (els.tabScript) els.tabScript.hidden = key !== "script";
     if (key === "logs") refreshLogs();
     if (key === "chat") loadChat();
   };
@@ -509,6 +605,37 @@ function bindControls() {
   }
   if (els.loadScriptBtn) {
     els.loadScriptBtn.addEventListener("click", loadScript);
+  }
+  if (els.scriptParse) {
+    els.scriptParse.addEventListener("click", parseAapsToBlocks);
+  }
+  if (els.scriptImportShell) {
+    els.scriptImportShell.addEventListener("click", importShellToBlocks);
+  }
+  if (els.scriptFromBlocks) {
+    els.scriptFromBlocks.addEventListener("click", fillScriptFromBlocks);
+  }
+  if (els.scriptFile) {
+    els.scriptFile.addEventListener("change", async () => {
+      const file = els.scriptFile.files && els.scriptFile.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        if (els.scriptText) els.scriptText.value = text;
+        const name = String(file.name || "").toLowerCase();
+        if (name.endsWith(".sh")) {
+          await importShellToBlocks();
+        } else {
+          await parseAapsToBlocks();
+        }
+      } catch (e) {
+        setScriptMsg(`failed to load file: ${(e && e.message) || String(e)}`, { error: true });
+      } finally {
+        try {
+          els.scriptFile.value = "";
+        } catch {}
+      }
+    });
   }
 
   els.clearBtn.addEventListener("click", () => {

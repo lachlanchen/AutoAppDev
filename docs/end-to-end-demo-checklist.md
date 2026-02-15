@@ -69,6 +69,21 @@ Expected:
 - Blocks appear on canvas.
 - `Send Plan` returns an `ok` ack (rendered in the export panel).
 
+## 5b) Script Tab Import (Optional)
+1. Open the **Script** tab (right panel).
+2. Paste `examples/pipeline_formatted_script_v1.aaps` into the textarea.
+3. Click `Parse AAPS -> Blocks`.
+
+Expected:
+- Blocks appear on the canvas matching the parsed `STEP.block` values.
+
+Optional shell import:
+1. Paste `examples/pipeline_shell_annotated_v0.sh` into the textarea.
+2. Click `Import Shell -> Blocks`.
+
+Expected:
+- Blocks appear on the canvas; the textarea is replaced with the extracted AAPS script.
+
 ## 6) Start Pipeline
 1. Click **Start** in the top bar.
 2. Watch the Status panel.
@@ -118,4 +133,3 @@ Expected:
 - If logs don’t show:
   - Confirm backend is running and `runtime/logs/pipeline.log` exists and is changing.
   - In the PWA Logs tab, click `Refresh` to reset the cursor and reload the last window.
-
