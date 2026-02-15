@@ -3,7 +3,7 @@
 ## Goal
 Add a small, centralized PWA API client module and upgrade the Status UI to show:
 - Backend health
-- DB status (from `/api/health.db`)
+- DB status (from `GET /api/health` -> `db` field)
 - Pipeline state badge
 
 Acceptance:
@@ -119,8 +119,7 @@ Manual browser verification (required to validate real badge behavior):
 - [ ] `pwa/api-client.js` exists and `pwa/app.js` uses it (no duplicated fetch wrapper logic).
 - [ ] Status UI shows:
   - [ ] Backend badge (ok/down)
-  - [ ] DB badge (ok/error/unknown) populated from `/api/health.db`
+  - [ ] DB badge (ok/error/unknown) populated from `/api/health` response (`db.ok` / `db.time` / `db.error`)
   - [ ] Pipeline state badge from `/api/pipeline/status.status.state`
 - [ ] Status refresh interval is <= 2 seconds for the badges (polling).
 - [ ] Default light theme remains the default (`<body data-theme="light">`).
-
