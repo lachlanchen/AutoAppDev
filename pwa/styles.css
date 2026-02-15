@@ -299,6 +299,18 @@ body[data-theme="dark"] .canvas {
   font-weight: 950;
 }
 
+.prog-bind {
+  border: 0;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  padding: 0 10px;
+  height: 32px;
+  cursor: pointer;
+  font-weight: 950;
+  margin-right: 8px;
+}
+
 .export {
   border-top: 1px solid var(--stroke);
   padding: 12px 14px;

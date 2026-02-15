@@ -71,6 +71,11 @@ Validation:
 - `params` (object, optional): action parameters.
 - `meta` (object, optional)
 
+Optional convention (v0):
+- `ACTION.meta.action_ref` (object, optional): binds this step to an action definition in the action registry.
+  - By id: `{ "id": 123 }`
+  - By slug: `{ "slug": "my_action" }` (reserved for a future slug field; stored as data only)
+
 ### 1.7 Shell Annotations v0 (Import Helper)
 To import from a `.sh` file without parsing bash, embed AAPS lines as structured comments:
 

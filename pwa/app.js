@@ -107,6 +107,46 @@ function parseWorkspaceSlug(raw) {
   return { ok: true, workspace: ws };
 }
 
+function normalizeActionRef(ref) {
+  if (!ref || typeof ref !== "object") return null;
+  if ("id" in ref) {
+    const raw = ref.id;
+    const n =
+      typeof raw === "number" && Number.isFinite(raw)
+        ? raw
+        : typeof raw === "string" && /^[0-9]+$/.test(raw.trim())
+          ? Number(raw.trim())
+          : NaN;
+    const id = Number.isFinite(n) ? Math.trunc(n) : NaN;
+    if (!Number.isFinite(id) || id <= 0) return null;
+    return { id };
+  }
+  if ("slug" in ref) {
+    const s = typeof ref.slug === "string" ? ref.slug.trim() : "";
+    if (!s) return null;
+    if (s.length > 200) return null;
+    if (/[\x00-\x1f]/.test(s)) return null;
+    return { slug: s };
+  }
+  return null;
+}
+
+function actionRefValue(ref) {
+  const r = normalizeActionRef(ref);
+  if (!r) return "";
+  if (typeof r.id === "number") return String(r.id);
+  return String(r.slug || "");
+}
+
+function lookupActionTitleById(id) {
+  const n = Number(id);
+  if (!Number.isFinite(n)) return "";
+  const items = Array.isArray(actionsIndex) ? actionsIndex : [];
+  const it = items.find((a) => a && typeof a === "object" && a.id === n);
+  const title = it && typeof it.title === "string" ? it.title.trim() : "";
+  return title || "";
+}
+
 function updateReadmeTargetPath(workspace) {
   const ws = String(workspace || "").trim();
   return ws ? `auto-apps/${ws}/README.md` : "auto-apps/<workspace>/README.md";
@@ -141,7 +181,14 @@ function formatProgramBlockLabel(block, meta) {
     const ws = String(b.workspace || "").trim();
     return `${String(meta.label || "Update README")} (${updateReadmeTargetPath(ws)})`;
   }
-  return String(meta.label || type || "Block");
+  const base = String(meta.label || type || "Block");
+  const ref = normalizeActionRef(b.action_ref);
+  if (!ref) return base;
+  if (typeof ref.id === "number") {
+    const title = lookupActionTitleById(ref.id);
+    return title ? `${base} -> #${ref.id} ${title}` : `${base} -> #${ref.id}`;
+  }
+  return `${base} -> slug: ${String(ref.slug)}`;
 }
 
 function renderProgram() {
@@ -164,6 +211,43 @@ function renderProgram() {
     label.className = "prog-label";
     label.textContent = formatProgramBlockLabel(b, meta);
     row.appendChild(label);
+    if (type !== "update_readme") {
+      const bind = document.createElement("button");
+      bind.className = "prog-bind";
+      bind.type = "button";
+      bind.textContent = "Bind";
+      bind.addEventListener("click", () => {
+        const cur = b && typeof b === "object" ? b : {};
+        const curRef = normalizeActionRef(cur.action_ref);
+        const raw = window.prompt("Action ref (id or slug). Blank to clear.", actionRefValue(curRef));
+        if (raw === null) return;
+        const s = String(raw || "").trim();
+        if (!s) {
+          if (cur && typeof cur === "object") delete cur.action_ref;
+          persistProgram();
+          renderProgram();
+          return;
+        }
+        if (/^[0-9]+$/.test(s)) {
+          const id = Number(s);
+          if (Number.isFinite(id) && id > 0) {
+            cur.action_ref = { id: Math.trunc(id) };
+          } else {
+            window.alert("Invalid id");
+            return;
+          }
+        } else {
+          if (s.length > 200 || /[\x00-\x1f]/.test(s)) {
+            window.alert("Invalid slug");
+            return;
+          }
+          cur.action_ref = { slug: s };
+        }
+        persistProgram();
+        renderProgram();
+      });
+      row.appendChild(bind);
+    }
     const rm = document.createElement("button");
     rm.className = "prog-remove";
     rm.type = "button";
@@ -260,6 +344,9 @@ function programToIr(prog, title = "Program") {
           },
         },
       ];
+    } else {
+      const ref = normalizeActionRef(b && b.action_ref);
+      if (ref) actions[0].meta = { action_ref: ref };
     }
     return {
       id: `s${idx + 1}`,
@@ -297,6 +384,9 @@ function programToAapsScript(prog, title = "Program") {
           block_markdown: defaultUpdateReadmeBlockMarkdown({ workspace: ws }),
         },
       };
+    } else {
+      const ref = normalizeActionRef(b && b.action_ref);
+      if (ref) action.meta = { action_ref: ref };
     }
     lines.push(`STEP  ${JSON.stringify({ id: `s${idx + 1}`, title: meta.label, block })}`);
     lines.push(`ACTION ${JSON.stringify(action)}`);
@@ -321,7 +411,22 @@ function irToProgram(ir) {
         steps.push({ type: "update_readme", workspace: ws });
         return;
       }
-      if (typeof st.block === "string" && st.block.trim()) steps.push({ type: st.block.trim() });
+      let ref = null;
+      actions.forEach((a) => {
+        if (ref) return;
+        if (!a || typeof a !== "object") return;
+        const meta = a.meta && typeof a.meta === "object" ? a.meta : null;
+        if (!meta) return;
+        const ar = meta.action_ref;
+        const norm = normalizeActionRef(ar);
+        if (norm) ref = norm;
+      });
+
+      if (typeof st.block === "string" && st.block.trim()) {
+        const obj = { type: st.block.trim() };
+        if (ref) obj.action_ref = ref;
+        steps.push(obj);
+      }
     });
   });
   return steps;
