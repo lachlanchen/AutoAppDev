@@ -55,14 +55,19 @@ async def _run() -> int:
 
     conn = None
     try:
-        conn = await asyncio.wait_for(asyncpg.connect(dsn=dsn), timeout=2.0)
-        v = await asyncio.wait_for(conn.fetchval("SELECT 1"), timeout=2.0)
+        # Use asyncpg's built-in timeout to avoid hangs during DNS/connection setup.
+        conn = await asyncpg.connect(dsn=dsn, timeout=2.0)
+        v = await conn.fetchval("SELECT 1", timeout=2.0)
         if int(v) != 1:
             print(f"ERROR: unexpected SELECT 1 result: {v!r}", file=sys.stderr)
             return 3
         print("OK: postgres SELECT 1")
         return 0
     except asyncio.TimeoutError:
+        print("ERROR: postgres connection/query timed out (2s)", file=sys.stderr)
+        print(f"DSN: {_sanitize_dsn(dsn)}", file=sys.stderr)
+        return 4
+    except TimeoutError:
         print("ERROR: postgres connection/query timed out (2s)", file=sys.stderr)
         print(f"DSN: {_sanitize_dsn(dsn)}", file=sys.stderr)
         return 4
@@ -80,7 +85,23 @@ async def _run() -> int:
 
 
 def main() -> None:
-    raise SystemExit(asyncio.run(_run()))
+    # Avoid asyncio.run() to prevent shutdown waits on lingering resolver threads.
+    # This is a smoke-test CLI, so a hard exit is acceptable and keeps it deterministic.
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        rc = loop.run_until_complete(_run())
+    finally:
+        try:
+            loop.stop()
+            loop.close()
+        except Exception:
+            pass
+    try:
+        sys.stdout.flush()
+        sys.stderr.flush()
+    finally:
+        os._exit(int(rc))
 
 
 if __name__ == "__main__":
