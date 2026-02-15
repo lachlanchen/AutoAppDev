@@ -184,16 +184,21 @@ fi
 log "Using session ID: $session_id"
 
 if [ ! -s "$TASKS_FILE" ]; then
+  repo_files="$(cd "$ROOT_DIR" && find . -maxdepth 3 -type f | sort || true)"
   order_prompt="$PROMPT_DIR/001_generate_tasks.md"
   order_json="$LOG_DIR/001_generate_tasks.jsonl"
   cat >"$order_prompt" <<EOF
 You are developing AutoAppDev (Scratch-like PWA + Tornado backend).
 Driver script: $ROOT_DIR/scripts/auto-autoappdev-development.sh (this script).
 
-Task:
-1) Inspect the current repo structure and existing files.
-2) Design a first batch of small, incremental tasks that make the controller app real and usable.
-3) Write tasks to: $TASKS_FILE
+Current repo file list (use this; do NOT spend tool-calls on extra repo inspection):
+$repo_files
+
+Task (MUST complete fully in this single turn):
+1) Design a first batch of small, incremental tasks that make the controller app real and usable.
+2) Write tasks to: $TASKS_FILE (create/overwrite it).
+3) Verify the file is non-empty (e.g. \`wc -l\`, \`sed -n '1,5p'\`).
+4) \`git add\` ONLY this tasks file, then commit and push.
 
 TSV format (NO header, 5 columns):
 1) seq (1-based int)
@@ -205,17 +210,61 @@ TSV format (NO header, 5 columns):
 Rules:
 - Tasks must be small and ordered from global-to-local.
 - Include explicit tasks for: Postgres wiring, .env handling, light theme PWA, scratch-like blocks, chat/inbox, pipeline start/stop/pause, logs view.
-- Do not implement code in this step. Only write tasks list.
-- Commit and push the tasks file.
+- Do not modify code in this step. Only write the tasks list file.
+- Do NOT commit any other files (logs/prompts/session ids). Only tasks.tsv.
 
 Final response: DONE_TASKS
 EOF
   log "Generating initial task list"
   run_codex_resume "$session_id" "$order_prompt" "$order_json"
   git_push_best_effort || true
+
+  # Retry once with an even more forceful prompt if Codex didn't write the file.
   if [ ! -s "$TASKS_FILE" ]; then
-    echo "Expected tasks file: $TASKS_FILE" >&2
-    exit 1
+    retry_prompt="$PROMPT_DIR/001b_generate_tasks_retry.md"
+    retry_json="$LOG_DIR/001b_generate_tasks_retry.jsonl"
+    cat >"$retry_prompt" <<EOF
+You did not create the required tasks file on the previous turn.
+
+Hard requirement: create/overwrite this file NOW and commit+push it:
+- $TASKS_FILE
+
+Do not inspect the repo further. Do not change any code.
+
+Do:
+1) Write at least 12 TSV lines (NO header, 5 tab-separated fields per line).
+2) Verify it is non-empty (wc -l).
+3) \`git add\` ONLY $TASKS_FILE
+4) \`git commit -m "Add AutoAppDev selfdev task list"\`
+5) \`git push\`
+
+Final response: DONE_TASKS_RETRY
+EOF
+    log "Retrying task list generation (tasks.tsv missing)"
+    run_codex_resume "$session_id" "$retry_prompt" "$retry_json"
+    git_push_best_effort || true
+  fi
+
+  # Last-resort fallback: seed a minimal tasks.tsv so the pipeline can proceed.
+  if [ ! -s "$TASKS_FILE" ]; then
+    log "Codex did not create tasks.tsv; seeding a minimal tasks list locally"
+    cat >"$TASKS_FILE" <<'TSV'
+1	backend_task_crud	backend	Add basic task CRUD API	Pipeline can create/list/update/complete tasks via HTTP endpoints
+2	pwa_task_list_ui	pwa	Add task list view in PWA	Task list renders from backend and supports marking done
+3	pwa_blocks_export	pwa	Export Scratch-like blocks to JSON	Exported JSON matches the on-canvas program and is saved to backend
+4	backend_program_store	backend	Store/serve program JSON	Backend persists program JSON in Postgres (or state.json fallback) and serves it back
+5	pipeline_run_logs	backend	Improve pipeline run metadata	Backend records start/stop/pause/resume transitions and exposes run history
+6	inbox_consumer_contract	scripts	Define inbox consumption contract	Document how pipeline reads runtime/inbox and how it acknowledges messages
+7	pwa_inbox_view	pwa	Show inbox + acknowledgements	PWA displays recent inbox messages and whether consumed
+8	rag_guardrails_docs	docs	Add RAG + guardrails checklist	Add a checklist for “retrieve evidence first” + timeouts + boundaries
+9	eval_cost_logging	backend	Log per-step cost/usage metrics	Backend stores per-step duration and token/cost estimates (best-effort)
+10	tmux_dev_quality	scripts	Make tmux dev session nicer	Add pane titles, ports printed, and health curl hints
+11	light_theme_polish	pwa	Polish default light theme	Improve typography/spacing; keep light default and accessible contrast
+12	readme_quickstart	docs	Add quickstart docs	README includes env setup, tmux run, and API endpoints
+TSV
+    git add "$TASKS_FILE"
+    git commit -m "Seed AutoAppDev selfdev task list"
+    git_push_best_effort || true
   fi
 fi
 
@@ -397,4 +446,3 @@ EOF
 done
 
 log "Selfdev run complete."
-
