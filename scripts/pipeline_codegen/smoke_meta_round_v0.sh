@@ -30,6 +30,11 @@ log2="$(mktemp /tmp/autoappdev_meta_round_run2.XXXXXX.log)"
 
 test -f "$work_dir/task_list.json"
 test -f "$runtime_dir/meta_round_v0_resume.json"
+test -d "$runtime_dir/outbox"
+
+ls "$runtime_dir/outbox" | rg -n '^[0-9]+_pipeline\.(md|txt)$' >/dev/null
+rg -n 'META_TASK t1' "$runtime_dir/outbox"/*_pipeline.md >/dev/null
+rg -n 'META_TASK t2' "$runtime_dir/outbox"/*_pipeline.md >/dev/null
 
 rg -n 'TEMPLATE_RUN id=t1' "$log1" >/dev/null
 rg -n 'TEMPLATE_RUN id=t2' "$log1" >/dev/null
@@ -38,10 +43,12 @@ rg -n 'TEMPLATE_RUN id=t2' "$log1" >/dev/null
 
 rg -nF 'SKIP META_TASK t1: already completed' "$log2" >/dev/null
 rg -nF 'SKIP META_TASK t2: already completed' "$log2" >/dev/null
+
+rg -nF 'SKIP META_TASK t1: already completed' "$runtime_dir/outbox"/*_pipeline.md >/dev/null
+rg -nF 'SKIP META_TASK t2: already completed' "$runtime_dir/outbox"/*_pipeline.md >/dev/null
 if rg -n 'TEMPLATE_RUN id=' "$log2" >/dev/null; then
   echo "[smoke] error: template ran unexpectedly on second run (resume should skip)" >&2
   exit 1
 fi
 
 echo "[smoke] ok: $out_runner (work: $work_dir runtime: $runtime_dir)"
-

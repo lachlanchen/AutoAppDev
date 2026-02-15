@@ -49,6 +49,17 @@ The runner respects a pause flag file:
 - `RUNTIME_DIR="${AUTOAPPDEV_RUNTIME_DIR:-<repo>/runtime}"`
 - If `"$RUNTIME_DIR/PAUSE"` exists, the runner sleeps until the file is removed.
 
+### Outbox (Progress Updates)
+Generated runners can publish operator-facing progress updates without HTTP by writing message files under:
+- `"$AUTOAPPDEV_RUNTIME_DIR/outbox/"` (file-queue ingested by the backend; see `docs/api-contracts.md`)
+
+Runner v0 includes a best-effort helper:
+- `outbox_write <content> [role]`
+  - writes `runtime/outbox/<ts>_<role>.md` using an atomic rename pattern
+  - `role` defaults to `pipeline` (allowlist: `pipeline`, `system`)
+
+`meta_round_v0` loops use this helper to emit `META_TASK ... start/done` (and skip) updates so the PWA can observe progress via `/api/outbox`.
+
 ### Codex Wrapper Environment
 `codex_exec` uses these environment variables (with defaults):
 - `AUTOAPPDEV_CODEX_MODEL` (default: `gpt-5.3-codex`)

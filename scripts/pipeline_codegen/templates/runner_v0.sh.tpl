@@ -11,12 +11,63 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUNTIME_DIR="${AUTOAPPDEV_RUNTIME_DIR:-$ROOT_DIR/runtime}"
 export AUTOAPPDEV_RUNTIME_DIR_RESOLVED="$RUNTIME_DIR"
 LOG_DIR="$RUNTIME_DIR/logs"
+OUTBOX_DIR="$RUNTIME_DIR/outbox"
 PAUSE_FLAG="$RUNTIME_DIR/PAUSE"
 
 mkdir -p "$LOG_DIR"
 
 log() {
   printf '[runner] %s\n' "$*"
+}
+
+outbox_write() {
+  # Best-effort status channel for operator UI (no HTTP required).
+  # Backend ingests: runtime/outbox/<ts>_<role>.md|.txt (see docs/api-contracts.md).
+  local content="${1:-}"
+  local role="${2:-pipeline}"
+
+  if [ -z "$content" ]; then
+    return 0
+  fi
+
+  case "$role" in
+    pipeline|system)
+      ;;
+    *)
+      role="pipeline"
+      ;;
+  esac
+
+  set +e
+
+  mkdir -p "$OUTBOX_DIR" >/dev/null 2>&1
+
+  local ts=""
+  ts="$(
+    python3 - <<'PY'
+import time
+print(time.time_ns(), end="")
+PY
+  )"
+  if [ -z "$ts" ]; then
+    ts="$(date +%s%3N 2>/dev/null)"
+  fi
+  if [ -z "$ts" ]; then
+    ts="0"
+  fi
+
+  local tmp="$OUTBOX_DIR/.tmp.${ts}.$$"
+  local out="$OUTBOX_DIR/${ts}_${role}.md"
+  printf '%s\n' "$content" > "$tmp" 2>/dev/null
+  mv "$tmp" "$out" 2>/dev/null
+  local rc=$?
+  if [ "$rc" -ne 0 ]; then
+    rm -f "$tmp" 2>/dev/null
+    log "warn: failed to write outbox message"
+  fi
+
+  set -e
+  return 0
 }
 
 cleanup() {
@@ -212,13 +263,16 @@ meta_round_run_template_tasks() {
     && IFS= read -r -d '' task_acceptance; do
     if meta_round_is_completed "$task_id" "$META_ROUND_RESUME_FILE"; then
       log "SKIP META_TASK $task_id: already completed"
+      outbox_write "SKIP META_TASK $task_id: already completed" pipeline
       continue
     fi
 
     log "META_TASK $task_id: start"
+    outbox_write "META_TASK $task_id: start ($task_title)" pipeline
     run_task_template_v0 "$task_id" "$task_title" "$task_acceptance"
     meta_round_mark_completed "$task_id" "$META_ROUND_RESUME_FILE"
     log "META_TASK $task_id: done"
+    outbox_write "META_TASK $task_id: done" pipeline
   done < "$tmp_tasks"
 
   rm -f "$tmp_tasks"
