@@ -57,7 +57,7 @@ def _parse_outbox_role(raw: Any) -> str:
 
 def _infer_outbox_role_from_name(name: str) -> str:
     n = str(name or "")
-    m = re.match(r"^[0-9]+_([a-zA-Z0-9-]+)\\.", n)
+    m = re.match(r"^[0-9]+_([a-zA-Z0-9-]+)\.", n)
     if not m:
         return "pipeline"
     return _parse_outbox_role(m.group(1))
