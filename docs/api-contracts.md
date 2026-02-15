@@ -46,7 +46,7 @@ Response:
 The UI refers to “Chat/Inbox”.
 
 - `/api/inbox` is the first-class inbox persistence API.
-- `/api/chat` is the chat log API used by the current PWA.
+- `/api/chat` is a simple chat log API (older UI); the current PWA uses `/api/inbox` for guidance messages.
 
 Side effect:
 - When a user posts to `/api/inbox` or `/api/chat`, the backend also writes a `runtime/inbox/*_user.md` file so pipeline scripts can consume guidance.

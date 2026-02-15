@@ -91,7 +91,7 @@
       <section class="panel panel--right">
         <div class="tabs">
           <button class="tab is-active" data-tab="status">Status</button>
-          <button class="tab" data-tab="chat">Chat</button>
+          <button class="tab" data-tab="chat">Inbox</button>
           <button class="tab" data-tab="logs">Logs</button>
         </div>
 
@@ -113,14 +113,14 @@
             <div class="v" id="pipeline-pid">-</div>
           </div>
           <div class="hintbox">
-            Use Chat to inject guidance while the pipeline runs. Messages are written to a runtime inbox that scripts can consume.
+            Use Inbox to inject guidance while the pipeline runs. Messages are written to a runtime inbox that scripts can consume.
           </div>
         </div>
 
         <div class="tabview" id="tab-chat" hidden>
           <div class="chatlog" id="chatlog"></div>
           <div class="chatbar">
-            <input class="input" id="chat-input" placeholder="Type guidance for the running pipeline..." />
+            <input class="input" id="chat-input" placeholder="Send a message to the pipeline inbox..." />
             <button class="btn btn--primary" id="chat-send">Send</button>
           </div>
         </div>

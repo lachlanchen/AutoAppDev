@@ -189,7 +189,7 @@ function bindTabs() {
 
 async function loadChat() {
   try {
-    const data = await api("/api/chat?limit=50");
+    const data = await api("/api/inbox?limit=50");
     const msgs = data.messages || [];
     els.chatlog.innerHTML = "";
     msgs.forEach((m) => {
@@ -209,7 +209,7 @@ async function sendChat() {
   if (!content) return;
   els.chatInput.value = "";
   try {
-    await api("/api/chat", { method: "POST", body: JSON.stringify({ content }) });
+    await api("/api/inbox", { method: "POST", body: JSON.stringify({ content }) });
   } catch (e) {
     console.warn(e);
   }

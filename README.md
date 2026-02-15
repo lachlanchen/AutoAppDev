@@ -3,6 +3,17 @@
 Reusable scripts + guides for building apps step-by-step from screenshots/markdown with Codex as a non-interactive tool.
 
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
+## Self-Dev Status (Auto-Updated)
+
+- Updated: 2026-02-15T09:52:03Z
+- Phase commit: `Selfdev: 16 pwa_chat_inbox_ui work`
+- Progress: 15 / 34 tasks done
+- Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
+- Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
+
+This section is updated by `scripts/auto-autoappdev-development.sh`.
+Do not edit content between the markers.
+
 <!-- AUTOAPPDEV:STATUS:END -->
 
 ## Philosophy
