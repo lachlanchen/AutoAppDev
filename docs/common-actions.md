@@ -54,12 +54,12 @@ Semantics:
 
 `params`:
 - `workspace` (required string; see "Target Path")
-- `block_markdown` (optional string)
-  - If provided: the exact markdown to place between the markers.
-  - If omitted/empty: the engine/backend should use the **default block template** below.
+- `block_markdown` (required string)
+  - The exact markdown to place between the markers.
+  - MUST include a `## Philosophy` section.
 
-### Default Block Template (Includes Philosophy)
-The default block content between markers should be:
+### Recommended block_markdown Template (Includes Philosophy)
+A recommended `block_markdown` template is:
 
 ```md
 ## Workspace Status (Auto-Updated)
@@ -82,9 +82,29 @@ AutoAppDev treats agents as tools and keeps work stable via a strict, resumable 
 
 Engines may add additional workspace-specific info (links to logs, run ids, etc.), but should keep the Philosophy section present and stable.
 
+### Example (README snippet)
+```md
+# <Workspace Name>
+
+<!-- AUTOAPPDEV:README:BEGIN -->
+## Workspace Status (Auto-Updated)
+
+- Updated: <utc-iso-timestamp>
+
+## Philosophy
+AutoAppDev treats agents as tools and keeps work stable via a strict, resumable loop:
+1. Plan
+2. Implement
+3. Debug/verify (with timeouts)
+4. Fix
+5. Summarize + log
+6. Commit + push (if used by the workflow)
+<!-- AUTOAPPDEV:README:END -->
+```
+
 ### Example (AAPS v1)
 ```text
-ACTION {"id":"a1","kind":"update_readme","params":{"workspace":"my_workspace"}}
+ACTION {"id":"a1","kind":"update_readme","params":{"workspace":"my_workspace","block_markdown":"...markdown..."}}
 ```
 
 ### Example (IR v1)
@@ -92,6 +112,6 @@ ACTION {"id":"a1","kind":"update_readme","params":{"workspace":"my_workspace"}}
 {
   "id": "a1",
   "kind": "update_readme",
-  "params": { "workspace": "my_workspace" }
+  "params": { "workspace": "my_workspace", "block_markdown": "...markdown..." }
 }
 ```

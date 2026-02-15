@@ -5,8 +5,8 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T13:21:08Z
-- Phase commit: `Selfdev: 32 common_action_update_readme_spec work`
+- Updated: 2026-02-15T13:27:11Z
+- Phase commit: `Selfdev: 32 common_action_update_readme_spec verify`
 - Progress: 31 / 42 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
