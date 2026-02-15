@@ -315,13 +315,19 @@ def main() -> None:
     RUNTIME_DIR = runtime_dir
     LOG_DIR = log_dir
 
+    loop = asyncio.get_event_loop()
+    try:
+        # Fail fast: ensure DB connectivity/schema application happens before entering the IOLoop.
+        loop.run_until_complete(make_app(runtime_dir=runtime_dir, log_dir=log_dir))
+    except Exception as e:
+        print(f"ERROR: backend startup failed: {type(e).__name__}: {e}", file=sys.stderr)
+        print("Hint: verify Postgres is running and DATABASE_URL is correct (see docs/env.md).", file=sys.stderr)
+        raise SystemExit(1)
+
     # Redirect tornado logs to file for easier tailing in the PWA.
     backend_log = (log_dir / "backend.log").open("a", encoding="utf-8")
     sys.stdout = backend_log  # type: ignore[assignment]
     sys.stderr = backend_log  # type: ignore[assignment]
-
-    loop = asyncio.get_event_loop()
-    loop.create_task(make_app(runtime_dir=runtime_dir, log_dir=log_dir))
     tornado.ioloop.IOLoop.current().start()
 
 
