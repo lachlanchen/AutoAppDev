@@ -21,3 +21,8 @@ Create `.env` from `.env.example` and follow `docs/env.md`.
 ```bash
 conda run -n autoappdev python -m backend.db_smoketest
 ```
+
+## Apply schema.sql
+```bash
+conda run -n autoappdev python -m backend.apply_schema
+```
