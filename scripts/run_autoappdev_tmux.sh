@@ -58,6 +58,10 @@ if ! command -v tmux >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ ! -f "$ROOT_DIR/.env" ]; then
+  echo "Warning: missing .env at $ROOT_DIR/.env (copy from .env.example)." >&2
+fi
+
 if [ "$SKIP_SETUP" -eq 0 ]; then
   "$ROOT_DIR/scripts/setup_autoappdev_env.sh"
 fi
