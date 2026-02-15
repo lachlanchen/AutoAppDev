@@ -7,6 +7,7 @@ const CACHE_NAME = "autoappdev-shell-v1";
 const PRECACHE_URLS = [
   "./index.html",
   "./styles.css",
+  "./api-client.js",
   "./app.js",
   "./favicon.svg",
   "./manifest.json",

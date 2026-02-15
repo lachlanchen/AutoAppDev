@@ -13,6 +13,7 @@
         API_BASE_URL: "http://127.0.0.1:8788",
       };
     </script>
+    <script src="api-client.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body data-theme="light">
@@ -97,11 +98,15 @@
         <div class="tabview" id="tab-status">
           <div class="kv">
             <div class="k">Backend</div>
-            <div class="v" id="backend-health">unknown</div>
+            <div class="v badge badge--unknown" id="backend-health">unknown</div>
+          </div>
+          <div class="kv">
+            <div class="k">DB</div>
+            <div class="v badge badge--unknown" id="db-health">unknown</div>
           </div>
           <div class="kv">
             <div class="k">Pipeline</div>
-            <div class="v" id="pipeline-status">idle</div>
+            <div class="v badge badge--unknown" id="pipeline-status">idle</div>
           </div>
           <div class="kv">
             <div class="k">PID</div>

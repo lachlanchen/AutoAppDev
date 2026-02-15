@@ -327,6 +327,36 @@ body[data-theme="dark"] .canvas {
 .k { color: var(--muted); font-weight: 850; }
 .v { font-weight: 950; }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.3px;
+}
+
+.badge--unknown, .badge--idle { color: var(--muted); }
+.badge--ok {
+  color: color-mix(in srgb, var(--b-debug) 80%, var(--text));
+  border-color: color-mix(in srgb, var(--b-debug) 40%, var(--stroke));
+  background: color-mix(in srgb, var(--b-debug) 18%, var(--panel));
+}
+.badge--warn {
+  color: color-mix(in srgb, var(--b-plan) 80%, var(--text));
+  border-color: color-mix(in srgb, var(--b-plan) 45%, var(--stroke));
+  background: color-mix(in srgb, var(--b-plan) 18%, var(--panel));
+}
+.badge--err {
+  color: color-mix(in srgb, var(--red) 75%, var(--text));
+  border-color: color-mix(in srgb, var(--red) 45%, var(--stroke));
+  background: color-mix(in srgb, var(--red) 16%, var(--panel));
+}
+
 .hintbox {
   margin-top: 14px;
   padding: 12px;
@@ -394,4 +424,3 @@ body[data-theme="dark"] .canvas {
   .brand { min-width: 0; }
   .controls { justify-content: flex-start; }
 }
-

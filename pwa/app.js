@@ -1,6 +1,3 @@
-const cfg = window.__AUTOAPPDEV_CONFIG__ || {};
-const API_BASE_URL = cfg.API_BASE_URL || "http://127.0.0.1:8788";
-
 const els = {
   themeBtn: document.getElementById("btn-theme"),
   start: document.getElementById("btn-start"),
@@ -8,6 +5,7 @@ const els = {
   resume: document.getElementById("btn-resume"),
   stop: document.getElementById("btn-stop"),
   backendHealth: document.getElementById("backend-health"),
+  dbHealth: document.getElementById("db-health"),
   pipelineStatus: document.getElementById("pipeline-status"),
   pipelinePid: document.getElementById("pipeline-pid"),
   toolbox: document.getElementById("toolbox"),
@@ -92,26 +90,50 @@ function loadProgram() {
 }
 
 async function api(path, opts = {}) {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...opts,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = data.error || data.detail || `HTTP ${res.status}`;
-    const err = new Error(msg);
-    err.status = res.status;
-    throw err;
+  if (!window.AutoAppDevApi || typeof window.AutoAppDevApi.requestJson !== "function") {
+    throw new Error("api_client_not_loaded");
   }
-  return data;
+  return await window.AutoAppDevApi.requestJson(path, opts);
+}
+
+function setBadge(el, variant, text, title) {
+  if (!el) return;
+  el.classList.remove("badge--ok", "badge--warn", "badge--err", "badge--unknown", "badge--idle");
+  el.classList.add("badge", variant);
+  if (typeof text === "string") el.textContent = text;
+  if (title !== undefined) el.title = title || "";
+}
+
+function pipelineVariant(state) {
+  switch (String(state || "").toLowerCase()) {
+    case "running":
+      return "badge--ok";
+    case "paused":
+      return "badge--warn";
+    case "failed":
+      return "badge--err";
+    case "completed":
+    case "stopped":
+    case "idle":
+      return "badge--idle";
+    default:
+      return "badge--unknown";
+  }
 }
 
 async function refreshHealth() {
   try {
-    await api("/api/health");
-    els.backendHealth.textContent = "ok";
+    const data = await api("/api/health");
+    setBadge(els.backendHealth, "badge--ok", "ok");
+    const db = data.db || {};
+    if (db.ok) {
+      setBadge(els.dbHealth, "badge--ok", "ok", db.time ? `time: ${db.time}` : "");
+    } else {
+      setBadge(els.dbHealth, "badge--err", "error", db.error ? `error: ${db.error}` : "");
+    }
   } catch (e) {
-    els.backendHealth.textContent = "down";
+    setBadge(els.backendHealth, "badge--err", "down");
+    setBadge(els.dbHealth, "badge--unknown", "unknown");
   }
 }
 
@@ -119,10 +141,13 @@ async function refreshStatus() {
   try {
     const data = await api("/api/pipeline/status");
     const st = data.status || {};
-    els.pipelineStatus.textContent = st.state || (st.running ? "running" : "idle");
+    const state = st.state || (st.running ? "running" : "idle");
+    els.pipelineStatus.textContent = state;
+    setBadge(els.pipelineStatus, pipelineVariant(state), state);
     els.pipelinePid.textContent = st.pid ? String(st.pid) : "-";
   } catch {
-    // ignore
+    setBadge(els.pipelineStatus, "badge--unknown", "unknown");
+    els.pipelinePid.textContent = "-";
   }
 }
 
@@ -271,7 +296,7 @@ function boot() {
   loadChat();
   refreshLogs();
 
-  window.setInterval(refreshHealth, 5000);
+  window.setInterval(refreshHealth, 2000);
   window.setInterval(refreshStatus, 2000);
   window.setInterval(() => {
     // keep logs reasonably fresh while running
