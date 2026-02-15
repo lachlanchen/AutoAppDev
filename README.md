@@ -5,9 +5,9 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T16:40:21Z
-- Phase commit: `Selfdev: 44 aaps_numbered_prefix_parser summary`
-- Progress: 43 / 49 tasks done
+- Updated: 2026-02-15T16:45:01Z
+- Phase commit: `Selfdev: 45 runner_template_substitution plan`
+- Progress: 44 / 49 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
 
