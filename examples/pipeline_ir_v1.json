@@ -1,0 +1,65 @@
+{
+  "kind": "autoappdev_ir",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Happy path demo",
+      "steps": [
+        {
+          "id": "s1",
+          "title": "Plan",
+          "block": "plan",
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "note",
+              "params": { "text": "Read context and outline steps." }
+            }
+          ]
+        },
+        {
+          "id": "s2",
+          "title": "Work",
+          "block": "work",
+          "actions": [
+            { "id": "a1", "kind": "run", "params": { "cmd": "echo work" } }
+          ]
+        },
+        {
+          "id": "s3",
+          "title": "Debug",
+          "block": "debug",
+          "actions": [
+            { "id": "a1", "kind": "run", "params": { "cmd": "echo debug" } }
+          ]
+        },
+        {
+          "id": "s4",
+          "title": "Summary",
+          "block": "summary",
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "note",
+              "params": { "text": "Write summary + verification steps." }
+            }
+          ]
+        },
+        {
+          "id": "s5",
+          "title": "Release",
+          "block": "commit_push",
+          "actions": [
+            {
+              "id": "a1",
+              "kind": "note",
+              "params": { "text": "Commit/push is handled by driver scripts." }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
