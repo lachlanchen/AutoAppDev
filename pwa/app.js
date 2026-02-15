@@ -48,6 +48,7 @@ const BLOCK_META = {
   debug: { label: "Debug", cls: "block--debug" },
   fix: { label: "Fix", cls: "block--fix" },
   summary: { label: "Summary", cls: "block--summary" },
+  update_readme: { label: "Update README", cls: "block--summary" },
   commit_push: { label: "Commit+Push", cls: "block--release" },
   while_loop: { label: "While", cls: "block--loop" },
   wait_input: { label: "Wait Input", cls: "block--input" },
@@ -67,6 +68,53 @@ function setTheme(next) {
   localStorage.setItem("autoappdev_theme", next);
 }
 
+function parseWorkspaceSlug(raw) {
+  const ws = String(raw || "").trim();
+  if (!ws) return { ok: false, error: "workspace is required" };
+  if (ws === "." || ws === "..") return { ok: false, error: "workspace must not be '.' or '..'" };
+  if (ws.includes("/") || ws.includes("\\")) return { ok: false, error: "workspace must be a single path segment" };
+  if (ws.length > 100) return { ok: false, error: "workspace is too long" };
+  if (/[\x00-\x1f]/.test(ws)) return { ok: false, error: "workspace contains control characters" };
+  return { ok: true, workspace: ws };
+}
+
+function updateReadmeTargetPath(workspace) {
+  const ws = String(workspace || "").trim();
+  return ws ? `auto-apps/${ws}/README.md` : "auto-apps/<workspace>/README.md";
+}
+
+function defaultUpdateReadmeBlockMarkdown({ workspace } = {}) {
+  const ws = String(workspace || "").trim();
+  const lines = [];
+  lines.push("## Workspace Status (Auto-Updated)");
+  lines.push("");
+  lines.push("- Updated: <utc-iso-timestamp>");
+  if (ws) lines.push(`- Workspace: ${ws}`);
+  lines.push("");
+  lines.push("This section is updated by AutoAppDev.");
+  lines.push("Do not edit content between the markers.");
+  lines.push("");
+  lines.push("## Philosophy");
+  lines.push("AutoAppDev treats agents as tools and keeps work stable via a strict, resumable loop:");
+  lines.push("1. Plan");
+  lines.push("2. Implement");
+  lines.push("3. Debug/verify (with timeouts)");
+  lines.push("4. Fix");
+  lines.push("5. Summarize + log");
+  lines.push("6. Commit + push (if used by the workflow)");
+  return lines.join("\n") + "\n";
+}
+
+function formatProgramBlockLabel(block, meta) {
+  const b = block && typeof block === "object" ? block : {};
+  const type = String(b.type || "");
+  if (type === "update_readme") {
+    const ws = String(b.workspace || "").trim();
+    return `${String(meta.label || "Update README")} (${updateReadmeTargetPath(ws)})`;
+  }
+  return String(meta.label || type || "Block");
+}
+
 function renderProgram() {
   els.canvas.querySelectorAll(".program").forEach((n) => n.remove());
   if (!program.length) {
@@ -79,10 +127,14 @@ function renderProgram() {
   const wrap = document.createElement("div");
   wrap.className = "program";
   program.forEach((b, idx) => {
-    const meta = BLOCK_META[b.type] || { label: b.type, cls: "block--work" };
+    const type = b && typeof b === "object" ? String(b.type || "") : "";
+    const meta = BLOCK_META[type] || { label: type, cls: "block--work" };
     const row = document.createElement("div");
     row.className = `prog-block ${meta.cls}`;
-    row.innerHTML = `<div class="prog-label">${meta.label}</div>`;
+    const label = document.createElement("div");
+    label.className = "prog-label";
+    label.textContent = formatProgramBlockLabel(b, meta);
+    row.appendChild(label);
     const rm = document.createElement("button");
     rm.className = "prog-remove";
     rm.type = "button";
@@ -152,20 +204,39 @@ async function saveSettings() {
 function programToPlan(prog) {
   const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => ({
     id: idx + 1,
-    block: String((b && b.type) || ""),
+    block: (() => {
+      const type = b && typeof b === "object" ? String(b.type || "") : "";
+      return type === "update_readme" ? "summary" : type;
+    })(),
   }));
   return { kind: "autoappdev_plan", version: 1, steps };
 }
 
 function programToIr(prog, title = "Program") {
   const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => {
-    const block = String((b && b.type) || "");
-    const meta = BLOCK_META[block] || { label: block || `Step ${idx + 1}` };
+    const type = b && typeof b === "object" ? String(b.type || "") : "";
+    const meta = BLOCK_META[type] || { label: type || `Step ${idx + 1}` };
+    let block = type;
+    let actions = [{ id: "a1", kind: "noop", params: {} }];
+    if (type === "update_readme") {
+      block = "summary";
+      const ws = String((b && b.workspace) || "").trim();
+      actions = [
+        {
+          id: "a1",
+          kind: "update_readme",
+          params: {
+            workspace: ws,
+            block_markdown: defaultUpdateReadmeBlockMarkdown({ workspace: ws }),
+          },
+        },
+      ];
+    }
     return {
       id: `s${idx + 1}`,
       title: meta.label,
       block,
-      actions: [{ id: "a1", kind: "noop", params: {} }],
+      actions,
     };
   });
   return {
@@ -182,10 +253,24 @@ function programToAapsScript(prog, title = "Program") {
   lines.push(`TASK  ${JSON.stringify({ id: "t1", title: String(title || "Program") })}`);
   lines.push("");
   (Array.isArray(prog) ? prog : []).forEach((b, idx) => {
-    const block = String((b && b.type) || "");
-    const meta = BLOCK_META[block] || { label: block || `Step ${idx + 1}` };
+    const type = b && typeof b === "object" ? String(b.type || "") : "";
+    const meta = BLOCK_META[type] || { label: type || `Step ${idx + 1}` };
+    let block = type;
+    let action = { id: "a1", kind: "noop", params: {} };
+    if (type === "update_readme") {
+      block = "summary";
+      const ws = String((b && b.workspace) || "").trim();
+      action = {
+        id: "a1",
+        kind: "update_readme",
+        params: {
+          workspace: ws,
+          block_markdown: defaultUpdateReadmeBlockMarkdown({ workspace: ws }),
+        },
+      };
+    }
     lines.push(`STEP  ${JSON.stringify({ id: `s${idx + 1}`, title: meta.label, block })}`);
-    lines.push(`ACTION ${JSON.stringify({ id: "a1", kind: "noop", params: {} })}`);
+    lines.push(`ACTION ${JSON.stringify(action)}`);
     lines.push("");
   });
   return lines.join("\n").trimEnd() + "\n";
@@ -198,7 +283,16 @@ function irToProgram(ir) {
   tasks.forEach((t) => {
     const s = t && Array.isArray(t.steps) ? t.steps : [];
     s.forEach((st) => {
-      if (st && typeof st.block === "string" && st.block.trim()) steps.push({ type: st.block.trim() });
+      if (!st || typeof st !== "object") return;
+      const actions = Array.isArray(st.actions) ? st.actions : [];
+      const upd = actions.find((a) => a && typeof a === "object" && a.kind === "update_readme");
+      const params = upd && typeof upd === "object" ? upd.params : null;
+      const ws = params && typeof params === "object" ? String(params.workspace || "").trim() : "";
+      if (ws) {
+        steps.push({ type: "update_readme", workspace: ws });
+        return;
+      }
+      if (typeof st.block === "string" && st.block.trim()) steps.push({ type: st.block.trim() });
     });
   });
   return steps;
@@ -596,7 +690,18 @@ function bindDnD() {
     ev.preventDefault();
     const type = ev.dataTransfer.getData("text/plain");
     if (!type) return;
-    program.push({ type });
+    if (type === "update_readme") {
+      const raw = window.prompt("Workspace slug for auto-apps/<workspace>/README.md?", "my_workspace");
+      if (raw === null) return;
+      const parsed = parseWorkspaceSlug(raw);
+      if (!parsed.ok) {
+        window.alert(`Invalid workspace: ${parsed.error}`);
+        return;
+      }
+      program.push({ type, workspace: parsed.workspace });
+    } else {
+      program.push({ type });
+    }
     persistProgram();
     renderProgram();
   });
