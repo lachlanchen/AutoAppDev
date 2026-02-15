@@ -11,7 +11,7 @@ one small task at a time, with a consistent session and strict guardrails.
 
 Options:
   --model <name>            Codex model (default: gpt-5.3-codex)
-  --reasoning <effort>      Reasoning effort: low|medium|high|extra_high (default: medium)
+  --reasoning <effort>      Reasoning effort: none|minimal|low|medium|high|xhigh (default: medium)
   --sandbox <mode>          Codex sandbox: danger-full-access (default), etc.
   --approval <mode>         Codex approval: never (default), etc.
   --new-session             Start a fresh Codex session (ignore saved session id)
@@ -56,6 +56,15 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+case "$reasoning" in
+  extra_high|xhigh) reasoning="xhigh" ;;
+  none|minimal|low|medium|high|xhigh) : ;;
+  *)
+    echo "Invalid --reasoning: $reasoning (expected none|minimal|low|medium|high|xhigh)." >&2
+    exit 1
+    ;;
+esac
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SELFDEV_DIR="$ROOT_DIR/references/selfdev"
