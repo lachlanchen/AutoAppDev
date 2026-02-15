@@ -42,6 +42,59 @@ Response:
 { "ok": true }
 ```
 
+## Plan Payload
+
+### GET /api/plan
+Returns the currently stored plan payload (or `null` if none).
+
+Response:
+```json
+{
+  "plan": {
+    "kind": "autoappdev_plan",
+    "version": 1,
+    "steps": [
+      { "id": 1, "block": "plan" },
+      { "id": 2, "block": "work" }
+    ]
+  }
+}
+```
+
+### POST /api/plan
+Stores the current plan payload.
+
+Request:
+```json
+{
+  "kind": "autoappdev_plan",
+  "version": 1,
+  "steps": [
+    { "id": 1, "block": "plan" },
+    { "id": 2, "block": "work" }
+  ]
+}
+```
+
+Response:
+```json
+{ "ok": true }
+```
+
+Response (error examples):
+```json
+{ "error": "invalid_json" }
+```
+```json
+{ "error": "invalid_kind" }
+```
+```json
+{ "error": "invalid_version" }
+```
+```json
+{ "error": "steps_must_be_list" }
+```
+
 ## Inbox Messages
 The UI refers to “Chat/Inbox”.
 

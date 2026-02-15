@@ -181,6 +181,48 @@ class ConfigHandler(BaseHandler):
         self.write_json({"ok": True})
 
 
+class PlanHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self) -> None:
+        cfg = await self.storage.get_config()
+        self.write_json({"plan": cfg.get("pipeline_plan")})
+
+    async def post(self) -> None:
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+        if body.get("kind") != "autoappdev_plan":
+            self.write_json({"error": "invalid_kind"}, status=400)
+            return
+        if body.get("version") != 1:
+            self.write_json({"error": "invalid_version"}, status=400)
+            return
+        steps = body.get("steps")
+        if not isinstance(steps, list):
+            self.write_json({"error": "steps_must_be_list"}, status=400)
+            return
+        for i, st in enumerate(steps):
+            if not isinstance(st, dict):
+                self.write_json({"error": "invalid_step", "index": i}, status=400)
+                return
+            if not isinstance(st.get("id"), int):
+                self.write_json({"error": "invalid_step_id", "index": i}, status=400)
+                return
+            block = st.get("block")
+            if not isinstance(block, str) or not block.strip():
+                self.write_json({"error": "invalid_step_block", "index": i}, status=400)
+                return
+        await self.storage.set_config("pipeline_plan", body)
+        self.write_json({"ok": True})
+
+
 class ChatHandler(BaseHandler):
     def initialize(self, storage: Storage, runtime_dir: Path) -> None:
         self.storage = storage
@@ -576,6 +618,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/health", HealthHandler, {"storage": storage}),
             (r"/api/version", VersionHandler),
             (r"/api/config", ConfigHandler, {"storage": storage}),
+            (r"/api/plan", PlanHandler, {"storage": storage}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),

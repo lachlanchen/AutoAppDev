@@ -12,6 +12,7 @@ const els = {
   canvas: document.getElementById("canvas"),
   canvasEmpty: document.getElementById("canvas-empty"),
   exportBtn: document.getElementById("btn-export"),
+  sendPlanBtn: document.getElementById("btn-send-plan"),
   clearBtn: document.getElementById("btn-clear"),
   export: document.getElementById("export"),
   tabs: document.querySelectorAll(".tab"),
@@ -94,6 +95,31 @@ async function api(path, opts = {}) {
     throw new Error("api_client_not_loaded");
   }
   return await window.AutoAppDevApi.requestJson(path, opts);
+}
+
+function programToPlan(prog) {
+  const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => ({
+    id: idx + 1,
+    block: String((b && b.type) || ""),
+  }));
+  return { kind: "autoappdev_plan", version: 1, steps };
+}
+
+async function sendPlan() {
+  if (!program.length) {
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify({ ok: false, error: "empty_program" }, null, 2);
+    return;
+  }
+  const payload = programToPlan(program);
+  try {
+    const ack = await api("/api/plan", { method: "POST", body: JSON.stringify(payload) });
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify({ ack, plan: payload }, null, 2);
+  } catch (e) {
+    els.export.hidden = false;
+    els.export.textContent = JSON.stringify({ ok: false, error: e.message || String(e) }, null, 2);
+  }
 }
 
 function setBadge(el, variant, text, title) {
@@ -236,6 +262,10 @@ function bindControls() {
     els.export.hidden = false;
     els.export.textContent = JSON.stringify({ program }, null, 2);
   });
+
+  if (els.sendPlanBtn) {
+    els.sendPlanBtn.addEventListener("click", sendPlan);
+  }
 
   els.clearBtn.addEventListener("click", () => {
     program = [];
