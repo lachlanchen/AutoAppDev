@@ -85,9 +85,27 @@ def _generate_body(ir: dict[str, Any]) -> str:
         t = _as_dict(t_any, f"tasks[{t_i}]")
         t_id = _req_str(t, "id", f"tasks[{t_i}]")
         t_title = _req_str(t, "title", f"tasks[{t_i}]")
+        t_meta_any = t.get("meta")
+        if t_meta_any is None:
+            t_meta = {}
+        else:
+            t_meta = t_meta_any
+        if not isinstance(t_meta, dict):
+            _die(f"invalid tasks[{t_i}].meta (expected object)")
+
+        t_acceptance_any = t_meta.get("acceptance")
+        if t_acceptance_any is None:
+            t_acceptance = ""
+        elif isinstance(t_acceptance_any, str):
+            t_acceptance = t_acceptance_any
+        else:
+            _die(f"invalid tasks[{t_i}].meta.acceptance (expected string)")
 
         lines.append("")
         lines.append(f"# TASK {t_id}: {_comment_safe(t_title)}")
+        lines.append(f"export AUTOAPPDEV_CTX_TASK_ID={_bash_sq(t_id)}")
+        lines.append(f"export AUTOAPPDEV_CTX_TASK_TITLE={_bash_sq(t_title)}")
+        lines.append(f"export AUTOAPPDEV_CTX_TASK_ACCEPTANCE={_bash_sq(t_acceptance)}")
         lines.append(f"log {_bash_sq(f'TASK {t_id}: {t_title}')}")
 
         steps = _as_list(t.get("steps"), f"tasks[{t_i}].steps")
@@ -98,6 +116,9 @@ def _generate_body(ir: dict[str, Any]) -> str:
             s_block = _req_str(s, "block", f"tasks[{t_i}].steps[{s_i}]")
 
             lines.append(f"# STEP {s_id} ({s_block}): {_comment_safe(s_title)}")
+            lines.append(f"export AUTOAPPDEV_CTX_STEP_ID={_bash_sq(s_id)}")
+            lines.append(f"export AUTOAPPDEV_CTX_STEP_TITLE={_bash_sq(s_title)}")
+            lines.append(f"export AUTOAPPDEV_CTX_STEP_BLOCK={_bash_sq(s_block)}")
             lines.append(f"log {_bash_sq(f'STEP {s_id} ({s_block}): {s_title}')}")
 
             actions = _as_list(s.get("actions"), f"tasks[{t_i}].steps[{s_i}].actions")
@@ -107,6 +128,8 @@ def _generate_body(ir: dict[str, Any]) -> str:
                 a_kind = _req_str(a, "kind", f"tasks[{t_i}].steps[{s_i}].actions[{a_i}]")
 
                 lines.append(f"# ACTION {a_id}: kind={_comment_safe(a_kind)}")
+                lines.append(f"export AUTOAPPDEV_CTX_ACTION_ID={_bash_sq(a_id)}")
+                lines.append(f"export AUTOAPPDEV_CTX_ACTION_KIND={_bash_sq(a_kind)}")
 
                 params = a.get("params") or {}
                 if not isinstance(params, dict):
@@ -194,4 +217,3 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-

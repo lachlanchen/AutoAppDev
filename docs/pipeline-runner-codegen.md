@@ -61,3 +61,22 @@ Artifacts written by `codex_exec`:
 - `runtime/logs/codex_<n>.prompt.txt`
 - `runtime/logs/codex_<n>.jsonl`
 - `runtime/logs/codex_stderr.log` (append)
+
+## Placeholder Substitution (v0)
+Generated runners perform strict placeholder substitution (Convention v0) inside:
+- `ACTION.kind="run"`: `params.cmd`
+- `ACTION.kind="codex_exec"`: `params.prompt`
+
+Syntax and conventions:
+- See `docs/aaps-numbering-placeholders.md` for the `{{...}}` syntax and guidance.
+- Whitespace inside braces is ignored, e.g. `{{ task.id }}`.
+
+Supported keys:
+- `{{runtime_dir}}` (resolved runtime dir)
+- `{{task.id}}`, `{{task.title}}`, `{{task.acceptance}}`
+- `{{step.id}}`, `{{step.title}}`, `{{step.block}}`
+- `{{action.id}}`, `{{action.kind}}`
+
+Behavior:
+- Unknown placeholder keys are an error (fail fast).
+- `AUTOAPPDEV_CODEX_DISABLE=1` skips invoking `codex` and prints the substituted prompt (useful for smoke tests).

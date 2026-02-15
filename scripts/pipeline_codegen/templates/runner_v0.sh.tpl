@@ -37,12 +37,13 @@ wait_if_paused() {
 }
 
 subst_placeholders() {
-  python3 - <<'PY'
+  python3 - 3<&0 <<'PY'
 import os
 import re
 import sys
 
-text = sys.stdin.read()
+with os.fdopen(3, "r", encoding="utf-8") as f:
+    text = f.read()
 
 mapping = {
     "runtime_dir": os.environ.get("AUTOAPPDEV_RUNTIME_DIR_RESOLVED", ""),
@@ -56,7 +57,7 @@ mapping = {
     "action.kind": os.environ.get("AUTOAPPDEV_CTX_ACTION_KIND", ""),
 }
 
-pattern = re.compile(r"\\{\\{\\s*([^{}]+?)\\s*\\}\\}")
+pattern = re.compile(r"\{\{\s*([^{}]+?)\s*\}\}")
 
 
 def repl(m: re.Match[str]) -> str:

@@ -1,0 +1,37 @@
+{
+  "kind": "autoappdev_ir",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "t_ph",
+      "title": "Runner_placeholders_smoke_v0",
+      "meta": {
+        "acceptance": "Acceptance_placeholders_smoke_v0"
+      },
+      "steps": [
+        {
+          "id": "s1",
+          "title": "Smoke_step",
+          "block": "debug",
+          "actions": [
+            {
+              "id": "a_run",
+              "kind": "run",
+              "params": {
+                "cmd": "echo PLACEHOLDERS_RUN task={{task.id}} step={{step.id}} runtime={{runtime_dir}} acceptance={{task.acceptance}} title={{task.title}} block={{step.block}} action={{action.id}}/{{action.kind}}"
+              }
+            },
+            {
+              "id": "a_codex",
+              "kind": "codex_exec",
+              "params": {
+                "prompt": "PLACEHOLDERS_CODEX task={{task.id}} step={{step.id}} runtime={{runtime_dir}} acceptance={{task.acceptance}} title={{task.title}}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
