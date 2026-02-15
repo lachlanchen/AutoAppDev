@@ -18,6 +18,15 @@ from .storage import Storage, safe_env
 from .pipeline_parser import ParseError, parse_aaps_v1
 from .pipeline_shell_import import ShellImportError, import_shell_annotated_to_ir
 from .llm_assisted_parse import LlmParseError, build_prompt, extract_aaps, make_request_id, run_codex_to_jsonl, write_artifacts
+from .update_readme_action import (
+    UpdateReadmeError,
+    make_update_id,
+    resolve_workspace_readme_path,
+    upsert_readme_block,
+    validate_block_markdown,
+    validate_workspace_slug,
+    write_update_artifacts,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -611,6 +620,114 @@ class ScriptsParseLlmHandler(BaseHandler):
         )
 
 
+class UpdateReadmeHandler(BaseHandler):
+    def initialize(self, runtime_dir: Path) -> None:
+        self.runtime_dir = runtime_dir
+
+    async def post(self) -> None:
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"ok": False, "error": "invalid_body"}, status=400)
+            return
+
+        workspace = body.get("workspace")
+        if not isinstance(workspace, str):
+            self.write_json({"ok": False, "error": "invalid_workspace"}, status=400)
+            return
+        block_markdown = body.get("block_markdown")
+        if not isinstance(block_markdown, str):
+            self.write_json({"ok": False, "error": "invalid_block_markdown"}, status=400)
+            return
+
+        try:
+            ws = validate_workspace_slug(workspace)
+            validate_block_markdown(block_markdown)
+            update_id = make_update_id(workspace=ws, block_markdown=block_markdown)
+            target = resolve_workspace_readme_path(REPO_ROOT, ws)
+        except UpdateReadmeError as e:
+            status = 403 if e.code in {"path_outside_repo", "path_outside_auto_apps"} else 400
+            self.write_json(e.to_dict(), status=status)
+            return
+
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            self.write_json({"ok": False, "error": "mkdir_failed", "detail": f"{type(e).__name__}: {e}"}, status=500)
+            return
+
+        before: str | None = None
+        if target.exists():
+            try:
+                before = target.read_text("utf-8")
+            except Exception as e:
+                self.write_json({"ok": False, "error": "read_failed", "detail": f"{type(e).__name__}: {e}"}, status=500)
+                return
+
+        try:
+            after, meta = upsert_readme_block(before, workspace=ws, block_markdown=block_markdown)
+        except UpdateReadmeError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+
+        updated = before is None or after != before
+        if updated:
+            tmp = target.with_name(target.name + f".{update_id}.tmp")
+            try:
+                tmp.write_text(after, "utf-8")
+                tmp.replace(target)
+            except Exception as e:
+                try:
+                    if tmp.exists():
+                        tmp.unlink()
+                except Exception:
+                    pass
+                self.write_json({"ok": False, "error": "write_failed", "detail": f"{type(e).__name__}: {e}"}, status=500)
+                return
+
+        rel = str(target.relative_to(REPO_ROOT)) if REPO_ROOT in target.parents else str(target)
+        meta_out: dict[str, Any] = {
+            **(meta or {}),
+            "id": update_id,
+            "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "workspace": ws,
+            "path": rel,
+            "updated": updated,
+        }
+        try:
+            artifacts = write_update_artifacts(
+                runtime_dir=self.runtime_dir,
+                update_id=update_id,
+                before=before or "",
+                after=after,
+                meta=meta_out,
+            )
+        except Exception as e:
+            self.write_json(
+                {"ok": False, "error": "artifact_write_failed", "detail": f"{type(e).__name__}: {e}"},
+                status=500,
+            )
+            return
+
+        print(
+            f"update_readme id={update_id} workspace={ws} path={rel} updated={updated} "
+            f"markers_preexisted={bool(meta_out.get('markers_preexisted'))}"
+        )
+        self.write_json(
+            {
+                "ok": True,
+                "workspace": ws,
+                "path": rel,
+                "updated": updated,
+                "markers_preexisted": bool(meta_out.get("markers_preexisted")),
+                "artifacts": {"dir": str(artifacts.dir)},
+            }
+        )
+
+
 class ChatHandler(BaseHandler):
     def initialize(self, storage: Storage, runtime_dir: Path) -> None:
         self.storage = storage
@@ -1012,6 +1129,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/scripts/parse", ScriptsParseHandler),
             (r"/api/scripts/import-shell", ScriptsImportShellHandler),
             (r"/api/scripts/parse-llm", ScriptsParseLlmHandler, {"storage": storage, "runtime_dir": runtime_dir}),
+            (r"/api/actions/update-readme", UpdateReadmeHandler, {"runtime_dir": runtime_dir}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),

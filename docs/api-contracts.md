@@ -255,6 +255,47 @@ Response (error: timeout):
 { "ok": false, "error": "timeout", "detail": "codex exec exceeded timeout_s=45.0" }
 ```
 
+## Actions
+
+### POST /api/actions/update-readme
+Safely upserts the owned README block for a workspace under `auto-apps/` (see `docs/common-actions.md`).
+
+Request:
+```json
+{
+  "workspace": "my_workspace",
+  "block_markdown": "## Workspace Status...\\n\\n## Philosophy\\n..."
+}
+```
+
+Response (success):
+```json
+{
+  "ok": true,
+  "workspace": "my_workspace",
+  "path": "auto-apps/my_workspace/README.md",
+  "updated": true,
+  "markers_preexisted": false,
+  "artifacts": { "dir": ".../runtime/logs/update_readme/<id>" }
+}
+```
+
+Notes:
+- `workspace` must be a single path segment (no `/` or `\\`, no `.` or `..`).
+- Only the block between `<!-- AUTOAPPDEV:README:BEGIN -->` and `<!-- AUTOAPPDEV:README:END -->` is replaced/owned.
+- `block_markdown` must include a `## Philosophy` section and must not contain the marker strings.
+
+Response (error examples):
+```json
+{ "ok": false, "error": "invalid_workspace" }
+```
+```json
+{ "ok": false, "error": "missing_philosophy", "detail": "block_markdown must include a '## Philosophy' section" }
+```
+```json
+{ "ok": false, "error": "marker_mismatch", "detail": "expected exactly one begin+end marker; got begin=1 end=0" }
+```
+
 ## Inbox Messages
 The UI refers to “Chat/Inbox”.
 
