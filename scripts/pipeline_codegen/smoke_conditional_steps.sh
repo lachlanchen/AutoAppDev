@@ -25,7 +25,7 @@ timeout 10s bash "$out_runner" >"$out_log" 2>&1 || true
 # First task: debug passes => fix should be skipped.
 rg -n 'TASK t_cond_pass' "$out_log" >/dev/null
 rg -n 'DEBUG_OK' "$out_log" >/dev/null
-rg -n 'SKIP STEP f1 \\(fix\\): conditional=on_debug_failure' "$out_log" >/dev/null
+rg -nF 'SKIP STEP f1 (fix): conditional=on_debug_failure' "$out_log" >/dev/null
 if rg -n 'FIX_RAN_UNEXPECTED' "$out_log" >/dev/null; then
   echo "[smoke] error: fix ran unexpectedly for passing debug" >&2
   exit 1
@@ -37,4 +37,3 @@ rg -n 'DEBUG_FAIL' "$out_log" >/dev/null
 rg -n 'FIX_RAN_EXPECTED' "$out_log" >/dev/null
 
 echo "[smoke] ok: $out_runner (log: $out_log)"
-
