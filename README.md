@@ -7,6 +7,7 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 - `docs/ORDERING_RATIONALE.md`: Example rationale for sequencing screenshot-driven steps.
 - `docs/controller-mvp-scope.md`: Controller MVP scope (screens + minimal APIs).
 - `docs/env.md`: Environment variables (.env) conventions.
+- `docs/api-contracts.md`: API request/response contracts for the controller.
 - `scripts/app-auto-development.sh`: The linear pipeline driver (plan -> backend -> PWA -> Android -> iOS -> review -> summary), with resume/state support.
 - `scripts/generate_screenshot_docs.sh`: Screenshot -> markdown description generator (Codex-driven).
 - `scripts/setup_backend_env.sh`: Backend conda env bootstrap for local runs.
