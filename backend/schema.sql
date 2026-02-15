@@ -57,3 +57,15 @@ create table if not exists pipeline_scripts (
 );
 
 create index if not exists pipeline_scripts_updated_at_idx on pipeline_scripts(updated_at);
+
+create table if not exists action_definitions (
+  id bigserial primary key,
+  title text not null,
+  kind text not null,
+  spec jsonb not null,
+  enabled boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists action_definitions_updated_at_idx on action_definitions(updated_at);

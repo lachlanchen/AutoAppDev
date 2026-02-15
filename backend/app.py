@@ -18,6 +18,7 @@ from .storage import Storage, safe_env
 from .pipeline_parser import ParseError, parse_aaps_v1
 from .pipeline_shell_import import ShellImportError, import_shell_annotated_to_ir
 from .llm_assisted_parse import LlmParseError, build_prompt, extract_aaps, make_request_id, run_codex_to_jsonl, write_artifacts
+from .action_registry import ActionRegistryError, validate_action_create, validate_action_update
 from .update_readme_action import (
     UpdateReadmeError,
     make_update_id,
@@ -728,6 +729,100 @@ class UpdateReadmeHandler(BaseHandler):
         )
 
 
+class ActionsHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self) -> None:
+        limit = int(self.get_query_argument("limit", "50"))
+        items = await self.storage.list_action_definitions(limit=limit)
+        self.write_json({"actions": items})
+
+    async def post(self) -> None:
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+        cfg = await self.storage.get_config()
+        try:
+            title, kind, spec, enabled = validate_action_create(body, repo_root=REPO_ROOT, cfg=cfg)
+        except ActionRegistryError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        action = await self.storage.create_action_definition(title=title, kind=kind, spec=spec, enabled=enabled)
+        self.write_json({"ok": True, "action": action})
+
+
+class ActionHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self, action_id: str) -> None:
+        try:
+            aid = int(action_id)
+        except Exception:
+            self.write_json({"error": "invalid_id"}, status=400)
+            return
+        action = await self.storage.get_action_definition(aid)
+        if not action:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+        self.write_json({"action": action})
+
+    async def put(self, action_id: str) -> None:
+        try:
+            aid = int(action_id)
+        except Exception:
+            self.write_json({"error": "invalid_id"}, status=400)
+            return
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+        cur = await self.storage.get_action_definition(aid)
+        if not cur:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+        cfg = await self.storage.get_config()
+        try:
+            title, spec, enabled = validate_action_update(body, repo_root=REPO_ROOT, existing=cur, cfg=cfg)
+        except ActionRegistryError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        spec_set = "spec" in body
+        updated = await self.storage.update_action_definition(
+            aid,
+            title=title,
+            spec=spec,
+            spec_set=spec_set,
+            enabled=enabled,
+        )
+        if not updated:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+        self.write_json({"ok": True, "action": updated})
+
+    async def delete(self, action_id: str) -> None:
+        try:
+            aid = int(action_id)
+        except Exception:
+            self.write_json({"error": "invalid_id"}, status=400)
+            return
+        ok = await self.storage.delete_action_definition(aid)
+        if not ok:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+        self.write_json({"ok": True})
+
+
 class ChatHandler(BaseHandler):
     def initialize(self, storage: Storage, runtime_dir: Path) -> None:
         self.storage = storage
@@ -1129,6 +1224,8 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/scripts/parse", ScriptsParseHandler),
             (r"/api/scripts/import-shell", ScriptsImportShellHandler),
             (r"/api/scripts/parse-llm", ScriptsParseLlmHandler, {"storage": storage, "runtime_dir": runtime_dir}),
+            (r"/api/actions", ActionsHandler, {"storage": storage}),
+            (r"/api/actions/([0-9]+)", ActionHandler, {"storage": storage}),
             (r"/api/actions/update-readme", UpdateReadmeHandler, {"runtime_dir": runtime_dir}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),

@@ -257,6 +257,74 @@ Response (error: timeout):
 
 ## Actions
 
+`/api/actions` refers to the **action registry** (stored definitions). Some executor endpoints also live under `/api/actions/*` (for example `update-readme`).
+
+### GET /api/actions?limit=N
+Lists registered action definitions (metadata only; does not include `spec`).
+
+Response:
+```json
+{
+  "actions": [
+    {
+      "id": 1,
+      "title": "My prompt action",
+      "kind": "prompt",
+      "enabled": true,
+      "created_at": "2026-02-15T12:00:00+00:00",
+      "updated_at": "2026-02-15T12:00:00+00:00"
+    }
+  ]
+}
+```
+
+### POST /api/actions
+Creates a new action definition.
+
+Request:
+```json
+{
+  "title": "My action",
+  "kind": "prompt",
+  "enabled": true,
+  "spec": { "prompt": "..." }
+}
+```
+
+Response:
+```json
+{ "ok": true, "action": { "id": 1, "title": "...", "kind": "prompt", "spec": { }, "enabled": true } }
+```
+
+### GET /api/actions/<id>
+Fetches a single action definition (includes `spec`).
+
+Response:
+```json
+{ "action": { "id": 1, "title": "...", "kind": "prompt", "spec": { }, "enabled": true } }
+```
+
+### PUT /api/actions/<id>
+Updates an action definition (partial update supported for `title`, `enabled`, and `spec`).
+
+Request (example):
+```json
+{ "enabled": false }
+```
+
+Response:
+```json
+{ "ok": true, "action": { "id": 1, "enabled": false } }
+```
+
+### DELETE /api/actions/<id>
+Deletes an action definition.
+
+Response:
+```json
+{ "ok": true }
+```
+
 ### POST /api/actions/update-readme
 Safely upserts the owned README block for a workspace under `auto-apps/` (see `docs/common-actions.md`).
 

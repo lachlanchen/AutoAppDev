@@ -317,6 +317,207 @@ class Storage:
         self._write_state(st)
         return len(items) != before
 
+    async def create_action_definition(
+        self,
+        *,
+        title: str,
+        kind: str,
+        spec: Any,
+        enabled: bool = True,
+    ) -> dict[str, Any]:
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "insert into action_definitions(title, kind, spec, enabled) values($1, $2, $3, $4) "
+                    "returning id, title, kind, spec, enabled, created_at, updated_at",
+                    str(title or ""),
+                    str(kind or ""),
+                    spec,
+                    bool(enabled),
+                )
+                assert row is not None
+                return {
+                    "id": int(row["id"]),
+                    "title": str(row["title"] or ""),
+                    "kind": str(row["kind"] or ""),
+                    "spec": row["spec"],
+                    "enabled": bool(row["enabled"]),
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+
+        st = self._read_state()
+        st.setdefault("actions", [])
+        items = st["actions"] if isinstance(st.get("actions"), list) else []
+        next_id = 1
+        for it in items:
+            if isinstance(it, dict) and isinstance(it.get("id"), int):
+                next_id = max(next_id, int(it.get("id")) + 1)
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        obj = {
+            "id": next_id,
+            "title": str(title or ""),
+            "kind": str(kind or ""),
+            "spec": spec,
+            "enabled": bool(enabled),
+            "created_at": now,
+            "updated_at": now,
+        }
+        items.append(obj)
+        st["actions"] = items[-200:]
+        self._write_state(st)
+        return obj
+
+    async def get_action_definition(self, action_id: int) -> dict[str, Any] | None:
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "select id, title, kind, spec, enabled, created_at, updated_at from action_definitions where id=$1",
+                    int(action_id),
+                )
+                if not row:
+                    return None
+                return {
+                    "id": int(row["id"]),
+                    "title": str(row["title"] or ""),
+                    "kind": str(row["kind"] or ""),
+                    "spec": row["spec"],
+                    "enabled": bool(row["enabled"]),
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+
+        st = self._read_state()
+        items = st.get("actions", [])
+        if not isinstance(items, list):
+            return None
+        for it in items:
+            if isinstance(it, dict) and it.get("id") == action_id:
+                return it
+        return None
+
+    async def list_action_definitions(self, limit: int = 50) -> list[dict[str, Any]]:
+        lim = max(1, min(200, int(limit)))
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "select id, title, kind, enabled, created_at, updated_at "
+                    "from action_definitions order by id desc limit $1",
+                    lim,
+                )
+                items = [
+                    {
+                        "id": int(r["id"]),
+                        "title": str(r["title"] or ""),
+                        "kind": str(r["kind"] or ""),
+                        "enabled": bool(r["enabled"]),
+                        "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+                        "updated_at": r["updated_at"].isoformat() if r["updated_at"] else None,
+                    }
+                    for r in rows
+                ]
+                items.reverse()
+                return items
+
+        st = self._read_state()
+        items = st.get("actions", [])
+        if not isinstance(items, list):
+            return []
+        out = items[-lim:]
+        out.reverse()
+        return [
+            {
+                "id": int(it.get("id")),
+                "title": str(it.get("title") or ""),
+                "kind": str(it.get("kind") or ""),
+                "enabled": bool(it.get("enabled", True)),
+                "created_at": it.get("created_at"),
+                "updated_at": it.get("updated_at"),
+            }
+            for it in out
+            if isinstance(it, dict) and isinstance(it.get("id"), int)
+        ]
+
+    async def update_action_definition(
+        self,
+        action_id: int,
+        *,
+        title: str | None = None,
+        spec: Any = None,
+        spec_set: bool = False,
+        enabled: bool | None = None,
+        kind: str | None = None,
+    ) -> dict[str, Any] | None:
+        cur = await self.get_action_definition(int(action_id))
+        if not cur:
+            return None
+        next_title = cur.get("title") if title is None else str(title)
+        next_kind = cur.get("kind") if kind is None else str(kind)
+        next_spec = cur.get("spec") if not spec_set else spec
+        next_enabled = cur.get("enabled") if enabled is None else bool(enabled)
+
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "update action_definitions set title=$1, kind=$2, spec=$3, enabled=$4, updated_at=now() "
+                    "where id=$5 "
+                    "returning id, title, kind, spec, enabled, created_at, updated_at",
+                    next_title,
+                    next_kind,
+                    next_spec,
+                    next_enabled,
+                    int(action_id),
+                )
+                if not row:
+                    return None
+                return {
+                    "id": int(row["id"]),
+                    "title": str(row["title"] or ""),
+                    "kind": str(row["kind"] or ""),
+                    "spec": row["spec"],
+                    "enabled": bool(row["enabled"]),
+                    "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+
+        st = self._read_state()
+        items = st.get("actions", [])
+        if not isinstance(items, list):
+            return None
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        out: dict[str, Any] | None = None
+        for it in items:
+            if not (isinstance(it, dict) and it.get("id") == action_id):
+                continue
+            it["title"] = next_title
+            it["kind"] = next_kind
+            it["spec"] = next_spec
+            it["enabled"] = next_enabled
+            it["updated_at"] = now
+            out = it
+            break
+        if out is None:
+            return None
+        st["actions"] = items[-200:]
+        self._write_state(st)
+        return out
+
+    async def delete_action_definition(self, action_id: int) -> bool:
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                res = await conn.execute("delete from action_definitions where id=$1", int(action_id))
+                return "DELETE 1" in str(res)
+
+        st = self._read_state()
+        items = st.get("actions", [])
+        if not isinstance(items, list):
+            return False
+        before = len(items)
+        items = [it for it in items if not (isinstance(it, dict) and it.get("id") == action_id)]
+        st["actions"] = items
+        self._write_state(st)
+        return len(items) != before
+
     async def add_chat_message(self, role: str, content: str) -> None:
         if self._pool:
             async with self._pool.acquire() as conn:
