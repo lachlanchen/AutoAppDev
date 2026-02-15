@@ -546,6 +546,18 @@ body[data-theme="dark"] .canvas {
   line-height: 1.4;
 }
 
+html[dir="rtl"] .kv { flex-direction: row-reverse; }
+
+html[dir="rtl"] .msg--user {
+  border-right: 4px solid rgba(39, 103, 255, 0.75);
+  border-left: 1px solid var(--stroke);
+}
+
+html[dir="rtl"] .msg--system {
+  border-right: 4px solid rgba(255, 191, 47, 0.85);
+  border-left: 1px solid var(--stroke);
+}
+
 @media (max-width: 1200px) {
   .layout { grid-template-columns: 260px 1fr; grid-template-rows: 1fr 420px; }
   .panel--right { grid-column: 1 / -1; }

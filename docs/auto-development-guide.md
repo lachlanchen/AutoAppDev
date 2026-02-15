@@ -58,10 +58,12 @@ Must support and keep consistent / 必须支持并保持一致：
 English requirements:
 - Unified key naming and fallback strategy (fallback to English or Simplified Chinese).
 - Arabic must support RTL (layout and icon direction).
+- PWA should support runtime UI language switching and persist the choice (e.g., `localStorage["autoappdev_ui_lang"]`).
 
 中文要求：
 - 统一 key 命名与回退策略（缺失时回退到英文或简中）。
 - 阿拉伯语需考虑 RTL（布局与图标方向）。
+- PWA 需支持运行时切换 UI 语言并持久化（例如 `localStorage["autoappdev_ui_lang"]`）。
 
 ## 4) Every Step Must Consider the Whole Architecture / 每一步必须考虑整体结构
 

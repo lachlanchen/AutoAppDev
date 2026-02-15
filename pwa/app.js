@@ -2,6 +2,7 @@ const els = {
   themeBtn: document.getElementById("btn-theme"),
   agentSelect: document.getElementById("agent-select"),
   modelSelect: document.getElementById("model-select"),
+  uiLang: document.getElementById("ui-lang"),
   start: document.getElementById("btn-start"),
   pause: document.getElementById("btn-pause"),
   resume: document.getElementById("btn-resume"),
@@ -74,16 +75,99 @@ const els = {
   wsMsg: document.getElementById("ws-msg"),
 };
 
+const UI_LANG_STORAGE_KEY = "autoappdev_ui_lang";
+let uiLang = "en";
+
+function normalizeUiLang(raw) {
+  const i18n = window.AutoAppDevI18n && typeof window.AutoAppDevI18n === "object" ? window.AutoAppDevI18n : null;
+  if (i18n && typeof i18n.normalize === "function") return i18n.normalize(raw);
+  const s = String(raw || "").trim();
+  return s || "en";
+}
+
+function isRtlUiLang(lang) {
+  const i18n = window.AutoAppDevI18n && typeof window.AutoAppDevI18n === "object" ? window.AutoAppDevI18n : null;
+  const l = normalizeUiLang(lang);
+  const rtl = i18n && i18n.RTL_LANGS;
+  if (rtl && typeof rtl.has === "function") return rtl.has(l);
+  if (Array.isArray(rtl)) return rtl.includes(l);
+  return l === "ar";
+}
+
+function t(key) {
+  const k = String(key || "");
+  if (!k) return "";
+  const i18n = window.AutoAppDevI18n && typeof window.AutoAppDevI18n === "object" ? window.AutoAppDevI18n : null;
+  const pack = (i18n && i18n.PACK && typeof i18n.PACK === "object" ? i18n.PACK : {}) || {};
+  const cur = (pack && uiLang && pack[uiLang] && typeof pack[uiLang] === "object" ? pack[uiLang] : {}) || {};
+  const en = (pack && pack.en && typeof pack.en === "object" ? pack.en : {}) || {};
+  const v = (k in cur ? cur[k] : undefined) ?? (k in en ? en[k] : undefined);
+  if (typeof v === "string") return v;
+  return k;
+}
+
+function applyUiLang() {
+  document.documentElement.lang = uiLang;
+  document.documentElement.dir = isRtlUiLang(uiLang) ? "rtl" : "ltr";
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (!key) return;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (!key) return;
+    el.setAttribute("placeholder", t(key));
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-title");
+    if (!key) return;
+    el.setAttribute("title", t(key));
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-aria-label");
+    if (!key) return;
+    el.setAttribute("aria-label", t(key));
+  });
+}
+
+function setUiLang(next, { persist } = {}) {
+  const lang = normalizeUiLang(next);
+  uiLang = lang;
+  if (els.uiLang && els.uiLang.value !== lang) els.uiLang.value = lang;
+  if (persist !== false) {
+    try {
+      localStorage.setItem(UI_LANG_STORAGE_KEY, lang);
+    } catch {
+      // ignore
+    }
+  }
+  applyUiLang();
+  updateThemeButtonLabel();
+  updateLogFollowButtonLabel();
+  renderProgram();
+  renderActionsList();
+}
+
+function loadUiLangFromStorage() {
+  try {
+    return normalizeUiLang(localStorage.getItem(UI_LANG_STORAGE_KEY));
+  } catch {
+    return "en";
+  }
+}
+
 const BLOCK_META = {
-  plan: { label: "Plan", cls: "block--plan" },
-  work: { label: "Work", cls: "block--work" },
-  debug: { label: "Debug", cls: "block--debug" },
-  fix: { label: "Fix", cls: "block--fix" },
-  summary: { label: "Summary", cls: "block--summary" },
-  update_readme: { label: "Update README", cls: "block--summary" },
-  commit_push: { label: "Commit+Push", cls: "block--release" },
-  while_loop: { label: "While", cls: "block--loop" },
-  wait_input: { label: "Wait Input", cls: "block--input" },
+  plan: { title: "Plan", label_key: "ui.block.plan", cls: "block--plan" },
+  work: { title: "Work", label_key: "ui.block.work", cls: "block--work" },
+  debug: { title: "Debug", label_key: "ui.block.debug", cls: "block--debug" },
+  fix: { title: "Fix", label_key: "ui.block.fix", cls: "block--fix" },
+  summary: { title: "Summary", label_key: "ui.block.summary", cls: "block--summary" },
+  update_readme: { title: "Update README", label_key: "ui.block.update_readme", cls: "block--summary" },
+  commit_push: { title: "Commit+Push", label_key: "ui.block.commit_push", cls: "block--release" },
+  while_loop: { title: "While", label_key: "ui.block.while_loop", cls: "block--loop" },
+  wait_input: { title: "Wait Input", label_key: "ui.block.wait_input", cls: "block--input" },
 };
 
 let program = [];
@@ -103,9 +187,15 @@ let actionsLoadedOnce = false;
 let workspaceSlug = "";
 let workspaceConfig = null;
 
+function updateThemeButtonLabel() {
+  if (!els.themeBtn) return;
+  const cur = String(document.body.dataset.theme || "light");
+  els.themeBtn.textContent = cur === "dark" ? t("ui.theme.dark") : t("ui.theme.light");
+}
+
 function setTheme(next) {
   document.body.dataset.theme = next;
-  els.themeBtn.textContent = next === "dark" ? "Dark" : "Light";
+  updateThemeButtonLabel();
   localStorage.setItem("autoappdev_theme", next);
 }
 
@@ -186,14 +276,32 @@ function defaultUpdateReadmeBlockMarkdown({ workspace } = {}) {
   return lines.join("\n") + "\n";
 }
 
-function formatProgramBlockLabel(block, meta) {
+function canonicalBlockTitle(type, idx) {
+  const tpe = String(type || "");
+  const meta = BLOCK_META[tpe] || null;
+  const title = meta && typeof meta.title === "string" ? meta.title.trim() : "";
+  return title || tpe || `Step ${idx + 1}`;
+}
+
+function uiBlockTitle(type, idx) {
+  const tpe = String(type || "");
+  const meta = BLOCK_META[tpe] || null;
+  const key = meta && typeof meta.label_key === "string" ? meta.label_key : "";
+  const fallback = canonicalBlockTitle(tpe, idx);
+  if (!key) return fallback;
+  const v = t(key);
+  return v === key ? fallback : v;
+}
+
+function formatProgramBlockLabel(block, idx) {
   const b = block && typeof block === "object" ? block : {};
   const type = String(b.type || "");
   if (type === "update_readme") {
     const ws = String(b.workspace || "").trim();
-    return `${String(meta.label || "Update README")} (${updateReadmeTargetPath(ws)})`;
+    const base = uiBlockTitle(type, idx);
+    return `${base} (${updateReadmeTargetPath(ws)})`;
   }
-  const base = String(meta.label || type || "Block");
+  const base = uiBlockTitle(type, idx);
   const ref = normalizeActionRef(b.action_ref);
   if (!ref) return base;
   if (typeof ref.id === "number") {
@@ -216,22 +324,22 @@ function renderProgram() {
   wrap.className = "program";
   program.forEach((b, idx) => {
     const type = b && typeof b === "object" ? String(b.type || "") : "";
-    const meta = BLOCK_META[type] || { label: type, cls: "block--work" };
+    const meta = BLOCK_META[type] || { title: type, cls: "block--work" };
     const row = document.createElement("div");
     row.className = `prog-block ${meta.cls}`;
     const label = document.createElement("div");
     label.className = "prog-label";
-    label.textContent = formatProgramBlockLabel(b, meta);
+    label.textContent = formatProgramBlockLabel(b, idx);
     row.appendChild(label);
     if (type !== "update_readme") {
       const bind = document.createElement("button");
       bind.className = "prog-bind";
       bind.type = "button";
-      bind.textContent = "Bind";
+      bind.textContent = t("ui.btn.bind");
       bind.addEventListener("click", () => {
         const cur = b && typeof b === "object" ? b : {};
         const curRef = normalizeActionRef(cur.action_ref);
-        const raw = window.prompt("Action ref (id or slug). Blank to clear.", actionRefValue(curRef));
+        const raw = window.prompt(t("ui.prompt.action_ref"), actionRefValue(curRef));
         if (raw === null) return;
         const s = String(raw || "").trim();
         if (!s) {
@@ -245,12 +353,12 @@ function renderProgram() {
           if (Number.isFinite(id) && id > 0) {
             cur.action_ref = { id: Math.trunc(id) };
           } else {
-            window.alert("Invalid id");
+            window.alert(t("ui.alert.invalid_id"));
             return;
           }
         } else {
           if (s.length > 200 || /[\x00-\x1f]/.test(s)) {
-            window.alert("Invalid slug");
+            window.alert(t("ui.alert.invalid_slug"));
             return;
           }
           cur.action_ref = { slug: s };
@@ -340,7 +448,7 @@ function programToPlan(prog) {
 function programToIr(prog, title = "Program") {
   const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => {
     const type = b && typeof b === "object" ? String(b.type || "") : "";
-    const meta = BLOCK_META[type] || { label: type || `Step ${idx + 1}` };
+    const stepTitle = canonicalBlockTitle(type, idx);
     let block = type;
     let actions = [{ id: "a1", kind: "noop", params: {} }];
     if (type === "update_readme") {
@@ -362,7 +470,7 @@ function programToIr(prog, title = "Program") {
     }
     return {
       id: `s${idx + 1}`,
-      title: meta.label,
+      title: stepTitle,
       block,
       actions,
     };
@@ -388,7 +496,7 @@ function programToAapsScript(prog, title = "Program") {
   lines.push("");
   (Array.isArray(prog) ? prog : []).forEach((b, idx) => {
     const type = b && typeof b === "object" ? String(b.type || "") : "";
-    const meta = BLOCK_META[type] || { label: type || `Step ${idx + 1}` };
+    const stepTitle = canonicalBlockTitle(type, idx);
     let block = type;
     let action = { id: "a1", kind: "noop", params: {} };
     if (type === "update_readme") {
@@ -406,7 +514,7 @@ function programToAapsScript(prog, title = "Program") {
       const ref = normalizeActionRef(b && b.action_ref);
       if (ref) action.meta = { action_ref: ref };
     }
-    lines.push(`STEP  ${JSON.stringify({ id: `s${idx + 1}`, title: meta.label, block })}`);
+    lines.push(`STEP  ${JSON.stringify({ id: `s${idx + 1}`, title: stepTitle, block })}`);
     lines.push(`ACTION ${JSON.stringify(action)}`);
     lines.push("");
   });
@@ -456,7 +564,7 @@ async function saveScript() {
     els.export.textContent = JSON.stringify({ ok: false, error: "empty_program" }, null, 2);
     return;
   }
-  const titleRaw = window.prompt("Script title?", "Program");
+  const titleRaw = window.prompt(t("ui.prompt.script_title"), "Program");
   if (titleRaw === null) return;
   const title = String(titleRaw).trim() || "Program";
   const script_text = programToAapsScript(program, title);
@@ -475,7 +583,7 @@ async function saveScript() {
 }
 
 async function loadScript() {
-  const raw = window.prompt("Load script id?", "");
+  const raw = window.prompt(t("ui.prompt.load_script_id"), "");
   if (raw === null) return;
   const id = String(raw).trim();
   if (!id) return;
@@ -692,7 +800,7 @@ function renderActionsList() {
   if (!items.length) {
     const empty = document.createElement("div");
     empty.className = "canvas-empty";
-    empty.textContent = "No actions yet. Click New to create one.";
+    empty.textContent = t("ui.actions.empty");
     els.actionsList.appendChild(empty);
     return;
   }
@@ -716,7 +824,8 @@ function renderActionsList() {
     t.textContent = title;
     const meta = document.createElement("div");
     meta.className = "actionrow-meta";
-    meta.textContent = `#${id} \u00b7 ${kind} \u00b7 ${enabled ? "enabled" : "disabled"}`;
+    const enabledLabel = enabled ? t("ui.actions.state_enabled") : t("ui.actions.state_disabled");
+    meta.textContent = `#${id} \u00b7 ${kind} \u00b7 ${enabledLabel}`;
 
     row.appendChild(t);
     row.appendChild(meta);
@@ -985,7 +1094,7 @@ function fillScriptFromBlocks() {
     setScriptMsg("no blocks on canvas", { error: true });
     return;
   }
-  const titleRaw = window.prompt("Script title?", "Program");
+  const titleRaw = window.prompt(t("ui.prompt.script_title"), "Program");
   if (titleRaw === null) return;
   const title = String(titleRaw).trim() || "Program";
   els.scriptText.value = programToAapsScript(program, title);
@@ -1068,8 +1177,7 @@ function generateRunnerScript(prog, { title, aapsText } = {}) {
 
   steps.forEach((b, idx) => {
     const block = String((b && b.type) || "").trim();
-    const meta = BLOCK_META[block] || { label: block || `Step ${idx + 1}` };
-    const label = String(meta.label || block || `Step ${idx + 1}`);
+    const label = canonicalBlockTitle(block, idx);
     out.push(`echo \"[autoappdev] step ${idx + 1}/${steps.length}: ${label} (${block || "unknown"})\"`);
     out.push("pause_if_needed");
     if (block === "commit_push") {
@@ -1092,7 +1200,7 @@ function exportAapsFile() {
     setScriptMsg("no blocks on canvas", { error: true });
     return;
   }
-  const titleRaw = window.prompt("Script title?", "Program");
+  const titleRaw = window.prompt(t("ui.prompt.script_title"), "Program");
   if (titleRaw === null) return;
   const title = String(titleRaw).trim() || "Program";
   const aaps = programToAapsScript(program, title);
@@ -1107,7 +1215,7 @@ function exportRunnerFile() {
     setScriptMsg("no blocks on canvas", { error: true });
     return;
   }
-  const titleRaw = window.prompt("Runner title?", "program-runner");
+  const titleRaw = window.prompt(t("ui.prompt.runner_title"), "program-runner");
   if (titleRaw === null) return;
   const title = String(titleRaw).trim() || "program-runner";
   const aaps = programToAapsScript(program, title);
@@ -1204,16 +1312,16 @@ async function doPipelineAction(action, fn) {
 async function refreshHealth() {
   try {
     const data = await api("/api/health");
-    setBadge(els.backendHealth, "badge--ok", "ok");
+    setBadge(els.backendHealth, "badge--ok", t("ui.health.ok"));
     const db = data.db || {};
     if (db.ok) {
-      setBadge(els.dbHealth, "badge--ok", "ok", db.time ? `time: ${db.time}` : "");
+      setBadge(els.dbHealth, "badge--ok", t("ui.health.ok"), db.time ? `time: ${db.time}` : "");
     } else {
-      setBadge(els.dbHealth, "badge--err", "error", db.error ? `error: ${db.error}` : "");
+      setBadge(els.dbHealth, "badge--err", t("ui.health.error"), db.error ? `error: ${db.error}` : "");
     }
   } catch (e) {
-    setBadge(els.backendHealth, "badge--err", "down");
-    setBadge(els.dbHealth, "badge--unknown", "unknown");
+    setBadge(els.backendHealth, "badge--err", t("ui.health.down"));
+    setBadge(els.dbHealth, "badge--unknown", t("ui.health.unknown"));
   }
 }
 
@@ -1222,12 +1330,14 @@ async function refreshStatus() {
     const data = await api("/api/pipeline/status");
     const st = data.status || {};
     const state = st.state || (st.running ? "running" : "idle");
-    els.pipelineStatus.textContent = state;
-    setBadge(els.pipelineStatus, pipelineVariant(state), state);
+    const raw = String(state || "").toLowerCase();
+    const key = `ui.pipeline.${raw}`;
+    const label = t(key);
+    setBadge(els.pipelineStatus, pipelineVariant(raw), label === key ? raw : label, raw);
     els.pipelinePid.textContent = st.pid ? String(st.pid) : "-";
     updateActionButtons(state);
   } catch {
-    setBadge(els.pipelineStatus, "badge--unknown", "unknown");
+    setBadge(els.pipelineStatus, "badge--unknown", t("ui.pipeline.unknown"));
     els.pipelinePid.textContent = "-";
     updateActionButtons("stopped");
   }
@@ -1252,13 +1362,13 @@ function bindDnD() {
     if (!type) return;
     if (type === "update_readme") {
       const raw = window.prompt(
-        "Workspace slug for auto-apps/<workspace>/README.md?",
+        t("ui.prompt.workspace_slug_for_readme"),
         String(workspaceSlug || "my_workspace")
       );
       if (raw === null) return;
       const parsed = parseWorkspaceSlug(raw);
       if (!parsed.ok) {
-        window.alert(`Invalid workspace: ${parsed.error}`);
+        window.alert(`${t("ui.alert.invalid_workspace")}: ${parsed.error}`);
         return;
       }
       program.push({ type, workspace: parsed.workspace });
@@ -1335,12 +1445,15 @@ function appendLogText(text) {
   els.logview.insertAdjacentText("beforeend", String(text || ""));
 }
 
+function updateLogFollowButtonLabel() {
+  if (!els.logFollow) return;
+  els.logFollow.textContent = logFollow ? t("ui.btn.pause") : t("ui.btn.follow");
+  els.logFollow.setAttribute("aria-pressed", logFollow ? "true" : "false");
+}
+
 function setLogFollow(on) {
   logFollow = Boolean(on);
-  if (els.logFollow) {
-    els.logFollow.textContent = logFollow ? "Pause" : "Follow";
-    els.logFollow.setAttribute("aria-pressed", logFollow ? "true" : "false");
-  }
+  updateLogFollowButtonLabel();
   if (logFollow) scrollLogsToBottom();
 }
 
@@ -1389,6 +1502,10 @@ function bindControls() {
     const cur = document.body.dataset.theme || "light";
     setTheme(cur === "light" ? "dark" : "light");
   });
+
+  if (els.uiLang) {
+    els.uiLang.addEventListener("change", () => setUiLang(els.uiLang.value));
+  }
 
   if (els.agentSelect) els.agentSelect.addEventListener("change", saveSettings);
   if (els.modelSelect) els.modelSelect.addEventListener("change", saveSettings);
@@ -1512,6 +1629,8 @@ function bindControls() {
 }
 
 function boot() {
+  setUiLang(loadUiLangFromStorage(), { persist: false });
+
   loadProgram();
   renderProgram();
   bindDnD();

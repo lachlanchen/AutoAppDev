@@ -17,6 +17,7 @@
         window.__AUTOAPPDEV_CONFIG__.API_BASE_URL || "http://127.0.0.1:8788";
     </script>
     <script src="api-client.js" defer></script>
+    <script src="i18n.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body data-theme="light">
@@ -24,14 +25,14 @@
       <div class="brand">
         <div class="logo">AA</div>
         <div class="brand-text">
-          <div class="brand-name">AutoAppDev Studio</div>
-          <div class="brand-sub">Scratch-like pipeline controller</div>
+          <div class="brand-name" data-i18n="ui.brand.name">AutoAppDev Studio</div>
+          <div class="brand-sub" data-i18n="ui.brand.sub">Scratch-like pipeline controller</div>
         </div>
       </div>
 
       <div class="controls">
         <div class="select">
-          <label>Agent</label>
+          <label data-i18n="ui.label.agent">Agent</label>
           <select id="agent-select">
             <option value="codex">Codex</option>
             <option value="copilot" disabled>Copilot (coming)</option>
@@ -40,17 +41,32 @@
           </select>
         </div>
         <div class="select">
-          <label>Model</label>
+          <label data-i18n="ui.label.model">Model</label>
           <select id="model-select">
             <option value="gpt-5.3-codex">gpt-5.3-codex</option>
             <option value="gpt-5.3-codex-mini" disabled>gpt-5.3-codex-mini</option>
           </select>
         </div>
 
-        <button class="btn btn--primary" id="btn-start">Start</button>
-        <button class="btn" id="btn-pause">Pause</button>
-        <button class="btn" id="btn-resume">Resume</button>
-        <button class="btn btn--danger" id="btn-stop">Stop</button>
+        <div class="select">
+          <label data-i18n="ui.label.language">Language</label>
+          <select id="ui-lang">
+            <option value="zh-Hans">中文(简体)</option>
+            <option value="zh-Hant">中文(繁體)</option>
+            <option value="en" selected>English</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="ar">العربية</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+        <button class="btn btn--primary" id="btn-start" data-i18n="ui.btn.start">Start</button>
+        <button class="btn" id="btn-pause" data-i18n="ui.btn.pause">Pause</button>
+        <button class="btn" id="btn-resume" data-i18n="ui.btn.resume">Resume</button>
+        <button class="btn btn--danger" id="btn-stop" data-i18n="ui.btn.stop">Stop</button>
         <span class="ctrl-msg" id="ctrl-msg" aria-live="polite"></span>
 
         <button class="btn btn--ghost" id="btn-theme">Light</button>
@@ -60,34 +76,40 @@
     <main class="layout">
       <section class="panel panel--toolbox">
         <div class="panel-head">
-          <div class="panel-title">Blocks</div>
-          <div class="panel-hint">Drag to canvas</div>
+          <div class="panel-title" data-i18n="ui.panel.blocks.title">Blocks</div>
+          <div class="panel-hint" data-i18n="ui.panel.blocks.hint">Drag to canvas</div>
         </div>
         <div class="toolbox" id="toolbox">
-          <div class="block block--plan" draggable="true" data-block="plan">Plan</div>
-          <div class="block block--work" draggable="true" data-block="work">Work</div>
-          <div class="block block--debug" draggable="true" data-block="debug">Debug</div>
-          <div class="block block--fix" draggable="true" data-block="fix">Fix</div>
-          <div class="block block--summary" draggable="true" data-block="summary">Summary</div>
-          <div class="block block--summary" draggable="true" data-block="update_readme">Update README</div>
-          <div class="block block--release" draggable="true" data-block="commit_push">Commit+Push</div>
+          <div class="block block--plan" draggable="true" data-block="plan" data-i18n="ui.block.plan">Plan</div>
+          <div class="block block--work" draggable="true" data-block="work" data-i18n="ui.block.work">Work</div>
+          <div class="block block--debug" draggable="true" data-block="debug" data-i18n="ui.block.debug">Debug</div>
+          <div class="block block--fix" draggable="true" data-block="fix" data-i18n="ui.block.fix">Fix</div>
+          <div class="block block--summary" draggable="true" data-block="summary" data-i18n="ui.block.summary">
+            Summary
+          </div>
+          <div class="block block--summary" draggable="true" data-block="update_readme" data-i18n="ui.block.update_readme">
+            Update README
+          </div>
+          <div class="block block--release" draggable="true" data-block="commit_push" data-i18n="ui.block.commit_push">
+            Commit+Push
+          </div>
         </div>
       </section>
 
       <section class="panel panel--canvas">
         <div class="panel-head">
-          <div class="panel-title">Program</div>
+          <div class="panel-title" data-i18n="ui.panel.program.title">Program</div>
           <div class="panel-actions">
-            <button class="btn btn--ghost" id="btn-clear">Clear</button>
-            <button class="btn btn--ghost" id="btn-export">Export JSON</button>
-            <button class="btn btn--ghost" id="btn-send-plan">Send Plan</button>
-            <button class="btn btn--ghost" id="btn-save-script">Save Script</button>
-            <button class="btn btn--ghost" id="btn-load-script">Load Script</button>
+            <button class="btn btn--ghost" id="btn-clear" data-i18n="ui.btn.clear">Clear</button>
+            <button class="btn btn--ghost" id="btn-export" data-i18n="ui.btn.export_json">Export JSON</button>
+            <button class="btn btn--ghost" id="btn-send-plan" data-i18n="ui.btn.send_plan">Send Plan</button>
+            <button class="btn btn--ghost" id="btn-save-script" data-i18n="ui.btn.save_script">Save Script</button>
+            <button class="btn btn--ghost" id="btn-load-script" data-i18n="ui.btn.load_script">Load Script</button>
           </div>
         </div>
-        <div class="canvas" id="canvas" aria-label="Program canvas">
+        <div class="canvas" id="canvas" aria-label="Program canvas" data-i18n-aria-label="ui.canvas.aria">
           <div class="canvas-empty" id="canvas-empty">
-            Drop blocks here to build a pipeline.
+            <span data-i18n="ui.canvas.empty">Drop blocks here to build a pipeline.</span>
           </div>
         </div>
         <pre class="export" id="export" hidden></pre>
@@ -95,28 +117,28 @@
 
       <section class="panel panel--right">
         <div class="tabs">
-          <button class="tab is-active" data-tab="status">Status</button>
-          <button class="tab" data-tab="chat">Inbox</button>
-          <button class="tab" data-tab="logs">Logs</button>
-          <button class="tab" data-tab="actions">Actions</button>
-          <button class="tab" data-tab="script">Script</button>
+          <button class="tab is-active" data-tab="status" data-i18n="ui.tab.status">Status</button>
+          <button class="tab" data-tab="chat" data-i18n="ui.tab.inbox">Inbox</button>
+          <button class="tab" data-tab="logs" data-i18n="ui.tab.logs">Logs</button>
+          <button class="tab" data-tab="actions" data-i18n="ui.tab.actions">Actions</button>
+          <button class="tab" data-tab="script" data-i18n="ui.tab.script">Script</button>
         </div>
 
         <div class="tabview" id="tab-status">
           <div class="kv">
-            <div class="k">Backend</div>
+            <div class="k" data-i18n="ui.status.backend">Backend</div>
             <div class="v badge badge--unknown" id="backend-health">unknown</div>
           </div>
           <div class="kv">
-            <div class="k">DB</div>
+            <div class="k" data-i18n="ui.status.db">DB</div>
             <div class="v badge badge--unknown" id="db-health">unknown</div>
           </div>
           <div class="kv">
-            <div class="k">Pipeline</div>
+            <div class="k" data-i18n="ui.status.pipeline">Pipeline</div>
             <div class="v badge badge--unknown" id="pipeline-status">idle</div>
           </div>
           <div class="kv">
-            <div class="k">PID</div>
+            <div class="k" data-i18n="ui.status.pid">PID</div>
             <div class="v" id="pipeline-pid">-</div>
           </div>
           <div class="hintbox">
@@ -124,18 +146,18 @@
           </div>
 
           <div class="divider"></div>
-          <div class="panel-title">Workspace</div>
-          <div class="panel-hint">Materials + shared context (persisted per workspace)</div>
+          <div class="panel-title" data-i18n="ui.panel.workspace.title">Workspace</div>
+          <div class="panel-hint" data-i18n="ui.panel.workspace.hint">Materials + shared context (persisted per workspace)</div>
 
           <div class="actionsection scriptbar">
-            <input class="input" id="ws-slug" placeholder="my_workspace" />
-            <button class="btn btn--ghost" id="ws-load">Load</button>
-            <button class="btn btn--ghost" id="ws-save">Save</button>
+            <input class="input" id="ws-slug" placeholder="my_workspace" data-i18n-placeholder="ui.ws.slug_ph" />
+            <button class="btn btn--ghost" id="ws-load" data-i18n="ui.btn.load">Load</button>
+            <button class="btn btn--ghost" id="ws-save" data-i18n="ui.btn.save">Save</button>
           </div>
 
           <div class="actiongrid">
             <div class="select">
-              <label>Default language</label>
+              <label data-i18n="ui.ws.default_language">Default language</label>
               <select id="ws-language">
                 <option value="zh-Hans">zh-Hans</option>
                 <option value="zh-Hant">zh-Hant</option>
@@ -149,28 +171,35 @@
               </select>
             </div>
             <div class="select">
-              <label>Shared context path (optional)</label>
-              <input class="input" id="ws-context-path" placeholder="docs/shared_context.md" />
+              <label data-i18n="ui.ws.shared_context_path_optional">Shared context path (optional)</label>
+              <input
+                class="input"
+                id="ws-context-path"
+                placeholder="docs/shared_context.md"
+                data-i18n-placeholder="ui.ws.shared_context_path_ph"
+              />
             </div>
           </div>
 
           <div class="select actionsection">
-            <label>Materials paths (one per line)</label>
+            <label data-i18n="ui.ws.materials_paths">Materials paths (one per line)</label>
             <textarea
               class="input action-text"
               id="ws-materials"
               spellcheck="false"
               placeholder="materials\nmaterials/screenshots"
+              data-i18n-placeholder="ui.ws.materials_paths_ph"
             ></textarea>
           </div>
 
           <div class="select actionsection">
-            <label>Shared context text</label>
+            <label data-i18n="ui.ws.shared_context_text">Shared context text</label>
             <textarea
               class="input action-text"
               id="ws-context-text"
               spellcheck="false"
               placeholder="Shared context visible to all tasks in this workspace..."
+              data-i18n-placeholder="ui.ws.shared_context_text_ph"
             ></textarea>
           </div>
 
@@ -184,8 +213,13 @@
         <div class="tabview" id="tab-chat" hidden>
           <div class="chatlog" id="chatlog"></div>
           <div class="chatbar">
-            <input class="input" id="chat-input" placeholder="Send a message to the pipeline inbox..." />
-            <button class="btn btn--primary" id="chat-send">Send</button>
+            <input
+              class="input"
+              id="chat-input"
+              placeholder="Send a message to the pipeline inbox..."
+              data-i18n-placeholder="ui.chat.input_ph"
+            />
+            <button class="btn btn--primary" id="chat-send" data-i18n="ui.btn.send">Send</button>
           </div>
         </div>
 
@@ -201,44 +235,63 @@
               aria-label="Auto-scroll follow"
               aria-pressed="true"
               title="Toggle auto-scroll (pause to select/copy)"
+              data-i18n-aria-label="ui.logs.follow_aria"
+              data-i18n-title="ui.logs.follow_title"
             >
               Pause
             </button>
-            <button class="btn btn--ghost" id="log-refresh">Refresh</button>
+            <button class="btn btn--ghost" id="log-refresh" data-i18n="ui.btn.refresh">Refresh</button>
           </div>
           <pre class="logview" id="logview"></pre>
         </div>
 
         <div class="tabview" id="tab-actions" hidden>
           <div class="actionbar">
-            <button class="btn btn--ghost" id="actions-refresh">Refresh</button>
-            <button class="btn btn--ghost" id="actions-new">New</button>
-            <button class="btn btn--ghost" id="actions-save">Save</button>
-            <button class="btn btn--ghost btn--danger" id="actions-delete">Delete</button>
+            <button class="btn btn--ghost" id="actions-refresh" data-i18n="ui.btn.refresh">Refresh</button>
+            <button class="btn btn--ghost" id="actions-new" data-i18n="ui.btn.new">New</button>
+            <button class="btn btn--ghost" id="actions-save" data-i18n="ui.btn.save">Save</button>
+            <button class="btn btn--ghost btn--danger" id="actions-delete" data-i18n="ui.btn.delete">Delete</button>
           </div>
 
-          <div class="actionlist" id="actions-list" aria-label="Action definitions"></div>
+          <div
+            class="actionlist"
+            id="actions-list"
+            aria-label="Action definitions"
+            data-i18n-aria-label="ui.actions.list_aria"
+          ></div>
 
           <div class="divider"></div>
 
           <div class="actiongrid">
             <div class="select">
-              <label>ID</label>
-              <input class="input" id="action-id" type="text" placeholder="(new)" disabled />
+              <label data-i18n="ui.actions.id">ID</label>
+              <input
+                class="input"
+                id="action-id"
+                type="text"
+                placeholder="(new)"
+                data-i18n-placeholder="ui.actions.id_ph"
+                disabled
+              />
             </div>
             <div class="select">
-              <label>Enabled</label>
+              <label data-i18n="ui.actions.enabled">Enabled</label>
               <select id="action-enabled">
                 <option value="true">true</option>
                 <option value="false">false</option>
               </select>
             </div>
             <div class="select">
-              <label>Title</label>
-              <input class="input" id="action-title" placeholder="Action title" />
+              <label data-i18n="ui.actions.title">Title</label>
+              <input
+                class="input"
+                id="action-title"
+                placeholder="Action title"
+                data-i18n-placeholder="ui.actions.action_title_ph"
+              />
             </div>
             <div class="select">
-              <label>Kind</label>
+              <label data-i18n="ui.actions.kind">Kind</label>
               <select id="action-kind">
                 <option value="prompt">prompt</option>
                 <option value="command">command</option>
@@ -248,27 +301,28 @@
 
           <div class="actionsection" id="action-section-prompt">
             <div class="select">
-              <label>Prompt</label>
+              <label data-i18n="ui.actions.prompt">Prompt</label>
               <textarea
                 class="input action-text"
                 id="action-prompt"
                 spellcheck="false"
                 placeholder="Prompt template..."
+                data-i18n-placeholder="ui.actions.prompt_ph"
               ></textarea>
             </div>
             <div class="actiongrid">
               <div class="select">
-                <label>Agent (optional)</label>
+                <label data-i18n="ui.actions.agent_optional">Agent (optional)</label>
                 <input class="input" id="action-agent" placeholder="codex" />
               </div>
               <div class="select">
-                <label>Model (optional)</label>
+                <label data-i18n="ui.actions.model_optional">Model (optional)</label>
                 <input class="input" id="action-model" placeholder="gpt-5.3-codex" />
               </div>
             </div>
             <div class="actiongrid">
               <div class="select">
-                <label>Reasoning</label>
+                <label data-i18n="ui.actions.reasoning">Reasoning</label>
                 <select id="action-reasoning">
                   <option value="low">low</option>
                   <option value="medium" selected>medium</option>
@@ -277,7 +331,7 @@
                 </select>
               </div>
               <div class="select">
-                <label>Timeout (s, optional)</label>
+                <label data-i18n="ui.actions.timeout_optional">Timeout (s, optional)</label>
                 <input class="input" id="action-timeout" type="number" min="5" max="300" step="1" placeholder="45" />
               </div>
             </div>
@@ -285,25 +339,26 @@
 
           <div class="actionsection" id="action-section-command" hidden>
             <div class="select">
-              <label>Cmd</label>
+              <label data-i18n="ui.actions.cmd">Cmd</label>
               <textarea
                 class="input action-text"
                 id="action-cmd"
                 spellcheck="false"
                 placeholder="bash scripts/my_tool.sh"
+                data-i18n-placeholder="ui.actions.cmd_ph"
               ></textarea>
             </div>
             <div class="actiongrid">
               <div class="select">
-                <label>Shell (v0)</label>
+                <label data-i18n="ui.actions.shell_v0">Shell (v0)</label>
                 <input class="input" id="action-shell" value="bash" disabled />
               </div>
               <div class="select">
-                <label>CWD (repo-relative)</label>
-                <input class="input" id="action-cwd" placeholder="." />
+                <label data-i18n="ui.actions.cwd_repo_relative">CWD (repo-relative)</label>
+                <input class="input" id="action-cwd" placeholder="." data-i18n-placeholder="ui.actions.cwd_ph" />
               </div>
               <div class="select">
-                <label>Timeout (s, optional)</label>
+                <label data-i18n="ui.actions.timeout_optional">Timeout (s, optional)</label>
                 <input
                   class="input"
                   id="action-timeout-cmd"
@@ -327,13 +382,21 @@
         <div class="tabview" id="tab-script" hidden>
           <div class="scriptbar">
             <input class="input" id="script-file" type="file" accept=".aaps,.sh,.txt" />
-            <button class="btn btn--ghost" id="script-parse" title="Parse AAPS v1 formatted script into blocks">
+            <button
+              class="btn btn--ghost"
+              id="script-parse"
+              title="Parse AAPS v1 formatted script into blocks"
+              data-i18n="ui.script.parse"
+              data-i18n-title="ui.script.parse_title"
+            >
               Parse AAPS -> Blocks
             </button>
             <button
               class="btn btn--ghost"
               id="script-import-shell"
               title="Import a shell script annotated with # AAPS: lines"
+              data-i18n="ui.script.import_shell"
+              data-i18n-title="ui.script.import_shell_title"
             >
               Import Shell -> Blocks
             </button>
@@ -341,6 +404,8 @@
               class="btn btn--ghost"
               id="script-from-blocks"
               title="Generate an AAPS v1 script from the current blocks"
+              data-i18n="ui.script.from_blocks"
+              data-i18n-title="ui.script.from_blocks_title"
             >
               From Blocks
             </button>
@@ -348,6 +413,8 @@
               class="btn btn--ghost"
               id="script-download-aaps"
               title="Download the generated AAPS v1 formatted script (.aaps)"
+              data-i18n="ui.script.download_aaps"
+              data-i18n-title="ui.script.download_aaps_title"
             >
               Download AAPS
             </button>
@@ -355,6 +422,8 @@
               class="btn btn--ghost"
               id="script-download-runner"
               title="Download a generated runnable shell runner (.sh)"
+              data-i18n="ui.script.download_runner"
+              data-i18n-title="ui.script.download_runner_title"
             >
               Download Runner
             </button>
@@ -364,6 +433,7 @@
             id="script-text"
             spellcheck="false"
             placeholder="Paste AAPS v1 here (AUTOAPPDEV_PIPELINE 1 ...), or paste an annotated .sh (lines starting with # AAPS:) and click Import..."
+            data-i18n-placeholder="ui.script.text_ph"
           ></textarea>
           <div class="script-msg" id="script-msg" aria-live="polite"></div>
           <div class="hintbox">
