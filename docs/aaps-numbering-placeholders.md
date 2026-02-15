@@ -19,11 +19,13 @@ KEYWORD <json-object>
 
 Where `KEYWORD` is `TASK`, `STEP`, or `ACTION`.
 
-Because the current deterministic parser (`backend/pipeline_parser.py`) expects the first token to be the keyword, a line like:
+For strict AAPS v1 portability, the first token should be the keyword. Some tools may also accept an
+optional numeric prefix token before the keyword, e.g.:
 ```text
-1. TASK {...}
+1.2 STEP {...}
 ```
-is **not** AAPS v1 and will not parse.
+
+This document still recommends **comment numbering** as the most portable, spec-compatible format.
 
 ### Convention
 To add Scratch-like numbering without changing the grammar:
@@ -101,4 +103,3 @@ It demonstrates:
 - numbering comments + indentation
 - placeholder usage in `prompt` and `cmd` strings:
   - `{{task.title}}`, `{{task.acceptance}}`, `{{runtime_dir}}`
-

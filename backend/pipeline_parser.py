@@ -20,6 +20,22 @@ def _is_comment_or_blank(line: str) -> bool:
     s = line.strip()
     return (not s) or s.startswith("#")
 
+def _is_numeric_prefix(token: str) -> bool:
+    """Return True for numeric prefixes like: 1, 1.2, 12.3.4, 1.2.
+
+    This is a deterministic, display-only extension used by the parser to accept
+    optional numbering before TASK/STEP/ACTION keywords.
+    """
+
+    t = token.rstrip(".")
+    if not t:
+        return False
+    parts = t.split(".")
+    for p in parts:
+        if not p or not p.isdigit():
+            return False
+    return True
+
 
 def _require_str(obj: dict[str, Any], key: str, *, line: int) -> str:
     v = obj.get(key)
@@ -82,12 +98,26 @@ def parse_aaps_v1(text: str) -> dict[str, Any]:
         if _is_comment_or_blank(raw):
             continue
         stripped = raw.lstrip()
-        # Split keyword + JSON part.
-        parts = stripped.split(None, 1)
-        if len(parts) != 2:
-            raise ParseError("invalid_statement", lineno, "expected: KEYWORD <json-object>")
-        kw = parts[0].strip()
-        json_part = parts[1].strip()
+        # Split keyword + JSON part (optionally allowing a numeric prefix token).
+        #
+        # We must not split the JSON part (strings can contain spaces), so only split
+        # on the left side and keep the remainder intact.
+        kw = ""
+        json_part = ""
+        parts3 = stripped.split(None, 2)
+        if len(parts3) == 3 and _is_numeric_prefix(parts3[0]) and parts3[1] in ("TASK", "STEP", "ACTION"):
+            kw = parts3[1].strip()
+            json_part = parts3[2].strip()
+        else:
+            parts = stripped.split(None, 1)
+            if len(parts) != 2:
+                raise ParseError(
+                    "invalid_statement",
+                    lineno,
+                    "expected: KEYWORD <json-object> (optional numeric prefix allowed)",
+                )
+            kw = parts[0].strip()
+            json_part = parts[1].strip()
         if kw not in ("TASK", "STEP", "ACTION"):
             raise ParseError("unknown_keyword", lineno, f"unknown keyword: {kw}")
         try:
@@ -159,4 +189,3 @@ def parse_aaps_v1(text: str) -> dict[str, Any]:
         raise ParseError("missing_task", header_lineno, "expected at least one TASK")
 
     return ir
-

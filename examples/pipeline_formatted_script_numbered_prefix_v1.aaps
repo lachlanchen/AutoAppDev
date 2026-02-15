@@ -1,0 +1,10 @@
+AUTOAPPDEV_PIPELINE 1
+
+1 TASK  {"id":"t1","title":"Numbered prefix demo"}
+
+1.1 STEP {"id":"s1","title":"Plan","block":"plan"}
+1.1.1 ACTION {"id":"a1","kind":"note","params":{"text":"hello from numbered prefix"}}
+
+1.2. STEP {"id":"s2","title":"Work","block":"work"}
+1.2.1 ACTION {"id":"a1","kind":"run","params":{"cmd":"echo work"}}
+
