@@ -5,9 +5,9 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T12:33:12Z
-- Phase commit: `Selfdev: 28 pwa_script_export_generate summary`
-- Progress: 27 / 42 tasks done
+- Updated: 2026-02-15T12:37:58Z
+- Phase commit: `Selfdev: 29 pipeline_codegen_templates plan`
+- Progress: 28 / 42 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
 
