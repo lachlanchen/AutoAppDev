@@ -135,6 +135,25 @@ Response (error example):
 
 ## Pipeline
 
+### GET /api/pipeline
+Returns the current pipeline state and timestamps.
+
+Response:
+```json
+{
+  "pipeline": {
+    "state": "stopped",
+    "pid": null,
+    "run_id": null,
+    "started_at": null,
+    "paused_at": null,
+    "resumed_at": null,
+    "stopped_at": "2026-02-15T12:00:02.345+00:00",
+    "updated_at": "2026-02-15T12:00:02.345+00:00"
+  }
+}
+```
+
 ### GET /api/pipeline/status
 Returns the latest pipeline run state.
 

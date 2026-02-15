@@ -152,6 +152,15 @@ class PipelineStatusHandler(BaseHandler):
         self.write_json({"status": {"running": st.running, "pid": st.pid, "run_id": st.run_id, "state": st.status}})
 
 
+class PipelineStateHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self) -> None:
+        ps = await self.storage.get_pipeline_state()
+        self.write_json({"pipeline": ps})
+
+
 class PipelineControl:
     def __init__(self, storage: Storage, runtime_dir: Path, log_dir: Path):
         self.storage = storage
@@ -242,33 +251,49 @@ class PipelineStartHandler(BaseHandler):
             self.write_json({"ok": False, "error": "script_not_found", "path": str(script_path)}, status=404)
             return
         res = await self.controller.start(script=str(script_path), cwd=cwd, args=[str(a) for a in args])
+        if res.get("ok"):
+            await self.storage.set_pipeline_state(
+                state="running", pid=res.get("pid"), run_id=res.get("run_id"), ts_kind="start"
+            )
         self.write_json(res, status=200 if res.get("ok") else 409)
 
 
 class PipelineStopHandler(BaseHandler):
-    def initialize(self, controller: PipelineControl) -> None:
+    def initialize(self, controller: PipelineControl, storage: Storage) -> None:
         self.controller = controller
+        self.storage = storage
 
     async def post(self) -> None:
         res = await self.controller.stop()
+        if res.get("ok"):
+            pid = self.controller.proc.pid if self.controller.proc else None
+            await self.storage.set_pipeline_state(state="stopped", pid=None, run_id=self.controller.run_id, ts_kind="stop")
         self.write_json(res, status=200 if res.get("ok") else 409)
 
 
 class PipelinePauseHandler(BaseHandler):
-    def initialize(self, controller: PipelineControl) -> None:
+    def initialize(self, controller: PipelineControl, storage: Storage) -> None:
         self.controller = controller
+        self.storage = storage
 
     async def post(self) -> None:
         res = await self.controller.pause()
+        if res.get("ok"):
+            pid = self.controller.proc.pid if self.controller.proc else None
+            await self.storage.set_pipeline_state(state="paused", pid=pid, run_id=self.controller.run_id, ts_kind="pause")
         self.write_json(res)
 
 
 class PipelineResumeHandler(BaseHandler):
-    def initialize(self, controller: PipelineControl) -> None:
+    def initialize(self, controller: PipelineControl, storage: Storage) -> None:
         self.controller = controller
+        self.storage = storage
 
     async def post(self) -> None:
         res = await self.controller.resume()
+        if res.get("ok"):
+            pid = self.controller.proc.pid if self.controller.proc else None
+            await self.storage.set_pipeline_state(state="running", pid=pid, run_id=self.controller.run_id, ts_kind="resume")
         self.write_json(res)
 
 
@@ -350,11 +375,12 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/config", ConfigHandler, {"storage": storage}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
+            (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),
             (r"/api/pipeline/status", PipelineStatusHandler, {"storage": storage}),
             (r"/api/pipeline/start", PipelineStartHandler, {"controller": controller, "storage": storage}),
-            (r"/api/pipeline/stop", PipelineStopHandler, {"controller": controller}),
-            (r"/api/pipeline/pause", PipelinePauseHandler, {"controller": controller}),
-            (r"/api/pipeline/resume", PipelineResumeHandler, {"controller": controller}),
+            (r"/api/pipeline/stop", PipelineStopHandler, {"controller": controller, "storage": storage}),
+            (r"/api/pipeline/pause", PipelinePauseHandler, {"controller": controller, "storage": storage}),
+            (r"/api/pipeline/resume", PipelineResumeHandler, {"controller": controller, "storage": storage}),
             (r"/api/logs/tail", LogsTailHandler, {"log_dir": log_dir}),
         ],
         debug=True,

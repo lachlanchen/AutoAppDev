@@ -30,3 +30,17 @@ create table if not exists pipeline_runs (
   cwd text not null,
   args jsonb not null default '[]'::jsonb
 );
+
+create table if not exists pipeline_state (
+  id integer primary key,
+  state text not null,
+  pid integer,
+  run_id bigint,
+  started_at timestamptz,
+  paused_at timestamptz,
+  resumed_at timestamptz,
+  stopped_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+insert into pipeline_state(id, state) values (1, 'stopped') on conflict (id) do nothing;

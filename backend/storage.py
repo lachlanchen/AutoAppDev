@@ -253,6 +253,105 @@ class Storage:
         pid = run.get("pid")
         return PipelineStatus(running=(status == "running"), pid=pid, run_id=run.get("id"), status=status)
 
+    async def get_pipeline_state(self) -> dict[str, Any]:
+        def iso(v: Any) -> Any:
+            if v is None:
+                return None
+            try:
+                return v.isoformat()
+            except Exception:
+                return str(v)
+
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "select state, pid, run_id, started_at, paused_at, resumed_at, stopped_at, updated_at "
+                    "from pipeline_state where id=1"
+                )
+                if not row:
+                    return {"state": "stopped"}
+                return {
+                    "state": str(row["state"]),
+                    "pid": row["pid"],
+                    "run_id": row["run_id"],
+                    "started_at": iso(row["started_at"]),
+                    "paused_at": iso(row["paused_at"]),
+                    "resumed_at": iso(row["resumed_at"]),
+                    "stopped_at": iso(row["stopped_at"]),
+                    "updated_at": iso(row["updated_at"]),
+                }
+
+        st = self._read_state()
+        ps = st.get("pipeline_state") if isinstance(st.get("pipeline_state"), dict) else {}
+        return ps if ps else {"state": "stopped"}
+
+    async def set_pipeline_state(
+        self,
+        *,
+        state: str,
+        pid: Optional[int],
+        run_id: Optional[int],
+        ts_kind: str,
+    ) -> None:
+        """Update the singleton pipeline_state row (id=1).
+
+        ts_kind: start|pause|resume|stop
+        """
+        if not self._pool:
+            st = self._read_state()
+            st["pipeline_state"] = {
+                "state": state,
+                "pid": pid,
+                "run_id": run_id,
+                "ts_kind": ts_kind,
+            }
+            self._write_state(st)
+            return
+
+        async with self._pool.acquire() as conn:
+            if ts_kind == "start":
+                await conn.execute(
+                    "insert into pipeline_state(id, state, pid, run_id, started_at, paused_at, resumed_at, stopped_at, updated_at) "
+                    "values (1, $1, $2, $3, now(), null, null, null, now()) "
+                    "on conflict (id) do update set "
+                    "state=$1, pid=$2, run_id=$3, started_at=now(), paused_at=null, resumed_at=null, stopped_at=null, updated_at=now()",
+                    state,
+                    pid,
+                    run_id,
+                )
+            elif ts_kind == "pause":
+                await conn.execute(
+                    "insert into pipeline_state(id, state, pid, run_id, paused_at, updated_at) "
+                    "values (1, $1, $2, $3, now(), now()) "
+                    "on conflict (id) do update set "
+                    "state=$1, pid=$2, run_id=$3, paused_at=now(), updated_at=now()",
+                    state,
+                    pid,
+                    run_id,
+                )
+            elif ts_kind == "resume":
+                await conn.execute(
+                    "insert into pipeline_state(id, state, pid, run_id, resumed_at, stopped_at, updated_at) "
+                    "values (1, $1, $2, $3, now(), null, now()) "
+                    "on conflict (id) do update set "
+                    "state=$1, pid=$2, run_id=$3, resumed_at=now(), stopped_at=null, updated_at=now()",
+                    state,
+                    pid,
+                    run_id,
+                )
+            elif ts_kind == "stop":
+                await conn.execute(
+                    "insert into pipeline_state(id, state, pid, run_id, stopped_at, updated_at) "
+                    "values (1, $1, $2, $3, now(), now()) "
+                    "on conflict (id) do update set "
+                    "state=$1, pid=$2, run_id=$3, stopped_at=now(), updated_at=now()",
+                    state,
+                    pid,
+                    run_id,
+                )
+            else:
+                raise ValueError("invalid ts_kind")
+
 
 def safe_env(key: str, default: str = "") -> str:
     v = os.getenv(key)
