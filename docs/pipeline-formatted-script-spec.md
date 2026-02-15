@@ -194,3 +194,18 @@ ACTION {"id":"a1","kind":"note","params":{"text":"Commit/push is handled by driv
 
 ### 4.2 Equivalent IR (`examples/pipeline_ir_v1.json`)
 See `examples/pipeline_ir_v1.json` (valid JSON).
+
+## 5) Meta-round Templates (Convention v0)
+Some pipelines want a "rounds" / meta-loop:
+- For `N_ROUND`: generate/refine a task list from a goal + shared context.
+- Then, for each task: run a standard per-task template (plan/work/debug/fix/translate/summary/log/commit).
+
+This spec intentionally keeps AAPS parsing deterministic (no templating). Meta-round behavior is represented as **engine conventions** using existing `meta` fields:
+- `TASK.meta` / `STEP.meta` / `ACTION.meta` can carry loop/template configuration.
+- Engines should ignore unknown `meta` keys they do not understand.
+
+Reference convention:
+- `docs/meta-round-templates.md` defines a standard `meta_round_v0` convention, including how to represent:
+  - `N_ROUND` and task list artifacts
+  - per-task templates without introducing new `STEP.block` values
+  - `translate` and `log` as action slots inside existing blocks (typically `summary` and `commit_push`)
