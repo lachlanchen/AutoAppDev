@@ -98,6 +98,7 @@
           <button class="tab is-active" data-tab="status">Status</button>
           <button class="tab" data-tab="chat">Inbox</button>
           <button class="tab" data-tab="logs">Logs</button>
+          <button class="tab" data-tab="actions">Actions</button>
           <button class="tab" data-tab="script">Script</button>
         </div>
 
@@ -149,6 +150,121 @@
             <button class="btn btn--ghost" id="log-refresh">Refresh</button>
           </div>
           <pre class="logview" id="logview"></pre>
+        </div>
+
+        <div class="tabview" id="tab-actions" hidden>
+          <div class="actionbar">
+            <button class="btn btn--ghost" id="actions-refresh">Refresh</button>
+            <button class="btn btn--ghost" id="actions-new">New</button>
+            <button class="btn btn--ghost" id="actions-save">Save</button>
+            <button class="btn btn--ghost btn--danger" id="actions-delete">Delete</button>
+          </div>
+
+          <div class="actionlist" id="actions-list" aria-label="Action definitions"></div>
+
+          <div class="divider"></div>
+
+          <div class="actiongrid">
+            <div class="select">
+              <label>ID</label>
+              <input class="input" id="action-id" type="text" placeholder="(new)" disabled />
+            </div>
+            <div class="select">
+              <label>Enabled</label>
+              <select id="action-enabled">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+            <div class="select">
+              <label>Title</label>
+              <input class="input" id="action-title" placeholder="Action title" />
+            </div>
+            <div class="select">
+              <label>Kind</label>
+              <select id="action-kind">
+                <option value="prompt">prompt</option>
+                <option value="command">command</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="actionsection" id="action-section-prompt">
+            <div class="select">
+              <label>Prompt</label>
+              <textarea
+                class="input action-text"
+                id="action-prompt"
+                spellcheck="false"
+                placeholder="Prompt template..."
+              ></textarea>
+            </div>
+            <div class="actiongrid">
+              <div class="select">
+                <label>Agent (optional)</label>
+                <input class="input" id="action-agent" placeholder="codex" />
+              </div>
+              <div class="select">
+                <label>Model (optional)</label>
+                <input class="input" id="action-model" placeholder="gpt-5.3-codex" />
+              </div>
+            </div>
+            <div class="actiongrid">
+              <div class="select">
+                <label>Reasoning</label>
+                <select id="action-reasoning">
+                  <option value="low">low</option>
+                  <option value="medium" selected>medium</option>
+                  <option value="high">high</option>
+                  <option value="xhigh">xhigh</option>
+                </select>
+              </div>
+              <div class="select">
+                <label>Timeout (s, optional)</label>
+                <input class="input" id="action-timeout" type="number" min="5" max="300" step="1" placeholder="45" />
+              </div>
+            </div>
+          </div>
+
+          <div class="actionsection" id="action-section-command" hidden>
+            <div class="select">
+              <label>Cmd</label>
+              <textarea
+                class="input action-text"
+                id="action-cmd"
+                spellcheck="false"
+                placeholder="bash scripts/my_tool.sh"
+              ></textarea>
+            </div>
+            <div class="actiongrid">
+              <div class="select">
+                <label>Shell (v0)</label>
+                <input class="input" id="action-shell" value="bash" disabled />
+              </div>
+              <div class="select">
+                <label>CWD (repo-relative)</label>
+                <input class="input" id="action-cwd" placeholder="." />
+              </div>
+              <div class="select">
+                <label>Timeout (s, optional)</label>
+                <input
+                  class="input"
+                  id="action-timeout-cmd"
+                  type="number"
+                  min="1"
+                  max="3600"
+                  step="1"
+                  placeholder="60"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="script-msg" id="actions-msg" aria-live="polite"></div>
+          <div class="hintbox">
+            Kind changes are not supported in v0. For command actions, <code>shell</code> is always <code>bash</code> and
+            <code>cwd</code> must stay within the repo.
+          </div>
         </div>
 
         <div class="tabview" id="tab-script" hidden>

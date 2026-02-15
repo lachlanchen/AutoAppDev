@@ -24,6 +24,7 @@ const els = {
   tabStatus: document.getElementById("tab-status"),
   tabChat: document.getElementById("tab-chat"),
   tabLogs: document.getElementById("tab-logs"),
+  tabActions: document.getElementById("tab-actions"),
   tabScript: document.getElementById("tab-script"),
   chatlog: document.getElementById("chatlog"),
   chatInput: document.getElementById("chat-input"),
@@ -40,6 +41,28 @@ const els = {
   scriptDownloadAaps: document.getElementById("script-download-aaps"),
   scriptDownloadRunner: document.getElementById("script-download-runner"),
   scriptMsg: document.getElementById("script-msg"),
+
+  actionsRefresh: document.getElementById("actions-refresh"),
+  actionsNew: document.getElementById("actions-new"),
+  actionsSave: document.getElementById("actions-save"),
+  actionsDelete: document.getElementById("actions-delete"),
+  actionsList: document.getElementById("actions-list"),
+  actionId: document.getElementById("action-id"),
+  actionEnabled: document.getElementById("action-enabled"),
+  actionTitle: document.getElementById("action-title"),
+  actionKind: document.getElementById("action-kind"),
+  actionSectionPrompt: document.getElementById("action-section-prompt"),
+  actionSectionCommand: document.getElementById("action-section-command"),
+  actionPrompt: document.getElementById("action-prompt"),
+  actionAgent: document.getElementById("action-agent"),
+  actionModel: document.getElementById("action-model"),
+  actionReasoning: document.getElementById("action-reasoning"),
+  actionTimeout: document.getElementById("action-timeout"),
+  actionCmd: document.getElementById("action-cmd"),
+  actionShell: document.getElementById("action-shell"),
+  actionCwd: document.getElementById("action-cwd"),
+  actionTimeoutCmd: document.getElementById("action-timeout-cmd"),
+  actionsMsg: document.getElementById("actions-msg"),
 };
 
 const BLOCK_META = {
@@ -61,6 +84,12 @@ const LOG_RESET_LIMIT = 2000;
 const logSince = { pipeline: 0, backend: 0 };
 const logInitialized = { pipeline: false, backend: false };
 let logFollow = true;
+
+let actionsIndex = [];
+let selectedActionId = null;
+let selectedAction = null;
+let actionsMode = "view"; // "view" | "new"
+let actionsLoadedOnce = false;
 
 function setTheme(next) {
   document.body.dataset.theme = next;
@@ -367,6 +396,303 @@ function formatScriptApiError(e) {
   const detail = typeof data.detail === "string" ? data.detail : "";
   const msg = detail || code || (e && e.message) || String(e);
   return line ? `line ${line}: ${msg}` : msg;
+}
+
+function setActionsMsg(text, { error } = {}) {
+  if (!els.actionsMsg) return;
+  const msg = String(text || "");
+  els.actionsMsg.textContent = msg;
+  els.actionsMsg.classList.toggle("is-error", Boolean(error) && Boolean(msg));
+}
+
+function formatActionApiError(e) {
+  const data = e && e.data && typeof e.data === "object" ? e.data : {};
+  const code = typeof data.error === "string" ? data.error : "";
+  const detail = typeof data.detail === "string" ? data.detail : "";
+  return detail || code || (e && e.message) || String(e);
+}
+
+function normalizeActionKind(raw) {
+  const k = String(raw || "").trim().toLowerCase();
+  return k === "command" ? "command" : "prompt";
+}
+
+function setActionKindUi(kind, { editable } = {}) {
+  const k = normalizeActionKind(kind);
+  if (els.actionKind) {
+    els.actionKind.value = k;
+    els.actionKind.disabled = !Boolean(editable);
+  }
+  if (els.actionSectionPrompt) els.actionSectionPrompt.hidden = k !== "prompt";
+  if (els.actionSectionCommand) els.actionSectionCommand.hidden = k !== "command";
+}
+
+function updateActionsButtons() {
+  const hasExisting = actionsMode === "view" && selectedActionId !== null;
+  if (els.actionsDelete) els.actionsDelete.disabled = !hasExisting;
+}
+
+function clearActionForm() {
+  if (els.actionId) els.actionId.value = "";
+  if (els.actionTitle) els.actionTitle.value = "";
+  if (els.actionEnabled) els.actionEnabled.value = "true";
+  if (els.actionKind) els.actionKind.value = "prompt";
+
+  if (els.actionPrompt) els.actionPrompt.value = "";
+  if (els.actionAgent) els.actionAgent.value = "";
+  if (els.actionModel) els.actionModel.value = "";
+  if (els.actionReasoning) els.actionReasoning.value = "medium";
+  if (els.actionTimeout) els.actionTimeout.value = "";
+
+  if (els.actionCmd) els.actionCmd.value = "";
+  if (els.actionShell) els.actionShell.value = "bash";
+  if (els.actionCwd) els.actionCwd.value = ".";
+  if (els.actionTimeoutCmd) els.actionTimeoutCmd.value = "";
+}
+
+function renderActionsList() {
+  if (!els.actionsList) return;
+  els.actionsList.innerHTML = "";
+
+  const items = Array.isArray(actionsIndex) ? actionsIndex : [];
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "canvas-empty";
+    empty.textContent = "No actions yet. Click New to create one.";
+    els.actionsList.appendChild(empty);
+    return;
+  }
+
+  items.forEach((it) => {
+    const id = it && typeof it.id === "number" ? it.id : null;
+    if (id === null) return;
+    const title = String((it && it.title) || "").trim() || `(untitled #${id})`;
+    const kind = normalizeActionKind(it && it.kind);
+    const enabled = Boolean(it && it.enabled);
+
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "actionrow";
+    if (id === selectedActionId) row.classList.add("is-selected");
+    row.dataset.actionId = String(id);
+    row.addEventListener("click", () => loadActionDefinition(id));
+
+    const t = document.createElement("div");
+    t.className = "actionrow-title";
+    t.textContent = title;
+    const meta = document.createElement("div");
+    meta.className = "actionrow-meta";
+    meta.textContent = `#${id} \u00b7 ${kind} \u00b7 ${enabled ? "enabled" : "disabled"}`;
+
+    row.appendChild(t);
+    row.appendChild(meta);
+    els.actionsList.appendChild(row);
+  });
+}
+
+async function refreshActionsList({ keepSelection } = {}) {
+  if (!els.actionsList) return;
+  try {
+    const data = await api("/api/actions?limit=200");
+    actionsIndex = Array.isArray(data.actions) ? data.actions : [];
+    if (keepSelection && selectedActionId !== null) {
+      const still = actionsIndex.some((a) => a && typeof a === "object" && a.id === selectedActionId);
+      if (!still) {
+        selectedActionId = null;
+        selectedAction = null;
+      }
+    }
+    renderActionsList();
+    updateActionsButtons();
+  } catch (e) {
+    setActionsMsg(formatActionApiError(e), { error: true });
+  }
+}
+
+function applyActionToForm(action, { editableKind } = {}) {
+  const a = action && typeof action === "object" ? action : {};
+  const id = typeof a.id === "number" ? a.id : null;
+  const title = String(a.title || "");
+  const enabled = Boolean(a.enabled);
+  const kind = normalizeActionKind(a.kind);
+  const spec = a && typeof a.spec === "object" && a.spec ? a.spec : {};
+
+  if (els.actionId) els.actionId.value = id === null ? "" : String(id);
+  if (els.actionTitle) els.actionTitle.value = title;
+  if (els.actionEnabled) els.actionEnabled.value = enabled ? "true" : "false";
+  setActionKindUi(kind, { editable: Boolean(editableKind) });
+
+  if (kind === "prompt") {
+    if (els.actionPrompt) els.actionPrompt.value = String(spec.prompt || "");
+    if (els.actionAgent) els.actionAgent.value = typeof spec.agent === "string" ? spec.agent : "";
+    if (els.actionModel) els.actionModel.value = typeof spec.model === "string" ? spec.model : "";
+    if (els.actionReasoning) els.actionReasoning.value = typeof spec.reasoning === "string" ? spec.reasoning : "medium";
+    if (els.actionTimeout) {
+      els.actionTimeout.value =
+        typeof spec.timeout_s === "number" && Number.isFinite(spec.timeout_s) ? String(spec.timeout_s) : "";
+    }
+  } else {
+    if (els.actionCmd) els.actionCmd.value = String(spec.cmd || "");
+    if (els.actionShell) els.actionShell.value = "bash";
+    if (els.actionCwd) els.actionCwd.value = typeof spec.cwd === "string" ? spec.cwd : ".";
+    if (els.actionTimeoutCmd) {
+      els.actionTimeoutCmd.value =
+        typeof spec.timeout_s === "number" && Number.isFinite(spec.timeout_s) ? String(spec.timeout_s) : "";
+    }
+  }
+}
+
+async function loadActionDefinition(id) {
+  const aid = Number(id);
+  if (!Number.isFinite(aid)) return;
+  setActionsMsg("");
+  try {
+    const res = await api(`/api/actions/${encodeURIComponent(String(aid))}`);
+    const action = res.action || {};
+    actionsMode = "view";
+    selectedActionId = aid;
+    selectedAction = action;
+    applyActionToForm(action, { editableKind: false });
+    renderActionsList();
+    updateActionsButtons();
+  } catch (e) {
+    setActionsMsg(formatActionApiError(e), { error: true });
+  }
+}
+
+function enterNewActionMode() {
+  actionsMode = "new";
+  selectedActionId = null;
+  selectedAction = null;
+  clearActionForm();
+  setActionKindUi("prompt", { editable: true });
+  setActionsMsg("");
+  renderActionsList();
+  updateActionsButtons();
+}
+
+function buildActionSpecFromForm(kind, { forCreate } = {}) {
+  const k = normalizeActionKind(kind);
+  if (k === "prompt") {
+    const prompt = String((els.actionPrompt && els.actionPrompt.value) || "").trim();
+    if (!prompt) return { ok: false, error: "prompt is required" };
+    const reasoning = String((els.actionReasoning && els.actionReasoning.value) || "medium").trim() || "medium";
+
+    const spec = { prompt, reasoning };
+
+    const agent = String((els.actionAgent && els.actionAgent.value) || "").trim();
+    if (agent) spec.agent = agent;
+    else if (!forCreate) spec.agent = null;
+
+    const model = String((els.actionModel && els.actionModel.value) || "").trim();
+    if (model) spec.model = model;
+    else if (!forCreate) spec.model = null;
+
+    const tRaw = String((els.actionTimeout && els.actionTimeout.value) || "").trim();
+    if (tRaw) {
+      const n = Number(tRaw);
+      if (!Number.isFinite(n)) return { ok: false, error: "timeout must be a number" };
+      spec.timeout_s = n;
+    } else if (!forCreate) {
+      spec.timeout_s = null;
+    }
+    return { ok: true, spec };
+  }
+
+  const cmd = String((els.actionCmd && els.actionCmd.value) || "").trim();
+  if (!cmd) return { ok: false, error: "cmd is required" };
+  const spec = { cmd, shell: "bash" };
+
+  const cwd = String((els.actionCwd && els.actionCwd.value) || "").trim();
+  if (cwd) spec.cwd = cwd;
+  else if (!forCreate) spec.cwd = null;
+
+  const tRaw = String((els.actionTimeoutCmd && els.actionTimeoutCmd.value) || "").trim();
+  if (tRaw) {
+    const n = Number(tRaw);
+    if (!Number.isFinite(n)) return { ok: false, error: "timeout must be a number" };
+    spec.timeout_s = n;
+  } else if (!forCreate) {
+    spec.timeout_s = null;
+  }
+  return { ok: true, spec };
+}
+
+async function saveActionFromForm() {
+  if (!els.actionTitle || !els.actionKind || !els.actionEnabled) return;
+  setActionsMsg("");
+
+  const title = String(els.actionTitle.value || "").trim();
+  if (!title) {
+    setActionsMsg("title is required", { error: true });
+    return;
+  }
+
+  const kind = normalizeActionKind(els.actionKind.value);
+  const enabled = String(els.actionEnabled.value || "true") !== "false";
+
+  const creating = actionsMode === "new" || selectedActionId === null;
+  const built = buildActionSpecFromForm(kind, { forCreate: creating });
+  if (!built.ok) {
+    setActionsMsg(built.error, { error: true });
+    return;
+  }
+
+  try {
+    if (creating) {
+      const res = await api("/api/actions", {
+        method: "POST",
+        body: JSON.stringify({ title, kind, enabled, spec: built.spec }),
+      });
+      const created = res.action || {};
+      const id = typeof created.id === "number" ? created.id : null;
+      actionsMode = "view";
+      if (id !== null) selectedActionId = id;
+      selectedAction = created;
+      applyActionToForm(created, { editableKind: false });
+      await refreshActionsList({ keepSelection: true });
+      renderActionsList();
+      updateActionsButtons();
+      setActionsMsg("created");
+      return;
+    }
+
+    const id = Number(selectedActionId);
+    const res = await api(`/api/actions/${encodeURIComponent(String(id))}`, {
+      method: "PUT",
+      body: JSON.stringify({ title, enabled, spec: built.spec }),
+    });
+    const updated = res.action || {};
+    selectedAction = updated;
+    applyActionToForm(updated, { editableKind: false });
+    await refreshActionsList({ keepSelection: true });
+    renderActionsList();
+    updateActionsButtons();
+    setActionsMsg("saved");
+  } catch (e) {
+    setActionsMsg(formatActionApiError(e), { error: true });
+  }
+}
+
+async function deleteSelectedAction() {
+  if (actionsMode !== "view" || selectedActionId === null) return;
+  const id = Number(selectedActionId);
+  if (!Number.isFinite(id)) return;
+  const ok = window.confirm(`Delete action #${id}?`);
+  if (!ok) return;
+  setActionsMsg("");
+  try {
+    await api(`/api/actions/${encodeURIComponent(String(id))}`, { method: "DELETE" });
+    selectedActionId = null;
+    selectedAction = null;
+    actionsMode = "view";
+    clearActionForm();
+    setActionKindUi("prompt", { editable: true });
+    await refreshActionsList({ keepSelection: false });
+    setActionsMsg("deleted");
+  } catch (e) {
+    setActionsMsg(formatActionApiError(e), { error: true });
+  }
 }
 
 async function parseAapsToBlocks() {
@@ -713,9 +1039,14 @@ function bindTabs() {
     els.tabStatus.hidden = key !== "status";
     els.tabChat.hidden = key !== "chat";
     els.tabLogs.hidden = key !== "logs";
+    if (els.tabActions) els.tabActions.hidden = key !== "actions";
     if (els.tabScript) els.tabScript.hidden = key !== "script";
     if (key === "logs") refreshLogs();
     if (key === "chat") loadChat();
+    if (key === "actions" && !actionsLoadedOnce) {
+      actionsLoadedOnce = true;
+      refreshActionsList({ keepSelection: true });
+    }
   };
 
   els.tabs.forEach((t) => {
@@ -910,6 +1241,25 @@ function bindControls() {
   els.stop.addEventListener("click", () =>
     doPipelineAction("stop", () => api("/api/pipeline/stop", { method: "POST", body: JSON.stringify({}) }))
   );
+
+  if (els.actionsRefresh) {
+    els.actionsRefresh.addEventListener("click", () => refreshActionsList({ keepSelection: true }));
+  }
+  if (els.actionsNew) {
+    els.actionsNew.addEventListener("click", enterNewActionMode);
+  }
+  if (els.actionsSave) {
+    els.actionsSave.addEventListener("click", saveActionFromForm);
+  }
+  if (els.actionsDelete) {
+    els.actionsDelete.addEventListener("click", deleteSelectedAction);
+  }
+  if (els.actionKind) {
+    els.actionKind.addEventListener("change", () => {
+      const k = normalizeActionKind(els.actionKind.value);
+      setActionKindUi(k, { editable: actionsMode === "new" });
+    });
+  }
 }
 
 function boot() {
@@ -936,6 +1286,7 @@ function boot() {
   refreshStatus();
   loadChat();
   refreshLogs({ reset: true });
+  updateActionsButtons();
 
   window.setInterval(refreshHealth, 2000);
   window.setInterval(refreshStatus, 2000);
