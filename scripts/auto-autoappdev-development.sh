@@ -281,6 +281,27 @@ if [ -z "$session_id" ]; then
 	- Backend: Python Tornado. Database: PostgreSQL. Secrets in .env.
 	- Frontend: PWA (static HTML/CSS/JS). Default theme: light.
 
+	Scratch-like Blocks & Control-Flow (new hard requirement):
+	- The PWA "Blocks" palette must be **dynamic** and generated from the Action library:
+	  - Any action definition can be used as a draggable block on the canvas.
+	  - Users can add new actions (therefore new blocks) and delete arbitrary non-default actions.
+	  - Canvas blocks are always removable/reorderable.
+	- Provide **built-in default actions** that are read-only:
+	  - Default actions (plan/work/debug/fix/summary/update_readme/commit_push) and a default
+	    **multilingual support** action must ship with the app.
+	  - Built-in actions are **read-only** in the UI and via API; they cannot be modified or deleted.
+	  - If the user tries to edit a built-in action, the app must **clone** it into a new user action
+	    and then edit the clone (original unchanged).
+	- Provide Scratch-like control-flow blocks:
+	  - Metatasks generator block (heuristic, redundant prompt) that outputs a task list artifact.
+	  - For-loop blocks (outer: For N_ROUND; inner: For each task in metatasks).
+	  - If/Else block (mapped to STEP.meta.conditional in IR) for conditional fixes.
+	- Default program shown on first load must demonstrate nested control-flow:
+	  For N_ROUND:
+	    metatasks generator
+	    for task in metatasks:
+	      plan -> work -> debug -> fix -> multilingual -> summary -> update_readme -> commit/push
+
 		Core missing module (must be built):
 		- **Pipeline Script Visualization + Writer**
 		  - Define a standardized, formatted pipeline script (human-editable) that represents:
@@ -494,6 +515,9 @@ for row in "${tasks[@]}"; do
 	  - UI language switching.
 	  - Actions can be language-aware; default languages: zh-Hans, zh-Hant, en, ja, ko, vi, ar, fr, es.
 	  - Include translation/localization action before summary/log steps by default in pipeline templates.
+	- Provide Scratch-like control-flow blocks + default nested program:
+	  - metatasks generator + For N_ROUND + For each task + If/Else.
+	  - Dynamic blocks palette generated from Action definitions (built-ins are read-only; clone-on-edit).
 	- Build the pipeline script visualization + writer module (script <-> IR <-> blocks):
 	  - standard formatted script (TASKS -> STEPS -> ACTIONS)
 	  - import/parse existing pipeline shell scripts into IR
