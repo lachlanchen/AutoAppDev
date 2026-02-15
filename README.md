@@ -5,8 +5,8 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T12:58:20Z
-- Phase commit: `Selfdev: 30 workspace_layout_standardization verify`
+- Updated: 2026-02-15T12:58:39Z
+- Phase commit: `Selfdev: 30 workspace_layout_standardization summary`
 - Progress: 29 / 42 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
