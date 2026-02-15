@@ -4,6 +4,7 @@ const els = {
   pause: document.getElementById("btn-pause"),
   resume: document.getElementById("btn-resume"),
   stop: document.getElementById("btn-stop"),
+  ctrlMsg: document.getElementById("ctrl-msg"),
   backendHealth: document.getElementById("backend-health"),
   dbHealth: document.getElementById("db-health"),
   pipelineStatus: document.getElementById("pipeline-status"),
@@ -147,6 +148,47 @@ function pipelineVariant(state) {
   }
 }
 
+function normalizePipelineState(state) {
+  const st = String(state || "").toLowerCase();
+  if (st === "running") return "running";
+  if (st === "paused") return "paused";
+  return "stopped";
+}
+
+function updateActionButtons(state) {
+  const st = normalizePipelineState(state);
+  const isRunning = st === "running";
+  const isPaused = st === "paused";
+  els.start.disabled = isRunning || isPaused;
+  els.pause.disabled = !isRunning;
+  els.resume.disabled = !isPaused;
+  els.stop.disabled = !(isRunning || isPaused);
+}
+
+function setCtrlMsg(text, { error } = {}) {
+  if (!els.ctrlMsg) return;
+  const msg = String(text || "");
+  els.ctrlMsg.textContent = msg;
+  els.ctrlMsg.classList.toggle("is-error", Boolean(error) && Boolean(msg));
+}
+
+async function doPipelineAction(action, fn) {
+  setCtrlMsg("");
+  try {
+    await fn();
+  } catch (e) {
+    const status = e && typeof e.status === "number" ? e.status : null;
+    if (status === 400) {
+      const detail = e && e.data && e.data.detail ? String(e.data.detail) : "";
+      setCtrlMsg(detail || e.message || `failed: ${action}`, { error: true });
+    } else {
+      setCtrlMsg((e && e.message) || `failed: ${action}`, { error: true });
+    }
+  } finally {
+    await refreshStatus();
+  }
+}
+
 async function refreshHealth() {
   try {
     const data = await api("/api/health");
@@ -171,9 +213,11 @@ async function refreshStatus() {
     els.pipelineStatus.textContent = state;
     setBadge(els.pipelineStatus, pipelineVariant(state), state);
     els.pipelinePid.textContent = st.pid ? String(st.pid) : "-";
+    updateActionButtons(state);
   } catch {
     setBadge(els.pipelineStatus, "badge--unknown", "unknown");
     els.pipelinePid.textContent = "-";
+    updateActionButtons("stopped");
   }
 }
 
@@ -281,28 +325,19 @@ function bindControls() {
 
   els.logRefresh.addEventListener("click", refreshLogs);
 
-  els.start.addEventListener("click", async () => {
-    // Minimal integration: just start the default pipeline script.
-    try {
-      await api("/api/pipeline/start", { method: "POST", body: JSON.stringify({}) });
-    } catch (e) {
-      alert(`Start failed: ${e.message || e}`);
-    }
-    await refreshStatus();
-  });
+  els.start.addEventListener("click", () =>
+    doPipelineAction("start", () => api("/api/pipeline/start", { method: "POST", body: JSON.stringify({}) }))
+  );
 
-  els.pause.addEventListener("click", async () => {
-    await api("/api/pipeline/pause", { method: "POST", body: "{}" }).catch(() => {});
-    await refreshStatus();
-  });
-  els.resume.addEventListener("click", async () => {
-    await api("/api/pipeline/resume", { method: "POST", body: "{}" }).catch(() => {});
-    await refreshStatus();
-  });
-  els.stop.addEventListener("click", async () => {
-    await api("/api/pipeline/stop", { method: "POST", body: "{}" }).catch(() => {});
-    await refreshStatus();
-  });
+  els.pause.addEventListener("click", () =>
+    doPipelineAction("pause", () => api("/api/pipeline/pause", { method: "POST", body: JSON.stringify({}) }))
+  );
+  els.resume.addEventListener("click", () =>
+    doPipelineAction("resume", () => api("/api/pipeline/resume", { method: "POST", body: JSON.stringify({}) }))
+  );
+  els.stop.addEventListener("click", () =>
+    doPipelineAction("stop", () => api("/api/pipeline/stop", { method: "POST", body: JSON.stringify({}) }))
+  );
 }
 
 function boot() {
@@ -311,6 +346,7 @@ function boot() {
   bindDnD();
   bindTabs();
   bindControls();
+  updateActionButtons("stopped");
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js").catch((e) => {

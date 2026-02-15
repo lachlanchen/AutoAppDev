@@ -132,6 +132,25 @@ select, input {
 
 .btn:active { transform: translateY(1px); }
 
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn:disabled:active { transform: none; }
+
+.ctrl-msg {
+  max-width: 320px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--muted);
+  align-self: center;
+}
+
+.ctrl-msg:empty { display: none; }
+
+.ctrl-msg.is-error { color: var(--red); }
+
 .btn--primary {
   background: linear-gradient(180deg, rgba(39, 103, 255, 0.96), rgba(39, 103, 255, 0.86));
   color: white;
