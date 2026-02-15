@@ -122,6 +122,63 @@
           <div class="hintbox">
             Use Inbox to inject guidance while the pipeline runs. Messages are written to a runtime inbox that scripts can consume.
           </div>
+
+          <div class="divider"></div>
+          <div class="panel-title">Workspace</div>
+          <div class="panel-hint">Materials + shared context (persisted per workspace)</div>
+
+          <div class="actionsection scriptbar">
+            <input class="input" id="ws-slug" placeholder="my_workspace" />
+            <button class="btn btn--ghost" id="ws-load">Load</button>
+            <button class="btn btn--ghost" id="ws-save">Save</button>
+          </div>
+
+          <div class="actiongrid">
+            <div class="select">
+              <label>Default language</label>
+              <select id="ws-language">
+                <option value="zh-Hans">zh-Hans</option>
+                <option value="zh-Hant">zh-Hant</option>
+                <option value="en" selected>en</option>
+                <option value="ja">ja</option>
+                <option value="ko">ko</option>
+                <option value="vi">vi</option>
+                <option value="ar">ar</option>
+                <option value="fr">fr</option>
+                <option value="es">es</option>
+              </select>
+            </div>
+            <div class="select">
+              <label>Shared context path (optional)</label>
+              <input class="input" id="ws-context-path" placeholder="docs/shared_context.md" />
+            </div>
+          </div>
+
+          <div class="select actionsection">
+            <label>Materials paths (one per line)</label>
+            <textarea
+              class="input action-text"
+              id="ws-materials"
+              spellcheck="false"
+              placeholder="materials\nmaterials/screenshots"
+            ></textarea>
+          </div>
+
+          <div class="select actionsection">
+            <label>Shared context text</label>
+            <textarea
+              class="input action-text"
+              id="ws-context-text"
+              spellcheck="false"
+              placeholder="Shared context visible to all tasks in this workspace..."
+            ></textarea>
+          </div>
+
+          <div class="script-msg" id="ws-msg" aria-live="polite"></div>
+          <div class="hintbox">
+            Workspace config is validated to stay under <code>auto-apps/&lt;workspace&gt;/</code>.
+            Paths must be workspace-relative (no <code>..</code>, no absolute paths).
+          </div>
         </div>
 
         <div class="tabview" id="tab-chat" hidden>

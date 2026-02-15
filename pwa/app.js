@@ -63,6 +63,15 @@ const els = {
   actionCwd: document.getElementById("action-cwd"),
   actionTimeoutCmd: document.getElementById("action-timeout-cmd"),
   actionsMsg: document.getElementById("actions-msg"),
+
+  wsSlug: document.getElementById("ws-slug"),
+  wsLoad: document.getElementById("ws-load"),
+  wsSave: document.getElementById("ws-save"),
+  wsMaterials: document.getElementById("ws-materials"),
+  wsLanguage: document.getElementById("ws-language"),
+  wsContextText: document.getElementById("ws-context-text"),
+  wsContextPath: document.getElementById("ws-context-path"),
+  wsMsg: document.getElementById("ws-msg"),
 };
 
 const BLOCK_META = {
@@ -90,6 +99,9 @@ let selectedActionId = null;
 let selectedAction = null;
 let actionsMode = "view"; // "view" | "new"
 let actionsLoadedOnce = false;
+
+let workspaceSlug = "";
+let workspaceConfig = null;
 
 function setTheme(next) {
   document.body.dataset.theme = next;
@@ -355,10 +367,13 @@ function programToIr(prog, title = "Program") {
       actions,
     };
   });
+  const task = { id: "t1", title: String(title || "Program"), steps };
+  const meta = workspaceTaskMeta();
+  if (meta) task.meta = meta;
   return {
     kind: "autoappdev_ir",
     version: 1,
-    tasks: [{ id: "t1", title: String(title || "Program"), steps }],
+    tasks: [task],
   };
 }
 
@@ -366,7 +381,10 @@ function programToAapsScript(prog, title = "Program") {
   const lines = [];
   lines.push("AUTOAPPDEV_PIPELINE 1");
   lines.push("");
-  lines.push(`TASK  ${JSON.stringify({ id: "t1", title: String(title || "Program") })}`);
+  const task = { id: "t1", title: String(title || "Program") };
+  const meta = workspaceTaskMeta();
+  if (meta) task.meta = meta;
+  lines.push(`TASK  ${JSON.stringify(task)}`);
   lines.push("");
   (Array.isArray(prog) ? prog : []).forEach((b, idx) => {
     const type = b && typeof b === "object" ? String(b.type || "") : "";
@@ -515,6 +533,117 @@ function formatActionApiError(e) {
   const code = typeof data.error === "string" ? data.error : "";
   const detail = typeof data.detail === "string" ? data.detail : "";
   return detail || code || (e && e.message) || String(e);
+}
+
+function setWsMsg(text, { error } = {}) {
+  if (!els.wsMsg) return;
+  const msg = String(text || "");
+  els.wsMsg.textContent = msg;
+  els.wsMsg.classList.toggle("is-error", Boolean(error) && Boolean(msg));
+}
+
+function loadWorkspaceSlugFromStorage() {
+  try {
+    return String(localStorage.getItem("autoappdev_workspace") || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function saveWorkspaceSlugToStorage(slug) {
+  try {
+    localStorage.setItem("autoappdev_workspace", String(slug || "").trim());
+  } catch {
+    // ignore
+  }
+}
+
+function parseMaterialsPaths(raw) {
+  const txt = String(raw || "");
+  const parts = txt
+    .split(/[\n,]+/g)
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+  const uniq = [];
+  parts.forEach((p) => {
+    if (!uniq.includes(p)) uniq.push(p);
+  });
+  return uniq.length ? uniq : ["materials"];
+}
+
+function fillWorkspaceForm(cfg) {
+  const c = cfg && typeof cfg === "object" ? cfg : {};
+  const mats = Array.isArray(c.materials_paths) ? c.materials_paths.map((s) => String(s || "").trim()).filter(Boolean) : [];
+  if (els.wsMaterials) els.wsMaterials.value = mats.length ? mats.join("\n") : "materials";
+  if (els.wsLanguage) {
+    const lang = typeof c.default_language === "string" ? c.default_language : "en";
+    els.wsLanguage.value = lang;
+  }
+  if (els.wsContextText) els.wsContextText.value = typeof c.shared_context_text === "string" ? c.shared_context_text : "";
+  if (els.wsContextPath) els.wsContextPath.value = typeof c.shared_context_path === "string" ? c.shared_context_path : "";
+}
+
+function buildWorkspacePayloadFromForm() {
+  const materials_paths = parseMaterialsPaths(els.wsMaterials ? els.wsMaterials.value : "");
+  const default_language = String((els.wsLanguage && els.wsLanguage.value) || "en").trim() || "en";
+  const shared_context_text = String((els.wsContextText && els.wsContextText.value) || "");
+  const shared_context_path = String((els.wsContextPath && els.wsContextPath.value) || "").trim();
+  return { materials_paths, default_language, shared_context_text, shared_context_path };
+}
+
+function workspaceTaskMeta() {
+  const ws = String(workspaceSlug || "").trim();
+  if (!ws) return null;
+  const cfg = workspaceConfig && typeof workspaceConfig === "object" ? workspaceConfig : null;
+  return { workspace: ws, workspace_config: cfg || {} };
+}
+
+async function loadWorkspaceConfig(slugRaw) {
+  const parsed = parseWorkspaceSlug(slugRaw);
+  if (!parsed.ok) {
+    setWsMsg(`Invalid workspace: ${parsed.error}`, { error: true });
+    return;
+  }
+  const ws = parsed.workspace;
+  if (els.wsSlug) els.wsSlug.value = ws;
+  setWsMsg("loading...");
+  try {
+    const res = await api(`/api/workspaces/${encodeURIComponent(ws)}/config`);
+    const cfg = res && typeof res.config === "object" && res.config ? res.config : {};
+    workspaceSlug = ws;
+    workspaceConfig = cfg;
+    fillWorkspaceForm(cfg);
+    saveWorkspaceSlugToStorage(ws);
+    setWsMsg(res && res.exists ? "loaded" : "loaded defaults (not saved yet)");
+  } catch (e) {
+    setWsMsg(formatActionApiError(e), { error: true });
+  }
+}
+
+async function saveWorkspaceConfig() {
+  if (!els.wsSlug) return;
+  const parsed = parseWorkspaceSlug(els.wsSlug.value);
+  if (!parsed.ok) {
+    setWsMsg(`Invalid workspace: ${parsed.error}`, { error: true });
+    return;
+  }
+  const ws = parsed.workspace;
+  const payload = buildWorkspacePayloadFromForm();
+  setWsMsg("saving...");
+  try {
+    const res = await api(`/api/workspaces/${encodeURIComponent(ws)}/config`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    const cfg = res && typeof res.config === "object" && res.config ? res.config : payload;
+    workspaceSlug = ws;
+    workspaceConfig = cfg;
+    fillWorkspaceForm(cfg);
+    saveWorkspaceSlugToStorage(ws);
+    setWsMsg("saved");
+  } catch (e) {
+    setWsMsg(formatActionApiError(e), { error: true });
+  }
 }
 
 function normalizeActionKind(raw) {
@@ -1122,7 +1251,10 @@ function bindDnD() {
     const type = ev.dataTransfer.getData("text/plain");
     if (!type) return;
     if (type === "update_readme") {
-      const raw = window.prompt("Workspace slug for auto-apps/<workspace>/README.md?", "my_workspace");
+      const raw = window.prompt(
+        "Workspace slug for auto-apps/<workspace>/README.md?",
+        String(workspaceSlug || "my_workspace")
+      );
       if (raw === null) return;
       const parsed = parseWorkspaceSlug(raw);
       if (!parsed.ok) {
@@ -1365,6 +1497,18 @@ function bindControls() {
       setActionKindUi(k, { editable: actionsMode === "new" });
     });
   }
+
+  if (els.wsLoad) {
+    els.wsLoad.addEventListener("click", () => loadWorkspaceConfig(els.wsSlug ? els.wsSlug.value : ""));
+  }
+  if (els.wsSave) {
+    els.wsSave.addEventListener("click", saveWorkspaceConfig);
+  }
+  if (els.wsSlug) {
+    els.wsSlug.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") loadWorkspaceConfig(els.wsSlug.value);
+    });
+  }
 }
 
 function boot() {
@@ -1386,6 +1530,9 @@ function boot() {
   setTheme(savedTheme === "dark" ? "dark" : "light");
 
   loadSettings();
+  const savedWs = loadWorkspaceSlugFromStorage();
+  if (els.wsSlug && savedWs) els.wsSlug.value = savedWs;
+  if (savedWs) loadWorkspaceConfig(savedWs);
 
   refreshHealth();
   refreshStatus();
