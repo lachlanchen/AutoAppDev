@@ -153,6 +153,10 @@
       "ui.block.summary": "Summary",
       "ui.block.update_readme": "Update README",
       "ui.block.commit_push": "Commit+Push",
+      "ui.block.metatasks_generator": "Meta Tasks",
+      "ui.block.for_n_round": "For N_ROUND",
+      "ui.block.for_each_task": "For each task",
+      "ui.block.if_else": "If/Else",
       "ui.block.while_loop": "While",
       "ui.block.wait_input": "Wait Input",
     },
@@ -1216,4 +1220,3 @@
 
   window.AutoAppDevI18n = { PACK, SUPPORTED, RTL_LANGS, normalize };
 })();
-

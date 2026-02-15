@@ -166,11 +166,116 @@ const BLOCK_META = {
   summary: { title: "Summary", label_key: "ui.block.summary", cls: "block--summary" },
   update_readme: { title: "Update README", label_key: "ui.block.update_readme", cls: "block--summary" },
   commit_push: { title: "Commit+Push", label_key: "ui.block.commit_push", cls: "block--release" },
+  metatasks_generator: { title: "Meta Tasks", label_key: "ui.block.metatasks_generator", cls: "block--loop" },
+  for_n_round: { title: "For N_ROUND", label_key: "ui.block.for_n_round", cls: "block--loop" },
+  for_each_task: { title: "For each task", label_key: "ui.block.for_each_task", cls: "block--loop" },
+  if_else: { title: "If/Else", label_key: "ui.block.if_else", cls: "block--loop" },
   while_loop: { title: "While", label_key: "ui.block.while_loop", cls: "block--loop" },
   wait_input: { title: "Wait Input", label_key: "ui.block.wait_input", cls: "block--input" },
 };
 
 let program = [];
+
+const CONTAINER_BLOCK_TYPES = new Set(["metatasks_generator", "for_n_round", "for_each_task", "if_else"]);
+const ACTION_BINDABLE_BLOCK_TYPES = new Set(["plan", "work", "debug", "fix", "summary", "commit_push"]);
+
+function isContainerBlockType(type) {
+  return CONTAINER_BLOCK_TYPES.has(String(type || ""));
+}
+
+function isActionBindableBlockType(type) {
+  return ACTION_BINDABLE_BLOCK_TYPES.has(String(type || ""));
+}
+
+function defaultMetaRoundProgram() {
+  const nRound = 2;
+  return [
+    {
+      type: "metatasks_generator",
+      n_round: nRound,
+      task_list_path: "references/meta_round/tasks_v0.json",
+      children: [
+        { type: "for_n_round", n_round: nRound, body: [{ type: "plan" }, { type: "plan" }] },
+        {
+          type: "for_each_task",
+          body: [
+            { type: "plan" },
+            { type: "work" },
+            { type: "debug" },
+            { type: "if_else", condition: "on_debug_failure", if_body: [{ type: "fix" }], else_body: [] },
+            { type: "summary" },
+            { type: "commit_push" },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+function makeBlockFromType(type) {
+  const tpe = String(type || "");
+  if (tpe === "metatasks_generator") {
+    // Default nested two-loop template.
+    return defaultMetaRoundProgram()[0];
+  }
+  if (tpe === "for_n_round") {
+    const nRound = 2;
+    return { type: "for_n_round", n_round: nRound, body: [{ type: "plan" }, { type: "plan" }] };
+  }
+  if (tpe === "for_each_task") {
+    return {
+      type: "for_each_task",
+      body: [
+        { type: "plan" },
+        { type: "work" },
+        { type: "debug" },
+        { type: "if_else", condition: "on_debug_failure", if_body: [{ type: "fix" }], else_body: [] },
+        { type: "summary" },
+        { type: "commit_push" },
+      ],
+    };
+  }
+  if (tpe === "if_else") {
+    return { type: "if_else", condition: "on_debug_failure", if_body: [{ type: "fix" }], else_body: [] };
+  }
+  return { type: tpe };
+}
+
+function flattenLeafBlocks(blocks) {
+  const out = [];
+  const visit = (b) => {
+    const obj = b && typeof b === "object" ? b : {};
+    const tpe = String(obj.type || "");
+    if (!tpe) return;
+    if (!isContainerBlockType(tpe)) {
+      out.push(obj);
+      return;
+    }
+    if (tpe === "metatasks_generator") {
+      const children = Array.isArray(obj.children) ? obj.children : [];
+      children.forEach(visit);
+      return;
+    }
+    if (tpe === "for_n_round" || tpe === "for_each_task") {
+      const body = Array.isArray(obj.body) ? obj.body : [];
+      body.forEach(visit);
+      return;
+    }
+    if (tpe === "if_else") {
+      const ifBody = Array.isArray(obj.if_body) ? obj.if_body : [];
+      const elseBody = Array.isArray(obj.else_body) ? obj.else_body : [];
+      ifBody.forEach(visit);
+      elseBody.forEach(visit);
+      return;
+    }
+  };
+  (Array.isArray(blocks) ? blocks : []).forEach(visit);
+  return out;
+}
+
+function countLeafBlocks(blocks) {
+  return flattenLeafBlocks(blocks).length;
+}
 
 const LOG_WINDOW_LIMIT = 400;
 const LOG_RESET_LIMIT = 2000;
@@ -301,6 +406,27 @@ function formatProgramBlockLabel(block, idx) {
     const base = uiBlockTitle(type, idx);
     return `${base} (${updateReadmeTargetPath(ws)})`;
   }
+  if (type === "metatasks_generator") {
+    const base = uiBlockTitle(type, idx);
+    const n = Number.parseInt(String(b.n_round || ""), 10);
+    const nRound = Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
+    const taskListPath = String(b.task_list_path || "").trim();
+    const parts = [];
+    if (nRound) parts.push(`N_ROUND=${nRound}`);
+    if (taskListPath) parts.push(taskListPath);
+    return parts.length ? `${base} (${parts.join(", ")})` : base;
+  }
+  if (type === "for_n_round") {
+    const base = uiBlockTitle(type, idx);
+    const n = Number.parseInt(String(b.n_round || ""), 10);
+    const nRound = Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
+    return nRound ? `${base} (N_ROUND=${nRound})` : base;
+  }
+  if (type === "if_else") {
+    const base = uiBlockTitle(type, idx);
+    const cond = String(b.condition || "").trim();
+    return cond ? `${base} (${cond})` : base;
+  }
   const base = uiBlockTitle(type, idx);
   const ref = normalizeActionRef(b.action_ref);
   if (!ref) return base;
@@ -322,64 +448,89 @@ function renderProgram() {
 
   const wrap = document.createElement("div");
   wrap.className = "program";
-  program.forEach((b, idx) => {
-    const type = b && typeof b === "object" ? String(b.type || "") : "";
-    const meta = BLOCK_META[type] || { title: type, cls: "block--work" };
-    const row = document.createElement("div");
-    row.className = `prog-block ${meta.cls}`;
-    const label = document.createElement("div");
-    label.className = "prog-label";
-    label.textContent = formatProgramBlockLabel(b, idx);
-    row.appendChild(label);
-    if (type !== "update_readme") {
-      const bind = document.createElement("button");
-      bind.className = "prog-bind";
-      bind.type = "button";
-      bind.textContent = t("ui.btn.bind");
-      bind.addEventListener("click", () => {
-        const cur = b && typeof b === "object" ? b : {};
-        const curRef = normalizeActionRef(cur.action_ref);
-        const raw = window.prompt(t("ui.prompt.action_ref"), actionRefValue(curRef));
-        if (raw === null) return;
-        const s = String(raw || "").trim();
-        if (!s) {
-          if (cur && typeof cur === "object") delete cur.action_ref;
+  const INDENT_PX = 18;
+
+  const renderBlocks = (list, depth, parentType) => {
+    const blocks = Array.isArray(list) ? list : [];
+    blocks.forEach((b, idx) => {
+      const obj = b && typeof b === "object" ? b : {};
+      const type = String(obj.type || "");
+      const meta = BLOCK_META[type] || { title: type, cls: "block--work" };
+      const row = document.createElement("div");
+      row.className = `prog-block ${meta.cls}`;
+      if (depth > 0) {
+        const dx = depth * INDENT_PX;
+        row.style.marginLeft = `${dx}px`;
+        row.style.width = `calc(100% - ${dx}px)`;
+      }
+      const label = document.createElement("div");
+      label.className = "prog-label";
+      const prefix = parentType === "for_n_round" ? `Round ${idx + 1}: ` : "";
+      label.textContent = prefix + formatProgramBlockLabel(obj, idx);
+      row.appendChild(label);
+
+      if (isActionBindableBlockType(type)) {
+        const bind = document.createElement("button");
+        bind.className = "prog-bind";
+        bind.type = "button";
+        bind.textContent = t("ui.btn.bind");
+        bind.addEventListener("click", () => {
+          const cur = obj && typeof obj === "object" ? obj : {};
+          const curRef = normalizeActionRef(cur.action_ref);
+          const raw = window.prompt(t("ui.prompt.action_ref"), actionRefValue(curRef));
+          if (raw === null) return;
+          const s = String(raw || "").trim();
+          if (!s) {
+            if (cur && typeof cur === "object") delete cur.action_ref;
+            persistProgram();
+            renderProgram();
+            return;
+          }
+          if (/^[0-9]+$/.test(s)) {
+            const id = Number(s);
+            if (Number.isFinite(id) && id > 0) {
+              cur.action_ref = { id: Math.trunc(id) };
+            } else {
+              window.alert(t("ui.alert.invalid_id"));
+              return;
+            }
+          } else {
+            if (s.length > 200 || /[\x00-\x1f]/.test(s)) {
+              window.alert(t("ui.alert.invalid_slug"));
+              return;
+            }
+            cur.action_ref = { slug: s };
+          }
           persistProgram();
           renderProgram();
-          return;
-        }
-        if (/^[0-9]+$/.test(s)) {
-          const id = Number(s);
-          if (Number.isFinite(id) && id > 0) {
-            cur.action_ref = { id: Math.trunc(id) };
-          } else {
-            window.alert(t("ui.alert.invalid_id"));
-            return;
-          }
-        } else {
-          if (s.length > 200 || /[\x00-\x1f]/.test(s)) {
-            window.alert(t("ui.alert.invalid_slug"));
-            return;
-          }
-          cur.action_ref = { slug: s };
-        }
+        });
+        row.appendChild(bind);
+      }
+
+      const rm = document.createElement("button");
+      rm.className = "prog-remove";
+      rm.type = "button";
+      rm.textContent = "×";
+      rm.addEventListener("click", () => {
+        blocks.splice(idx, 1);
         persistProgram();
         renderProgram();
       });
-      row.appendChild(bind);
-    }
-    const rm = document.createElement("button");
-    rm.className = "prog-remove";
-    rm.type = "button";
-    rm.textContent = "×";
-    rm.addEventListener("click", () => {
-      program.splice(idx, 1);
-      persistProgram();
-      renderProgram();
+      row.appendChild(rm);
+      wrap.appendChild(row);
+
+      if (type === "metatasks_generator") {
+        renderBlocks(obj.children, depth + 1, type);
+      } else if (type === "for_n_round" || type === "for_each_task") {
+        renderBlocks(obj.body, depth + 1, type);
+      } else if (type === "if_else") {
+        renderBlocks(obj.if_body, depth + 1, type);
+        if (Array.isArray(obj.else_body) && obj.else_body.length) renderBlocks(obj.else_body, depth + 1, type);
+      }
     });
-    row.appendChild(rm);
-    wrap.appendChild(row);
-  });
+  };
+
+  renderBlocks(program, 0, "");
   els.canvas.appendChild(wrap);
 }
 
@@ -390,7 +541,13 @@ function persistProgram() {
 function loadProgram() {
   try {
     const raw = localStorage.getItem("autoappdev_program");
-    if (!raw) return;
+    if (!raw) {
+      program = defaultMetaRoundProgram();
+      try {
+        persistProgram();
+      } catch {}
+      return;
+    }
     const p = JSON.parse(raw);
     if (Array.isArray(p)) program = p;
   } catch {}
@@ -435,7 +592,7 @@ async function saveSettings() {
 }
 
 function programToPlan(prog) {
-  const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => ({
+  const steps = flattenLeafBlocks(Array.isArray(prog) ? prog : []).map((b, idx) => ({
     id: idx + 1,
     block: (() => {
       const type = b && typeof b === "object" ? String(b.type || "") : "";
@@ -446,13 +603,18 @@ function programToPlan(prog) {
 }
 
 function programToIr(prog, title = "Program") {
-  const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => {
-    const type = b && typeof b === "object" ? String(b.type || "") : "";
-    const stepTitle = canonicalBlockTitle(type, idx);
-    let block = type;
+  const blocks = Array.isArray(prog) ? prog : [];
+  const titleStr = String(title || "Program");
+  const wsMeta = workspaceTaskMeta();
+
+  const leafBlockToIrStep = (block, idx, { id, title, meta } = {}) => {
+    const b = block && typeof block === "object" ? block : {};
+    const type = String(b.type || "");
+    const stepTitle = String(title || "").trim() || canonicalBlockTitle(type, idx);
+    let stepBlock = type;
     let actions = [{ id: "a1", kind: "noop", params: {} }];
     if (type === "update_readme") {
-      block = "summary";
+      stepBlock = "summary";
       const ws = String((b && b.workspace) || "").trim();
       actions = [
         {
@@ -468,59 +630,150 @@ function programToIr(prog, title = "Program") {
       const ref = normalizeActionRef(b && b.action_ref);
       if (ref) actions[0].meta = { action_ref: ref };
     }
-    return {
-      id: `s${idx + 1}`,
+    const out = {
+      id: String(id || `s${idx + 1}`),
       title: stepTitle,
-      block,
+      block: stepBlock,
       actions,
     };
-  });
-  const task = { id: "t1", title: String(title || "Program"), steps };
-  const meta = workspaceTaskMeta();
-  if (meta) task.meta = meta;
-  return {
-    kind: "autoappdev_ir",
-    version: 1,
-    tasks: [task],
+    if (meta && typeof meta === "object" && Object.keys(meta).length) out.meta = meta;
+    return out;
   };
+
+  const programToMetaRoundIr = (root) => {
+    const r = root && typeof root === "object" ? root : {};
+    const children = Array.isArray(r.children) ? r.children : [];
+    const roundLoop = children.find((c) => c && typeof c === "object" && String(c.type || "") === "for_n_round") || null;
+    const eachLoop = children.find((c) => c && typeof c === "object" && String(c.type || "") === "for_each_task") || null;
+
+    const roundBodyRaw = roundLoop && Array.isArray(roundLoop.body) ? roundLoop.body : [];
+    const roundLeaf = flattenLeafBlocks(roundBodyRaw);
+    const nCfg = Number.parseInt(String((roundLoop && roundLoop.n_round) || r.n_round || ""), 10);
+    const nRound = roundLeaf.length || (Number.isFinite(nCfg) && nCfg > 0 ? Math.trunc(nCfg) : 2);
+
+    const taskListPath = String(r.task_list_path || "").trim() || "references/meta_round/tasks_v0.json";
+
+    const controllerSteps = [];
+    for (let i = 0; i < nRound; i++) {
+      const leaf = roundLeaf[i] || { type: "plan" };
+      const leafType = leaf && typeof leaf === "object" ? String(leaf.type || "") : "";
+      controllerSteps.push(
+        leafBlockToIrStep(leaf, i, {
+          id: `r${i + 1}`,
+          title: `Round ${i + 1}: ${canonicalBlockTitle(leafType, i)}`,
+          meta: { round: i + 1 },
+        })
+      );
+    }
+
+    const templateSteps = [];
+    const eachBody = eachLoop && Array.isArray(eachLoop.body) ? eachLoop.body : [];
+    eachBody.forEach((node) => {
+      const obj = node && typeof node === "object" ? node : {};
+      const tpe = String(obj.type || "");
+      if (tpe === "if_else") {
+        const cond = String(obj.condition || "on_debug_failure").trim() || "on_debug_failure";
+        const ifBody = Array.isArray(obj.if_body) ? obj.if_body : [];
+        const ifLeaf = flattenLeafBlocks(ifBody);
+        const fixLeaf =
+          ifLeaf.find((b) => b && typeof b === "object" && String(b.type || "") === "fix") || ifLeaf[0] || { type: "fix" };
+        templateSteps.push(
+          leafBlockToIrStep(fixLeaf, templateSteps.length, {
+            id: `s${templateSteps.length + 1}`,
+            title: "Fix (if needed)",
+            meta: { conditional: cond },
+          })
+        );
+        return;
+      }
+      if (isContainerBlockType(tpe)) {
+        // v0: lossy flattening for nested containers inside the template body.
+        const leaves = flattenLeafBlocks([obj]);
+        leaves.forEach((leaf) => {
+          templateSteps.push(
+            leafBlockToIrStep(leaf, templateSteps.length, { id: `s${templateSteps.length + 1}` })
+          );
+        });
+        return;
+      }
+      templateSteps.push(leafBlockToIrStep(obj, templateSteps.length, { id: `s${templateSteps.length + 1}` }));
+    });
+
+    const controllerMeta = Object.assign({}, wsMeta || {}, {
+      meta_round_v0: { n_round: nRound, task_list_path: taskListPath },
+    });
+    const controllerTask = {
+      id: "meta",
+      title: `Meta-round controller: ${titleStr}`,
+      steps: controllerSteps,
+      meta: controllerMeta,
+    };
+
+    const templateMeta = Object.assign({}, wsMeta || {}, { task_template_v0: true });
+    const templateTask = { id: "template", title: `Task template: ${titleStr}`, steps: templateSteps, meta: templateMeta };
+
+    return { kind: "autoappdev_ir", version: 1, tasks: [controllerTask, templateTask] };
+  };
+
+  if (blocks.length === 1 && blocks[0] && typeof blocks[0] === "object" && String(blocks[0].type || "") === "metatasks_generator") {
+    return programToMetaRoundIr(blocks[0]);
+  }
+
+  const leaf = flattenLeafBlocks(blocks);
+  const steps = leaf.map((b, idx) => leafBlockToIrStep(b, idx, { id: `s${idx + 1}` }));
+  const task = { id: "t1", title: titleStr, steps };
+  if (wsMeta) task.meta = wsMeta;
+  return { kind: "autoappdev_ir", version: 1, tasks: [task] };
 }
 
 function programToAapsScript(prog, title = "Program") {
+  const ir = programToIr(prog, title);
+  return irToAapsText(ir);
+}
+
+function irToAapsText(ir) {
+  const tasks = ir && typeof ir === "object" && Array.isArray(ir.tasks) ? ir.tasks : [];
   const lines = [];
   lines.push("AUTOAPPDEV_PIPELINE 1");
   lines.push("");
-  const task = { id: "t1", title: String(title || "Program") };
-  const meta = workspaceTaskMeta();
-  if (meta) task.meta = meta;
-  lines.push("# 1 Task");
-  lines.push(`TASK  ${JSON.stringify(task)}`);
-  lines.push("");
-  (Array.isArray(prog) ? prog : []).forEach((b, idx) => {
-    const stepNo = idx + 1;
-    const type = b && typeof b === "object" ? String(b.type || "") : "";
-    const stepTitle = canonicalBlockTitle(type, idx);
-    let block = type;
-    let action = { id: "a1", kind: "noop", params: {} };
-    if (type === "update_readme") {
-      block = "summary";
-      const ws = String((b && b.workspace) || "").trim();
-      action = {
-        id: "a1",
-        kind: "update_readme",
-        params: {
-          workspace: ws,
-          block_markdown: defaultUpdateReadmeBlockMarkdown({ workspace: ws }),
-        },
-      };
-    } else {
-      const ref = normalizeActionRef(b && b.action_ref);
-      if (ref) action.meta = { action_ref: ref };
-    }
-    lines.push(`# 1.${stepNo} Step`);
-    lines.push(`  STEP  ${JSON.stringify({ id: `s${stepNo}`, title: stepTitle, block })}`);
-    lines.push(`# 1.${stepNo}.1 Action`);
-    lines.push(`    ACTION ${JSON.stringify(action)}`);
+  tasks.forEach((t, tIdx) => {
+    const taskNo = tIdx + 1;
+    const taskObj = t && typeof t === "object" ? t : {};
+    const meta = taskObj.meta && typeof taskObj.meta === "object" && !Array.isArray(taskObj.meta) ? taskObj.meta : null;
+    const outTask = { id: String(taskObj.id || `t${taskNo}`), title: String(taskObj.title || `Task ${taskNo}`) };
+    if (meta && Object.keys(meta).length) outTask.meta = meta;
+    lines.push(`# ${taskNo} Task`);
+    lines.push(`TASK  ${JSON.stringify(outTask)}`);
     lines.push("");
+
+    const steps = Array.isArray(taskObj.steps) ? taskObj.steps : [];
+    steps.forEach((st, sIdx) => {
+      const stepNo = sIdx + 1;
+      const stepObj = st && typeof st === "object" ? st : {};
+      const stepMeta = stepObj.meta && typeof stepObj.meta === "object" && !Array.isArray(stepObj.meta) ? stepObj.meta : null;
+      const outStep = {
+        id: String(stepObj.id || `s${stepNo}`),
+        title: String(stepObj.title || `Step ${stepNo}`),
+        block: String(stepObj.block || "plan"),
+      };
+      if (stepMeta && Object.keys(stepMeta).length) outStep.meta = stepMeta;
+      lines.push(`# ${taskNo}.${stepNo} Step`);
+      lines.push(`  STEP  ${JSON.stringify(outStep)}`);
+
+      const actions = Array.isArray(stepObj.actions) ? stepObj.actions : [];
+      actions.forEach((a, aIdx) => {
+        const actionNo = aIdx + 1;
+        const act = a && typeof a === "object" ? a : {};
+        const params = act.params && typeof act.params === "object" && !Array.isArray(act.params) ? act.params : null;
+        const aMeta = act.meta && typeof act.meta === "object" && !Array.isArray(act.meta) ? act.meta : null;
+        const outAction = { id: String(act.id || `a${actionNo}`), kind: String(act.kind || "noop") };
+        if (params) outAction.params = params;
+        if (aMeta && Object.keys(aMeta).length) outAction.meta = aMeta;
+        lines.push(`# ${taskNo}.${stepNo}.${actionNo} Action`);
+        lines.push(`    ACTION ${JSON.stringify(outAction)}`);
+      });
+      lines.push("");
+    });
   });
   return lines.join("\n").trimEnd() + "\n";
 }
@@ -528,35 +781,83 @@ function programToAapsScript(prog, title = "Program") {
 function irToProgram(ir) {
   if (!ir || typeof ir !== "object") return null;
   const tasks = Array.isArray(ir.tasks) ? ir.tasks : [];
+
+  const isObj = (o) => Boolean(o && typeof o === "object" && !Array.isArray(o));
+  const isMetaRoundTask = (t) => {
+    if (!t || typeof t !== "object") return false;
+    const meta = isObj(t.meta) ? t.meta : null;
+    return Boolean(meta && isObj(meta.meta_round_v0));
+  };
+  const isTemplateTask = (t) => {
+    if (!t || typeof t !== "object") return false;
+    const meta = isObj(t.meta) ? t.meta : null;
+    return Boolean(meta && meta.task_template_v0 === true);
+  };
+
+  const controller = tasks.find(isMetaRoundTask) || null;
+  const template = tasks.find(isTemplateTask) || null;
+
+  const irStepToLeafBlock = (st) => {
+    if (!st || typeof st !== "object") return null;
+    const actions = Array.isArray(st.actions) ? st.actions : [];
+    const upd = actions.find((a) => a && typeof a === "object" && a.kind === "update_readme");
+    const params = upd && typeof upd === "object" ? upd.params : null;
+    const ws = params && typeof params === "object" ? String(params.workspace || "").trim() : "";
+    if (ws) return { type: "update_readme", workspace: ws };
+
+    let ref = null;
+    actions.forEach((a) => {
+      if (ref) return;
+      if (!a || typeof a !== "object") return;
+      const meta = a.meta && typeof a.meta === "object" ? a.meta : null;
+      if (!meta) return;
+      const ar = meta.action_ref;
+      const norm = normalizeActionRef(ar);
+      if (norm) ref = norm;
+    });
+
+    if (typeof st.block !== "string" || !st.block.trim()) return null;
+    const obj = { type: st.block.trim() };
+    if (ref) obj.action_ref = ref;
+    return obj;
+  };
+
+  if (controller && template) {
+    const meta = controller.meta && typeof controller.meta === "object" ? controller.meta : {};
+    const mr = meta && typeof meta.meta_round_v0 === "object" ? meta.meta_round_v0 : {};
+    const nCfg = Number.parseInt(String(mr.n_round || ""), 10);
+    const nRound = Number.isFinite(nCfg) && nCfg > 0 ? Math.trunc(nCfg) : 2;
+    const taskListPath = String(mr.task_list_path || "").trim() || "references/meta_round/tasks_v0.json";
+
+    const controllerSteps = Array.isArray(controller.steps) ? controller.steps : [];
+    const roundBody = controllerSteps.map(irStepToLeafBlock).filter(Boolean);
+    const forNRound = { type: "for_n_round", n_round: nRound, body: roundBody };
+
+    const templateSteps = Array.isArray(template.steps) ? template.steps : [];
+    const eachBody = [];
+    templateSteps.forEach((st) => {
+      const step = st && typeof st === "object" ? st : {};
+      const stMeta = step.meta && typeof step.meta === "object" ? step.meta : null;
+      const cond = stMeta && typeof stMeta.conditional === "string" ? stMeta.conditional : "";
+      if (cond === "on_debug_failure" && String(step.block || "") === "fix") {
+        const fixLeaf = irStepToLeafBlock(step) || { type: "fix" };
+        eachBody.push({ type: "if_else", condition: cond, if_body: [fixLeaf], else_body: [] });
+        return;
+      }
+      const leaf = irStepToLeafBlock(step);
+      if (leaf) eachBody.push(leaf);
+    });
+    const forEach = { type: "for_each_task", body: eachBody };
+
+    return [{ type: "metatasks_generator", n_round: nRound, task_list_path: taskListPath, children: [forNRound, forEach] }];
+  }
+
   const steps = [];
   tasks.forEach((t) => {
     const s = t && Array.isArray(t.steps) ? t.steps : [];
     s.forEach((st) => {
-      if (!st || typeof st !== "object") return;
-      const actions = Array.isArray(st.actions) ? st.actions : [];
-      const upd = actions.find((a) => a && typeof a === "object" && a.kind === "update_readme");
-      const params = upd && typeof upd === "object" ? upd.params : null;
-      const ws = params && typeof params === "object" ? String(params.workspace || "").trim() : "";
-      if (ws) {
-        steps.push({ type: "update_readme", workspace: ws });
-        return;
-      }
-      let ref = null;
-      actions.forEach((a) => {
-        if (ref) return;
-        if (!a || typeof a !== "object") return;
-        const meta = a.meta && typeof a.meta === "object" ? a.meta : null;
-        if (!meta) return;
-        const ar = meta.action_ref;
-        const norm = normalizeActionRef(ar);
-        if (norm) ref = norm;
-      });
-
-      if (typeof st.block === "string" && st.block.trim()) {
-        const obj = { type: st.block.trim() };
-        if (ref) obj.action_ref = ref;
-        steps.push(obj);
-      }
+      const leaf = irStepToLeafBlock(st);
+      if (leaf) steps.push(leaf);
     });
   });
   return steps;
@@ -621,7 +922,7 @@ function applyIrToCanvas(ir) {
   program = nextProgram;
   persistProgram();
   renderProgram();
-  return { ok: true, steps: nextProgram.length };
+  return { ok: true, steps: countLeafBlocks(nextProgram) };
 }
 
 function formatScriptApiError(e) {
@@ -1102,7 +1403,7 @@ function fillScriptFromBlocks() {
   if (titleRaw === null) return;
   const title = String(titleRaw).trim() || "Program";
   els.scriptText.value = programToAapsScript(program, title);
-  setScriptMsg(`ok: generated script from ${program.length} block(s)`);
+  setScriptMsg(`ok: generated script from ${countLeafBlocks(program)} step(s)`);
 }
 
 function sanitizeFileBase(name) {
@@ -1136,7 +1437,7 @@ function aapsToShellAnnotations(aapsText) {
 }
 
 function generateRunnerScript(prog, { title, aapsText } = {}) {
-  const steps = Array.isArray(prog) ? prog : [];
+  const steps = flattenLeafBlocks(Array.isArray(prog) ? prog : []);
   const safeTitle = String(title || "Program").replace(/\"/g, '\\"');
   const embedded = aapsToShellAnnotations(String(aapsText || ""));
   const out = [];
@@ -1377,7 +1678,7 @@ function bindDnD() {
       }
       program.push({ type, workspace: parsed.workspace });
     } else {
-      program.push({ type });
+      program.push(makeBlockFromType(type));
     }
     persistProgram();
     renderProgram();
