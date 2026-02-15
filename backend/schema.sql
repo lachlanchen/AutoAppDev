@@ -20,6 +20,15 @@ create table if not exists inbox_messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists outbox_messages (
+  id bigserial primary key,
+  role text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists outbox_messages_created_at_idx on outbox_messages(created_at);
+
 create table if not exists pipeline_runs (
   id bigserial primary key,
   status text not null,

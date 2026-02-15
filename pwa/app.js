@@ -1403,10 +1403,35 @@ function bindTabs() {
 
 async function loadChat() {
   try {
-    const data = await api("/api/inbox?limit=50");
-    const msgs = data.messages || [];
+    const [inboxRes, outboxRes] = await Promise.all([
+      api("/api/inbox?limit=80").catch(() => ({ messages: [] })),
+      api("/api/outbox?limit=80").catch(() => ({ messages: [] })),
+    ]);
+
+    const inbox = Array.isArray(inboxRes && inboxRes.messages) ? inboxRes.messages : [];
+    const outbox = Array.isArray(outboxRes && outboxRes.messages) ? outboxRes.messages : [];
+    const merged = [];
+    let idx = 0;
+    inbox.forEach((m) => merged.push({ m, idx: idx++ }));
+    outbox.forEach((m) => merged.push({ m, idx: idx++ }));
+
+    const parseTs = (it) => {
+      const obj = it && typeof it === "object" ? it : {};
+      const raw = obj.created_at;
+      if (typeof raw !== "string") return 0;
+      const n = Date.parse(raw);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    merged.sort((a, b) => {
+      const ta = parseTs(a.m);
+      const tb = parseTs(b.m);
+      if (ta !== tb) return ta - tb;
+      return a.idx - b.idx;
+    });
+
     els.chatlog.innerHTML = "";
-    msgs.forEach((m) => {
+    merged.forEach(({ m }) => {
       const div = document.createElement("div");
       div.className = `msg ${m.role === "user" ? "msg--user" : "msg--system"}`;
       div.textContent = m.content || "";

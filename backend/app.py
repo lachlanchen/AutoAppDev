@@ -4,6 +4,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -45,6 +46,64 @@ def _write_inbox_message(runtime_dir: Path, content: str) -> None:
     ts = int(asyncio.get_event_loop().time() * 1000)
     p = inbox / f"{ts}_user.md"
     p.write_text(content, "utf-8")
+
+
+def _parse_outbox_role(raw: Any) -> str:
+    role = str(raw or "").strip().lower()
+    if role in ("system", "pipeline"):
+        return role
+    return "pipeline"
+
+
+def _infer_outbox_role_from_name(name: str) -> str:
+    n = str(name or "")
+    m = re.match(r"^[0-9]+_([a-zA-Z0-9-]+)\\.", n)
+    if not m:
+        return "pipeline"
+    return _parse_outbox_role(m.group(1))
+
+
+async def _ingest_outbox_files(*, storage: Storage, runtime_dir: Path, max_files: int = 50) -> None:
+    outbox = runtime_dir / "outbox"
+    outbox.mkdir(parents=True, exist_ok=True)
+    processed = outbox / "processed"
+    processed.mkdir(parents=True, exist_ok=True)
+
+    try:
+        items = sorted([p for p in outbox.iterdir() if p.is_file()])
+    except Exception:
+        return
+
+    n = 0
+    for p in items:
+        if n >= max_files:
+            break
+        if p.name.startswith("."):
+            continue
+        if p.suffix.lower() not in (".md", ".txt"):
+            continue
+        role = _infer_outbox_role_from_name(p.name)
+        try:
+            txt = p.read_text("utf-8", errors="replace")
+        except Exception:
+            continue
+        content = txt.strip()
+        if content:
+            await storage.add_outbox_message(role, content[:10_000])
+        # Move to processed to prevent re-ingest.
+        dest = processed / p.name
+        if dest.exists():
+            ts = int(asyncio.get_event_loop().time() * 1000)
+            dest = processed / f"{p.stem}_{ts}{p.suffix}"
+        try:
+            p.replace(dest)
+        except Exception:
+            # Best-effort: if move fails, avoid tight loops by removing the file.
+            try:
+                p.unlink()
+            except Exception:
+                pass
+        n += 1
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -925,6 +984,32 @@ class InboxHandler(BaseHandler):
         self.write_json({"ok": True})
 
 
+class OutboxHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self) -> None:
+        limit = int(self.get_query_argument("limit", "50"))
+        items = await self.storage.list_outbox_messages(limit=limit)
+        self.write_json({"messages": items})
+
+    async def post(self) -> None:
+        body = json.loads(self.request.body or b"{}")
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+        content = str(body.get("content") or "").strip()
+        if not content:
+            self.write_json({"error": "empty"}, status=400)
+            return
+        if len(content) > 10_000:
+            self.write_json({"error": "too_long"}, status=400)
+            return
+        role = _parse_outbox_role(body.get("role"))
+        await self.storage.add_outbox_message(role, content)
+        self.write_json({"ok": True})
+
+
 class PipelineStatusHandler(BaseHandler):
     def initialize(self, storage: Storage) -> None:
         self.storage = storage
@@ -1267,6 +1352,24 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
 
     tornado.ioloop.PeriodicCallback(_poll_logs, 500).start()
 
+    outbox_state: dict[str, Any] = {"running": False}
+
+    async def _run_outbox_ingest() -> None:
+        try:
+            await _ingest_outbox_files(storage=storage, runtime_dir=runtime_dir, max_files=50)
+        except Exception:
+            pass
+        finally:
+            outbox_state["running"] = False
+
+    def _poll_outbox() -> None:
+        if outbox_state.get("running"):
+            return
+        outbox_state["running"] = True
+        asyncio.create_task(_run_outbox_ingest())
+
+    tornado.ioloop.PeriodicCallback(_poll_outbox, 750).start()
+
     app = tornado.web.Application(
         [
             (r"/api/health", HealthHandler, {"storage": storage}),
@@ -1284,6 +1387,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/actions/update-readme", UpdateReadmeHandler, {"runtime_dir": runtime_dir}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
+            (r"/api/outbox", OutboxHandler, {"storage": storage}),
             (r"/api/pipeline", PipelineStateHandler, {"storage": storage}),
             (r"/api/pipeline/status", PipelineStatusHandler, {"storage": storage}),
             (r"/api/pipeline/start", PipelineStartHandler, {"controller": controller, "storage": storage}),

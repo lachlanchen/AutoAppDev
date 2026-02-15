@@ -40,6 +40,7 @@ AutoAppDev uses:
 - `runtime/PAUSE` as the pause flag file for pipeline pause/resume. See `backend/app.py` (`PipelineControl.pause_flag`) and `scripts/pipeline_demo.sh`.
 - `runtime/logs/` for live log tailing (pipeline + backend). See `backend/app.py` (log tailers) and generated runners such as `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`.
 - `runtime/inbox/` for a file-based inbox queue (`*_user.md`) written when users post messages. See `backend/app.py` (`_write_inbox_message`) and the note in `docs/api-contracts.md`.
+- `runtime/outbox/` for a file-based outbox queue (`<ts>_<role>.md` / `.txt`) written by pipeline scripts. The backend ingests these into `/api/outbox` and moves processed files to `runtime/outbox/processed/` (see `docs/api-contracts.md`).
 
 By default, `runtime/` is gitignored (see `.gitignore`), so it should be created locally and treated as ephemeral.
 
@@ -73,4 +74,3 @@ mkdir -p "$WS"/{materials,interactions,outputs,docs,references,scripts,tools,log
 4. (Optional) Run the demo pipeline and verify pause behavior:
 - Pipeline pause flag: create/remove `runtime/PAUSE`
 - Demo runner: `scripts/pipeline_demo.sh`
-

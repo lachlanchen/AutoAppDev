@@ -478,6 +478,74 @@ Response (error examples):
 { "error": "too_long" }
 ```
 
+## Outbox Messages
+Pipeline -> UI message channel.
+
+- `/api/outbox` is the first-class outbox persistence API.
+- Pipelines can write to outbox either:
+  - via HTTP `POST /api/outbox`, or
+  - by writing files under `runtime/outbox/` (see below).
+
+### GET /api/outbox?limit=N
+Lists recent outbox messages.
+
+Request:
+- Query string: `limit` (default 50)
+
+Response:
+```json
+{
+  "messages": [
+    {
+      "id": 123,
+      "role": "pipeline",
+      "content": "hello from pipeline",
+      "created_at": "2026-02-15T12:34:56.789+00:00"
+    }
+  ]
+}
+```
+
+### POST /api/outbox
+Adds an outbox message.
+
+Request:
+```json
+{ "role": "pipeline", "content": "hello from pipeline" }
+```
+
+Notes:
+- `role` is optional and defaults to `pipeline` (allowlist: `pipeline`, `system`).
+
+Response (success):
+```json
+{ "ok": true }
+```
+
+Response (error examples):
+```json
+{ "error": "invalid_body" }
+```
+```json
+{ "error": "empty" }
+```
+```json
+{ "error": "too_long" }
+```
+
+### File Queue: runtime/outbox/
+If you prefer not to call HTTP from a pipeline, you can write an outbox message file:
+- Path: `runtime/outbox/<ts>_<role>.md` (or `.txt`)
+  - Example: `runtime/outbox/1739655400123_pipeline.md`
+- The backend periodically ingests these files into `/api/outbox` and moves them to:
+  - `runtime/outbox/processed/`
+
+Recommended atomic write pattern:
+1. Write to a temp file, then rename into `runtime/outbox/`:
+```bash
+printf 'hello\n' > runtime/outbox/.tmp && mv runtime/outbox/.tmp runtime/outbox/$(date +%s%3N)_pipeline.md
+```
+
 ### GET /api/chat?limit=N
 Lists recent chat messages.
 
