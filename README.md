@@ -5,8 +5,8 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T12:37:58Z
-- Phase commit: `Selfdev: 29 pipeline_codegen_templates plan`
+- Updated: 2026-02-15T12:47:10Z
+- Phase commit: `Selfdev: 29 pipeline_codegen_templates work`
 - Progress: 28 / 42 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
@@ -35,6 +35,7 @@ The controller app aims to embody the same concepts as Scratch-like blocks/actio
 - `docs/env.md`: Environment variables (.env) conventions.
 - `docs/api-contracts.md`: API request/response contracts for the controller.
 - `docs/pipeline-formatted-script-spec.md`: Standard pipeline script format (AAPS) and canonical IR schema (TASK -> STEP -> ACTION).
+- `docs/pipeline-runner-codegen.md`: Deterministic generator for runnable bash pipeline runners from canonical IR.
 - `scripts/run_autoappdev_tmux.sh`: Start the AutoAppDev app (backend + PWA) in tmux.
 - `scripts/run_autoappdev_selfdev_tmux.sh`: Start the AutoAppDev self-dev driver in tmux.
 - `scripts/app-auto-development.sh`: The linear pipeline driver (plan -> backend -> PWA -> Android -> iOS -> review -> summary), with resume/state support.
