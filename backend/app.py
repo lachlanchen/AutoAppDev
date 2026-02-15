@@ -283,6 +283,9 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
     await storage.start()
     schema_path = Path(__file__).with_name("schema.sql")
     await storage.ensure_schema(schema_path.read_text("utf-8"))
+    # Smoke check: prove DB is reachable by fetching server time during startup.
+    db_time = await storage.get_server_time_iso()
+    print(f"DB time: {db_time}")
 
     controller = PipelineControl(storage=storage, runtime_dir=runtime_dir, log_dir=log_dir)
 

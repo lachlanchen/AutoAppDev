@@ -32,9 +32,45 @@ class Storage:
         if not self._database_url:
             return
         try:
-            self._pool = await asyncpg.create_pool(dsn=self._database_url, min_size=1, max_size=5)
-        except Exception:
+            self._pool = await asyncpg.create_pool(dsn=self._database_url, min_size=1, max_size=5, timeout=2.0)
+        except Exception as e:
             self._pool = None
+            raise RuntimeError(
+                f"failed to create Postgres pool (DATABASE_URL is set): {type(e).__name__}: {e}"
+            ) from e
+
+    def require_pool(self) -> asyncpg.Pool:
+        if not self._pool:
+            raise RuntimeError("postgres pool is not initialized")
+        return self._pool
+
+    @property
+    def pool(self) -> asyncpg.Pool:
+        return self.require_pool()
+
+    async def execute(self, sql: str, *args: Any) -> str:
+        async with self.require_pool().acquire() as conn:
+            return await conn.execute(sql, *args)
+
+    async def fetch(self, sql: str, *args: Any) -> list[asyncpg.Record]:
+        async with self.require_pool().acquire() as conn:
+            return await conn.fetch(sql, *args)
+
+    async def fetchrow(self, sql: str, *args: Any) -> asyncpg.Record | None:
+        async with self.require_pool().acquire() as conn:
+            return await conn.fetchrow(sql, *args)
+
+    async def fetchval(self, sql: str, *args: Any) -> Any:
+        async with self.require_pool().acquire() as conn:
+            return await conn.fetchval(sql, *args)
+
+    async def get_server_time_iso(self) -> str:
+        async with self.require_pool().acquire() as conn:
+            v = await conn.fetchval("select now()", timeout=2.0)
+        try:
+            return v.isoformat()  # type: ignore[no-any-return]
+        except Exception:
+            return str(v)
 
     async def stop(self) -> None:
         if self._pool:
@@ -44,8 +80,7 @@ class Storage:
     async def ensure_schema(self, schema_sql: str) -> None:
         if not self._pool:
             return
-        async with self._pool.acquire() as conn:
-            await conn.execute(schema_sql)
+        await self.execute(schema_sql)
 
     def _read_state(self) -> dict[str, Any]:
         if not self._state_path.exists():
@@ -184,4 +219,3 @@ def safe_env(key: str, default: str = "") -> str:
     if v is None:
         return default
     return str(v)
-
