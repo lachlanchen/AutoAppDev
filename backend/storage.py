@@ -119,6 +119,64 @@ class Storage:
         st["config"][key] = value
         self._write_state(st)
 
+    async def get_workspace_config(self, workspace: str) -> dict[str, Any] | None:
+        ws = str(workspace or "").strip()
+        if not ws:
+            return None
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "select workspace, config, updated_at from workspace_configs where workspace=$1",
+                    ws,
+                )
+                if not row:
+                    return None
+                return {
+                    "workspace": str(row["workspace"] or ""),
+                    "config": row["config"],
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+        st = self._read_state()
+        items = st.get("workspace_configs", {})
+        if not isinstance(items, dict):
+            return None
+        rec = items.get(ws)
+        if not isinstance(rec, dict):
+            return None
+        return {
+            "workspace": ws,
+            "config": rec.get("config") if isinstance(rec.get("config"), dict) else rec.get("config"),
+            "updated_at": rec.get("updated_at"),
+        }
+
+    async def upsert_workspace_config(self, workspace: str, config: dict[str, Any]) -> dict[str, Any]:
+        ws = str(workspace or "").strip()
+        if not ws:
+            raise ValueError("workspace is required")
+        if self._pool:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "insert into workspace_configs(workspace, config) values($1, $2) "
+                    "on conflict(workspace) do update set config=excluded.config, updated_at=now() "
+                    "returning workspace, config, updated_at",
+                    ws,
+                    config,
+                )
+                assert row is not None
+                return {
+                    "workspace": str(row["workspace"] or ""),
+                    "config": row["config"],
+                    "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+                }
+        st = self._read_state()
+        st.setdefault("workspace_configs", {})
+        items = st["workspace_configs"] if isinstance(st.get("workspace_configs"), dict) else {}
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        items[ws] = {"config": config, "updated_at": now}
+        st["workspace_configs"] = items
+        self._write_state(st)
+        return {"workspace": ws, "config": config, "updated_at": now}
+
     async def create_pipeline_script(
         self,
         *,

@@ -364,6 +364,67 @@ Response (error examples):
 { "ok": false, "error": "marker_mismatch", "detail": "expected exactly one begin+end marker; got begin=1 end=0" }
 ```
 
+## Workspaces
+
+Workspace configuration is stored per workspace under `auto-apps/<workspace>/` and validated with safe path rules.
+
+### GET /api/workspaces/<workspace>/config
+Fetches the stored config for a workspace. If none exists yet, returns defaults with `exists:false`.
+
+Response (not found yet):
+```json
+{
+  "ok": true,
+  "workspace": "my_workspace",
+  "exists": false,
+  "config": {
+    "materials_paths": ["materials"],
+    "shared_context_text": "",
+    "shared_context_path": "",
+    "default_language": "en"
+  },
+  "updated_at": null
+}
+```
+
+Response (found):
+```json
+{
+  "ok": true,
+  "workspace": "my_workspace",
+  "exists": true,
+  "config": {
+    "materials_paths": ["materials", "materials/screenshots"],
+    "shared_context_text": "...\n",
+    "shared_context_path": "docs/shared_context.md",
+    "default_language": "en"
+  },
+  "updated_at": "2026-02-15T12:00:00+00:00"
+}
+```
+
+### POST /api/workspaces/<workspace>/config
+Upserts workspace config. Partial updates are allowed; backend applies defaults and normalizes/validates paths.
+
+Request:
+```json
+{
+  "materials_paths": ["materials"],
+  "shared_context_path": "docs/shared_context.md",
+  "default_language": "en"
+}
+```
+
+Response:
+```json
+{ "ok": true, "workspace": "my_workspace", "config": { }, "updated_at": "..." }
+```
+
+Notes:
+- `workspace` must be a single path segment (no `/` or `\\`, no `.` or `..`).
+- `materials_paths` entries and `shared_context_path` are workspace-relative, but are validated to resolve under `auto-apps/<workspace>/` (no traversal/outside writes).
+- `default_language` must be one of: `zh-Hans`, `zh-Hant`, `en`, `ja`, `ko`, `vi`, `ar`, `fr`, `es`.
+
 ## Inbox Messages
 The UI refers to “Chat/Inbox”.
 

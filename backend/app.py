@@ -28,6 +28,7 @@ from .update_readme_action import (
     validate_workspace_slug,
     write_update_artifacts,
 )
+from .workspace_config import WorkspaceConfigError, default_workspace_config, normalize_workspace_config, validate_workspace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -193,6 +194,59 @@ class ConfigHandler(BaseHandler):
         for k, v in body.items():
             await self.storage.set_config(str(k), v)
         self.write_json({"ok": True})
+
+
+class WorkspaceConfigHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def get(self, workspace: str) -> None:
+        try:
+            ws = validate_workspace(workspace)
+        except WorkspaceConfigError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        rec = await self.storage.get_workspace_config(ws)
+        if not rec:
+            self.write_json(
+                {"ok": True, "workspace": ws, "exists": False, "config": default_workspace_config(), "updated_at": None}
+            )
+            return
+        cfg = rec.get("config") if isinstance(rec.get("config"), dict) else {}
+        self.write_json(
+            {
+                "ok": True,
+                "workspace": ws,
+                "exists": True,
+                "config": cfg,
+                "updated_at": rec.get("updated_at"),
+            }
+        )
+
+    async def post(self, workspace: str) -> None:
+        try:
+            ws = validate_workspace(workspace)
+        except WorkspaceConfigError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        try:
+            body = json.loads(self.request.body or b"{}")
+        except Exception:
+            self.write_json({"error": "invalid_json"}, status=400)
+            return
+        if not isinstance(body, dict):
+            self.write_json({"error": "invalid_body"}, status=400)
+            return
+
+        existing = await self.storage.get_workspace_config(ws)
+        base = existing.get("config") if existing and isinstance(existing.get("config"), dict) else None
+        try:
+            cfg = normalize_workspace_config(body, repo_root=REPO_ROOT, workspace=ws, base=base)
+        except WorkspaceConfigError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        rec = await self.storage.upsert_workspace_config(ws, cfg)
+        self.write_json({"ok": True, "workspace": ws, "config": cfg, "updated_at": rec.get("updated_at")})
 
 
 class PlanHandler(BaseHandler):
@@ -1219,6 +1273,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/version", VersionHandler),
             (r"/api/config", ConfigHandler, {"storage": storage}),
             (r"/api/plan", PlanHandler, {"storage": storage}),
+            (r"/api/workspaces/([^/]+)/config", WorkspaceConfigHandler, {"storage": storage}),
             (r"/api/scripts", ScriptsHandler, {"storage": storage}),
             (r"/api/scripts/([0-9]+)", ScriptHandler, {"storage": storage}),
             (r"/api/scripts/parse", ScriptsParseHandler),

@@ -69,3 +69,11 @@ create table if not exists action_definitions (
 );
 
 create index if not exists action_definitions_updated_at_idx on action_definitions(updated_at);
+
+create table if not exists workspace_configs (
+  workspace text primary key,
+  config jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists workspace_configs_updated_at_idx on workspace_configs(updated_at);
