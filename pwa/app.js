@@ -1,5 +1,7 @@
 const els = {
   themeBtn: document.getElementById("btn-theme"),
+  agentSelect: document.getElementById("agent-select"),
+  modelSelect: document.getElementById("model-select"),
   start: document.getElementById("btn-start"),
   pause: document.getElementById("btn-pause"),
   resume: document.getElementById("btn-resume"),
@@ -103,6 +105,37 @@ async function api(path, opts = {}) {
     throw new Error("api_client_not_loaded");
   }
   return await window.AutoAppDevApi.requestJson(path, opts);
+}
+
+function canSelectValue(selectEl, value) {
+  if (!selectEl || !value) return false;
+  const opt = Array.from(selectEl.options || []).find((o) => o.value === value);
+  return Boolean(opt && !opt.disabled);
+}
+
+async function loadSettings() {
+  if (!els.agentSelect || !els.modelSelect) return;
+  try {
+    const data = await api("/api/config");
+    const cfg = data.config || {};
+    const agent = typeof cfg.agent === "string" ? cfg.agent : "";
+    const model = typeof cfg.model === "string" ? cfg.model : "";
+    if (canSelectValue(els.agentSelect, agent)) els.agentSelect.value = agent;
+    if (canSelectValue(els.modelSelect, model)) els.modelSelect.value = model;
+  } catch (e) {
+    console.warn("load settings failed", e);
+  }
+}
+
+async function saveSettings() {
+  if (!els.agentSelect || !els.modelSelect) return;
+  const agent = String(els.agentSelect.value || "");
+  const model = String(els.modelSelect.value || "");
+  try {
+    await api("/api/config", { method: "POST", body: JSON.stringify({ agent, model }) });
+  } catch (e) {
+    console.warn("save settings failed", e);
+  }
 }
 
 function programToPlan(prog) {
@@ -365,6 +398,9 @@ function bindControls() {
     setTheme(cur === "light" ? "dark" : "light");
   });
 
+  if (els.agentSelect) els.agentSelect.addEventListener("change", saveSettings);
+  if (els.modelSelect) els.modelSelect.addEventListener("change", saveSettings);
+
   els.exportBtn.addEventListener("click", () => {
     els.export.hidden = false;
     els.export.textContent = JSON.stringify({ program }, null, 2);
@@ -426,6 +462,8 @@ function boot() {
 
   const savedTheme = localStorage.getItem("autoappdev_theme");
   setTheme(savedTheme === "dark" ? "dark" : "light");
+
+  loadSettings();
 
   refreshHealth();
   refreshStatus();

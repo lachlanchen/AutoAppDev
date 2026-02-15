@@ -5,8 +5,8 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
 ## Self-Dev Status (Auto-Updated)
 
-- Updated: 2026-02-15T10:40:31Z
-- Phase commit: `Selfdev: 21 settings_model_agent_selection plan`
+- Updated: 2026-02-15T10:42:46Z
+- Phase commit: `Selfdev: 21 settings_model_agent_selection work`
 - Progress: 20 / 34 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
