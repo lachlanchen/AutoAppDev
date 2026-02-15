@@ -177,16 +177,23 @@ class PipelineControl:
 
     def _spawn(self, script: str, cwd: str, args: list[str]) -> subprocess.Popen:
         out = self.log_path.open("ab", buffering=0)
-        cmd = ["/usr/bin/env", "bash", script, *args]
-        # Start in its own process group for reliable stop.
-        return subprocess.Popen(
-            cmd,
-            cwd=cwd,
-            stdout=out,
-            stderr=subprocess.STDOUT,
-            preexec_fn=os.setsid,
-            env=os.environ.copy(),
-        )
+        try:
+            cmd = ["/usr/bin/env", "bash", script, *args]
+            # Start in its own process group for reliable stop.
+            return subprocess.Popen(
+                cmd,
+                cwd=cwd,
+                stdout=out,
+                stderr=subprocess.STDOUT,
+                preexec_fn=os.setsid,
+                env=os.environ.copy(),
+            )
+        finally:
+            # Close parent handle; child keeps the fd.
+            try:
+                out.close()
+            except Exception:
+                pass
 
     async def start(self, script: str, cwd: str, args: list[str]) -> dict[str, Any]:
         if self.proc and self.proc.poll() is None:
@@ -211,8 +218,15 @@ class PipelineControl:
                 os.killpg(os.getpgid(self.proc.pid), signal.SIGKILL)
             except Exception:
                 pass
+            try:
+                self.proc.wait(timeout=2)
+            except Exception:
+                pass
         if self.run_id:
             await self.storage.set_run_status(self.run_id, "stopped", pid=self.proc.pid)
+            await self.storage.set_pipeline_state(state="stopped", pid=None, run_id=self.run_id, ts_kind="stop")
+        self.proc = None
+        self.run_id = None
         return {"ok": True}
 
     async def pause(self) -> dict[str, Any]:
@@ -227,6 +241,22 @@ class PipelineControl:
         if self.run_id:
             await self.storage.set_run_status(self.run_id, "running", pid=(self.proc.pid if self.proc else None))
         return {"ok": True}
+
+    async def maybe_collect_exit(self) -> None:
+        if not self.proc:
+            return
+        rc = self.proc.poll()
+        if rc is None:
+            return
+        run_id = self.run_id
+        pid = self.proc.pid
+        self.proc = None
+        self.run_id = None
+        if not run_id:
+            return
+        status = "completed" if rc == 0 else "failed"
+        await self.storage.set_run_status(run_id, status, pid=pid)
+        await self.storage.set_pipeline_state(state="stopped", pid=None, run_id=run_id, ts_kind="stop")
 
 
 class PipelineStartHandler(BaseHandler):
@@ -423,6 +453,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
     print(f"DB time: {db_time}")
 
     controller = PipelineControl(storage=storage, runtime_dir=runtime_dir, log_dir=log_dir)
+    tornado.ioloop.PeriodicCallback(lambda: asyncio.create_task(controller.maybe_collect_exit()), 500).start()
 
     app = tornado.web.Application(
         [
