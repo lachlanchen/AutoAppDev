@@ -5,7 +5,6 @@
 
 const CACHE_NAME = "autoappdev-shell-v1";
 const PRECACHE_URLS = [
-  "./",
   "./index.html",
   "./styles.css",
   "./app.js",
