@@ -1,4 +1,5 @@
 import asyncio
+from collections import deque
 import datetime
 import json
 import os
@@ -46,6 +47,91 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json; charset=utf-8")
         self.set_status(status)
         self.finish(json.dumps(obj, ensure_ascii=False))
+
+
+class LogBuffer:
+    def __init__(self, max_entries: int = 2000):
+        self._max_entries = max(100, int(max_entries))
+        self._items: deque[dict[str, Any]] = deque(maxlen=self._max_entries)
+        self._next_id = 1
+
+    def append(self, *, source: str, line: str) -> int:
+        lid = self._next_id
+        self._next_id += 1
+        self._items.append(
+            {
+                "id": lid,
+                "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "source": source,
+                "line": line,
+            }
+        )
+        return lid
+
+    def since(self, *, since_id: int, limit: int, source: str | None = None) -> list[dict[str, Any]]:
+        lim = max(1, min(2000, int(limit)))
+        out: list[dict[str, Any]] = []
+        for it in self._items:
+            if int(it.get("id", 0)) <= since_id:
+                continue
+            if source and it.get("source") != source:
+                continue
+            out.append(it)
+            if len(out) >= lim:
+                break
+        return out
+
+    def latest_id(self, *, source: str | None = None) -> int:
+        last = 0
+        for it in self._items:
+            if source and it.get("source") != source:
+                continue
+            try:
+                last = max(last, int(it.get("id", 0)))
+            except Exception:
+                pass
+        return last
+
+
+class FileLogTailer:
+    def __init__(self, *, source: str, path: Path, buf: LogBuffer):
+        self.source = source
+        self.path = path
+        self.buf = buf
+        self._offset = 0
+        self._partial = ""
+
+    def poll(self) -> None:
+        if not self.path.exists():
+            return
+        try:
+            size = self.path.stat().st_size
+        except Exception:
+            return
+        if size < self._offset:
+            # Log rotated/truncated.
+            self._offset = 0
+            self._partial = ""
+        try:
+            with self.path.open("rb") as f:
+                f.seek(self._offset)
+                data = f.read()
+                self._offset = f.tell()
+        except Exception:
+            return
+        if not data:
+            return
+        text = data.decode("utf-8", errors="replace")
+        if self._partial:
+            text = self._partial + text
+            self._partial = ""
+        lines = text.splitlines(keepends=True)
+        for ln in lines:
+            if ln.endswith("\n") or ln.endswith("\r\n"):
+                self.buf.append(source=self.source, line=ln.rstrip("\r\n"))
+            else:
+                # Partial final line; keep for next poll.
+                self._partial = ln
 
 
 class HealthHandler(BaseHandler):
@@ -409,6 +495,24 @@ class LogsTailHandler(BaseHandler):
         self.write_json({"lines": data, "name": name})
 
 
+class LogsSinceHandler(BaseHandler):
+    def initialize(self, log_buffer: LogBuffer) -> None:
+        self.log_buffer = log_buffer
+
+    async def get(self) -> None:
+        source = self.get_query_argument("source", "pipeline")
+        since = int(self.get_query_argument("since", "0"))
+        limit = int(self.get_query_argument("limit", "200"))
+        items = self.log_buffer.since(since_id=since, limit=limit, source=source or None)
+        nxt = since
+        if items:
+            try:
+                nxt = int(items[-1].get("id", since))
+            except Exception:
+                nxt = since
+        self.write_json({"source": source, "since": since, "next": nxt, "lines": items})
+
+
 def _load_env() -> None:
     load_dotenv(dotenv_path=REPO_ROOT / ".env", override=False)
 
@@ -455,6 +559,18 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
     controller = PipelineControl(storage=storage, runtime_dir=runtime_dir, log_dir=log_dir)
     tornado.ioloop.PeriodicCallback(lambda: asyncio.create_task(controller.maybe_collect_exit()), 500).start()
 
+    log_buffer = LogBuffer(max_entries=2000)
+    tailers = [
+        FileLogTailer(source="pipeline", path=log_dir / "pipeline.log", buf=log_buffer),
+        FileLogTailer(source="backend", path=log_dir / "backend.log", buf=log_buffer),
+    ]
+
+    def _poll_logs() -> None:
+        for t in tailers:
+            t.poll()
+
+    tornado.ioloop.PeriodicCallback(_poll_logs, 500).start()
+
     app = tornado.web.Application(
         [
             (r"/api/health", HealthHandler, {"storage": storage}),
@@ -468,6 +584,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/pipeline/stop", PipelineStopHandler, {"controller": controller, "storage": storage}),
             (r"/api/pipeline/pause", PipelinePauseHandler, {"controller": controller, "storage": storage}),
             (r"/api/pipeline/resume", PipelineResumeHandler, {"controller": controller, "storage": storage}),
+            (r"/api/logs", LogsSinceHandler, {"log_buffer": log_buffer}),
             (r"/api/logs/tail", LogsTailHandler, {"log_dir": log_dir}),
         ],
         debug=True,

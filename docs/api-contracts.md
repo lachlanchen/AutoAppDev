@@ -252,6 +252,22 @@ Response:
 
 ## Logs
 
+### GET /api/logs?source=pipeline&since=<id>&limit=N
+Returns incremental log entries after `since` for a given source.
+
+Response:
+```json
+{
+  "source": "pipeline",
+  "since": 0,
+  "next": 12,
+  "lines": [
+    { "id": 11, "ts": "2026-02-15T12:00:00+00:00", "source": "pipeline", "line": "line 1" },
+    { "id": 12, "ts": "2026-02-15T12:00:01+00:00", "source": "pipeline", "line": "line 2" }
+  ]
+}
+```
+
 ### GET /api/logs/tail?name=pipeline|backend&lines=N
 Returns the last N lines of a named log.
 
