@@ -262,6 +262,10 @@ Response (error: timeout):
 ### GET /api/actions?limit=N
 Lists registered action definitions (metadata only; does not include `spec`).
 
+Notes:
+- The backend may also expose **built-in** default actions in this list.
+- Built-in actions are marked `readonly:true` and cannot be updated/deleted directly.
+
 Response:
 ```json
 {
@@ -271,6 +275,7 @@ Response:
       "title": "My prompt action",
       "kind": "prompt",
       "enabled": true,
+      "readonly": false,
       "created_at": "2026-02-15T12:00:00+00:00",
       "updated_at": "2026-02-15T12:00:00+00:00"
     }
@@ -301,7 +306,7 @@ Fetches a single action definition (includes `spec`).
 
 Response:
 ```json
-{ "action": { "id": 1, "title": "...", "kind": "prompt", "spec": { }, "enabled": true } }
+{ "action": { "id": 1, "title": "...", "kind": "prompt", "spec": { }, "enabled": true, "readonly": false } }
 ```
 
 ### PUT /api/actions/<id>
@@ -317,12 +322,30 @@ Response:
 { "ok": true, "action": { "id": 1, "enabled": false } }
 ```
 
+Response (error: readonly):
+```json
+{ "error": "readonly", "detail": "built-in actions are read-only; clone to edit" }
+```
+
 ### DELETE /api/actions/<id>
 Deletes an action definition.
 
 Response:
 ```json
 { "ok": true }
+```
+
+Response (error: readonly):
+```json
+{ "error": "readonly", "detail": "built-in actions are read-only; clone to edit" }
+```
+
+### POST /api/actions/<id>/clone
+Clones a readonly built-in action into a new editable action definition stored in the DB.
+
+Response:
+```json
+{ "ok": true, "action": { "id": 123, "title": "...", "kind": "prompt", "spec": { }, "enabled": true, "readonly": false } }
 ```
 
 ### POST /api/actions/update-readme

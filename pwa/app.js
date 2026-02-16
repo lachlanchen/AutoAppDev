@@ -1076,7 +1076,8 @@ function setActionKindUi(kind, { editable } = {}) {
 
 function updateActionsButtons() {
   const hasExisting = actionsMode === "view" && selectedActionId !== null;
-  if (els.actionsDelete) els.actionsDelete.disabled = !hasExisting;
+  const ro = Boolean(selectedAction && typeof selectedAction === "object" && selectedAction.readonly);
+  if (els.actionsDelete) els.actionsDelete.disabled = !hasExisting || ro;
 }
 
 function clearActionForm() {
@@ -1116,6 +1117,7 @@ function renderActionsList() {
     const title = String((it && it.title) || "").trim() || `(untitled #${id})`;
     const kind = normalizeActionKind(it && it.kind);
     const enabled = Boolean(it && it.enabled);
+    const ro = Boolean(it && it.readonly);
 
     const row = document.createElement("button");
     row.type = "button";
@@ -1130,7 +1132,7 @@ function renderActionsList() {
     const meta = document.createElement("div");
     meta.className = "actionrow-meta";
     const enabledLabel = enabled ? t("ui.actions.state_enabled") : t("ui.actions.state_disabled");
-    meta.textContent = `#${id} \u00b7 ${kind} \u00b7 ${enabledLabel}`;
+    meta.textContent = `#${id} \u00b7 ${kind} \u00b7 ${enabledLabel}${ro ? " \u00b7 readonly" : ""}`;
 
     row.appendChild(t);
     row.appendChild(meta);
@@ -1306,17 +1308,58 @@ async function saveActionFromForm() {
     }
 
     const id = Number(selectedActionId);
-    const res = await api(`/api/actions/${encodeURIComponent(String(id))}`, {
-      method: "PUT",
-      body: JSON.stringify({ title, enabled, spec: built.spec }),
-    });
-    const updated = res.action || {};
-    selectedAction = updated;
-    applyActionToForm(updated, { editableKind: false });
-    await refreshActionsList({ keepSelection: true });
-    renderActionsList();
-    updateActionsButtons();
-    setActionsMsg("saved");
+    const isReadonly = Boolean(selectedAction && typeof selectedAction === "object" && selectedAction.readonly);
+
+    const doUpdate = async (targetId) => {
+      const res = await api(`/api/actions/${encodeURIComponent(String(targetId))}`, {
+        method: "PUT",
+        body: JSON.stringify({ title, enabled, spec: built.spec }),
+      });
+      const updated = res.action || {};
+      selectedAction = updated;
+      applyActionToForm(updated, { editableKind: false });
+      await refreshActionsList({ keepSelection: true });
+      renderActionsList();
+      updateActionsButtons();
+      return updated;
+    };
+
+    if (isReadonly) {
+      const cloneRes = await api(`/api/actions/${encodeURIComponent(String(id))}/clone`, { method: "POST", body: "{}" });
+      const created = cloneRes.action || {};
+      const cloneId = typeof created.id === "number" ? created.id : null;
+      if (cloneId === null) throw new Error("clone_failed");
+      actionsMode = "view";
+      selectedActionId = cloneId;
+      selectedAction = created;
+      const updated = await doUpdate(cloneId);
+      selectedActionId = typeof updated.id === "number" ? updated.id : cloneId;
+      setActionsMsg("cloned and saved");
+      return;
+    }
+
+    try {
+      const updated = await doUpdate(id);
+      selectedActionId = typeof updated.id === "number" ? updated.id : id;
+      setActionsMsg("saved");
+      return;
+    } catch (e) {
+      const code = e && e.data && typeof e.data === "object" ? e.data.error : "";
+      if (code === "readonly") {
+        const cloneRes = await api(`/api/actions/${encodeURIComponent(String(id))}/clone`, { method: "POST", body: "{}" });
+        const created = cloneRes.action || {};
+        const cloneId = typeof created.id === "number" ? created.id : null;
+        if (cloneId === null) throw new Error("clone_failed");
+        actionsMode = "view";
+        selectedActionId = cloneId;
+        selectedAction = created;
+        const updated = await doUpdate(cloneId);
+        selectedActionId = typeof updated.id === "number" ? updated.id : cloneId;
+        setActionsMsg("cloned and saved");
+        return;
+      }
+      throw e;
+    }
   } catch (e) {
     setActionsMsg(formatActionApiError(e), { error: true });
   }
@@ -1324,6 +1367,10 @@ async function saveActionFromForm() {
 
 async function deleteSelectedAction() {
   if (actionsMode !== "view" || selectedActionId === null) return;
+  if (selectedAction && typeof selectedAction === "object" && selectedAction.readonly) {
+    setActionsMsg("readonly", { error: true });
+    return;
+  }
   const id = Number(selectedActionId);
   if (!Number.isFinite(id)) return;
   const ok = window.confirm(`Delete action #${id}?`);

@@ -20,6 +20,7 @@ from .pipeline_parser import ParseError, parse_aaps_v1
 from .pipeline_shell_import import ShellImportError, import_shell_annotated_to_ir
 from .llm_assisted_parse import LlmParseError, build_prompt, extract_aaps, make_request_id, run_codex_to_jsonl, write_artifacts
 from .action_registry import ActionRegistryError, validate_action_create, validate_action_update
+from .builtin_actions import get_builtin_action, is_builtin_action_id, list_builtin_action_summaries
 from .update_readme_action import (
     UpdateReadmeError,
     make_update_id,
@@ -847,9 +848,19 @@ class ActionsHandler(BaseHandler):
         self.storage = storage
 
     async def get(self) -> None:
-        limit = int(self.get_query_argument("limit", "50"))
-        items = await self.storage.list_action_definitions(limit=limit)
-        self.write_json({"actions": items})
+        limit_raw = int(self.get_query_argument("limit", "50"))
+        limit = max(1, min(200, int(limit_raw)))
+
+        builtins = list_builtin_action_summaries()
+        if len(builtins) >= limit:
+            self.write_json({"actions": builtins[:limit]})
+            return
+
+        remaining = max(0, limit - len(builtins))
+        items = await self.storage.list_action_definitions(limit=remaining)
+        # Add a stable readonly field for non-builtin actions.
+        items_out = [dict(it, readonly=False) for it in items]
+        self.write_json({"actions": builtins + items_out})
 
     async def post(self) -> None:
         try:
@@ -880,10 +891,18 @@ class ActionHandler(BaseHandler):
         except Exception:
             self.write_json({"error": "invalid_id"}, status=400)
             return
+        if is_builtin_action_id(aid):
+            action = get_builtin_action(aid)
+            if not action:
+                self.write_json({"error": "not_found"}, status=404)
+                return
+            self.write_json({"action": action})
+            return
         action = await self.storage.get_action_definition(aid)
         if not action:
             self.write_json({"error": "not_found"}, status=404)
             return
+        action = dict(action, readonly=False)
         self.write_json({"action": action})
 
     async def put(self, action_id: str) -> None:
@@ -891,6 +910,12 @@ class ActionHandler(BaseHandler):
             aid = int(action_id)
         except Exception:
             self.write_json({"error": "invalid_id"}, status=400)
+            return
+        if is_builtin_action_id(aid):
+            self.write_json(
+                {"error": "readonly", "detail": "built-in actions are read-only; clone to edit"},
+                status=403,
+            )
             return
         try:
             body = json.loads(self.request.body or b"{}")
@@ -921,6 +946,7 @@ class ActionHandler(BaseHandler):
         if not updated:
             self.write_json({"error": "not_found"}, status=404)
             return
+        updated = dict(updated, readonly=False)
         self.write_json({"ok": True, "action": updated})
 
     async def delete(self, action_id: str) -> None:
@@ -929,11 +955,55 @@ class ActionHandler(BaseHandler):
         except Exception:
             self.write_json({"error": "invalid_id"}, status=400)
             return
+        if is_builtin_action_id(aid):
+            self.write_json(
+                {"error": "readonly", "detail": "built-in actions are read-only; clone to edit"},
+                status=403,
+            )
+            return
         ok = await self.storage.delete_action_definition(aid)
         if not ok:
             self.write_json({"error": "not_found"}, status=404)
             return
         self.write_json({"ok": True})
+
+
+class ActionCloneHandler(BaseHandler):
+    def initialize(self, storage: Storage) -> None:
+        self.storage = storage
+
+    async def post(self, action_id: str) -> None:
+        try:
+            aid = int(action_id)
+        except Exception:
+            self.write_json({"error": "invalid_id"}, status=400)
+            return
+        builtin = get_builtin_action(aid)
+        if not builtin:
+            self.write_json({"error": "not_found"}, status=404)
+            return
+
+        base_title = str(builtin.get("title") or "Action").strip() or "Action"
+        clone_title = f"{base_title} (copy)"
+        if len(clone_title) > 200:
+            clone_title = clone_title[:200].rstrip()
+            if not clone_title:
+                clone_title = "Action (copy)"
+
+        body = {
+            "title": clone_title,
+            "kind": str(builtin.get("kind") or "prompt"),
+            "enabled": bool(builtin.get("enabled", True)),
+            "spec": builtin.get("spec") if isinstance(builtin.get("spec"), dict) else {},
+        }
+        cfg = await self.storage.get_config()
+        try:
+            title, kind, spec, enabled = validate_action_create(body, repo_root=REPO_ROOT, cfg=cfg)
+        except ActionRegistryError as e:
+            self.write_json(e.to_dict(), status=400)
+            return
+        action = await self.storage.create_action_definition(title=title, kind=kind, spec=spec, enabled=enabled)
+        self.write_json({"ok": True, "action": dict(action, readonly=False)})
 
 
 class ChatHandler(BaseHandler):
@@ -1383,6 +1453,7 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/scripts/import-shell", ScriptsImportShellHandler),
             (r"/api/scripts/parse-llm", ScriptsParseLlmHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/actions", ActionsHandler, {"storage": storage}),
+            (r"/api/actions/([0-9]+)/clone", ActionCloneHandler, {"storage": storage}),
             (r"/api/actions/([0-9]+)", ActionHandler, {"storage": storage}),
             (r"/api/actions/update-readme", UpdateReadmeHandler, {"runtime_dir": runtime_dir}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
