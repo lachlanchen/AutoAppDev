@@ -292,6 +292,23 @@ let actionsLoadedOnce = false;
 let workspaceSlug = "";
 let workspaceConfig = null;
 
+const BUILTIN_ACTION_ID_TO_STEP_TYPE = {
+  // backend/builtin_actions.py (keep within JS safe integer range)
+  9000000001: "plan",
+  9000000002: "work",
+  9000000003: "debug",
+  9000000004: "fix",
+  9000000005: "summary",
+  9000000006: "commit_push",
+};
+
+function defaultStepTypeForActionId(actionId) {
+  const id = Number(actionId);
+  if (!Number.isFinite(id)) return "work";
+  const mapped = BUILTIN_ACTION_ID_TO_STEP_TYPE[id];
+  return typeof mapped === "string" && mapped ? mapped : "work";
+}
+
 function updateThemeButtonLabel() {
   if (!els.themeBtn) return;
   const cur = String(document.body.dataset.theme || "light");
@@ -437,6 +454,146 @@ function formatProgramBlockLabel(block, idx) {
   return `${base} -> slug: ${String(ref.slug)}`;
 }
 
+function clampInt(n, min, max) {
+  if (!Number.isFinite(n)) return min;
+  const v = Math.trunc(n);
+  if (v < min) return min;
+  if (v > max) return max;
+  return v;
+}
+
+function normalizeTaskListPath(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return { ok: false, error: "task list path is required" };
+  if (s.length > 400) return { ok: false, error: "task list path is too long" };
+  if (/[\x00-\x1f]/.test(s)) return { ok: false, error: "task list path contains control characters" };
+  return { ok: true, path: s };
+}
+
+function ensureForNRoundBody(loop, nRound) {
+  const obj = loop && typeof loop === "object" ? loop : null;
+  if (!obj) return;
+  if (!Array.isArray(obj.body)) obj.body = [];
+  const body = obj.body;
+  if (body.length > nRound) body.splice(nRound);
+  while (body.length < nRound) body.push({ type: "plan" });
+}
+
+function ensureMetaRoundChildren(meta) {
+  const obj = meta && typeof meta === "object" ? meta : null;
+  if (!obj) return { roundLoop: null, eachLoop: null };
+  if (!Array.isArray(obj.children)) obj.children = [];
+  const children = obj.children;
+
+  let roundLoop = children.find((c) => c && typeof c === "object" && String(c.type || "") === "for_n_round") || null;
+  if (!roundLoop) {
+    roundLoop = { type: "for_n_round", n_round: 2, body: [{ type: "plan" }, { type: "plan" }] };
+    children.unshift(roundLoop);
+  }
+
+  let eachLoop = children.find((c) => c && typeof c === "object" && String(c.type || "") === "for_each_task") || null;
+  if (!eachLoop) {
+    eachLoop = makeBlockFromType("for_each_task");
+    children.push(eachLoop);
+  }
+
+  return { roundLoop, eachLoop };
+}
+
+function editUpdateReadmeBlock(block) {
+  const obj = block && typeof block === "object" ? block : null;
+  if (!obj) return;
+  const curWs = String(obj.workspace || "").trim() || String(workspaceSlug || "my_workspace");
+  const raw = window.prompt(t("ui.prompt.workspace_slug_for_readme"), curWs);
+  if (raw === null) return;
+  const parsed = parseWorkspaceSlug(raw);
+  if (!parsed.ok) {
+    window.alert(`${t("ui.alert.invalid_workspace")}: ${parsed.error}`);
+    return;
+  }
+  obj.workspace = parsed.workspace;
+  persistProgram();
+  renderProgram();
+}
+
+function editMetaTasksGeneratorBlock(block) {
+  const obj = block && typeof block === "object" ? block : null;
+  if (!obj) return;
+
+  const curN = Number.parseInt(String(obj.n_round || ""), 10);
+  const defaultN = Number.isFinite(curN) && curN > 0 ? Math.trunc(curN) : 2;
+  const rawN = window.prompt(t("ui.prompt.n_round"), String(defaultN));
+  if (rawN === null) return;
+  const parsedN = Number.parseInt(String(rawN || "").trim(), 10);
+  if (!Number.isFinite(parsedN)) {
+    window.alert("Invalid N_ROUND");
+    return;
+  }
+  const nRound = clampInt(parsedN, 1, 10);
+
+  const defaultPath = String(obj.task_list_path || "").trim() || "references/meta_round/tasks_v0.json";
+  const rawPath = window.prompt(t("ui.prompt.task_list_path"), defaultPath);
+  if (rawPath === null) return;
+  const parsedPath = normalizeTaskListPath(rawPath);
+  if (!parsedPath.ok) {
+    window.alert(`Invalid task list path: ${parsedPath.error}`);
+    return;
+  }
+
+  obj.n_round = nRound;
+  obj.task_list_path = parsedPath.path;
+
+  const { roundLoop } = ensureMetaRoundChildren(obj);
+  if (roundLoop && typeof roundLoop === "object") {
+    roundLoop.n_round = nRound;
+    ensureForNRoundBody(roundLoop, nRound);
+  }
+
+  persistProgram();
+  renderProgram();
+}
+
+function editForNRoundBlock(block, { parent } = {}) {
+  const obj = block && typeof block === "object" ? block : null;
+  if (!obj) return;
+
+  const curN = Number.parseInt(String(obj.n_round || ""), 10);
+  const defaultN = Number.isFinite(curN) && curN > 0 ? Math.trunc(curN) : 2;
+  const rawN = window.prompt(t("ui.prompt.n_round"), String(defaultN));
+  if (rawN === null) return;
+  const parsedN = Number.parseInt(String(rawN || "").trim(), 10);
+  if (!Number.isFinite(parsedN)) {
+    window.alert("Invalid N_ROUND");
+    return;
+  }
+  const nRound = clampInt(parsedN, 1, 10);
+  obj.n_round = nRound;
+  ensureForNRoundBody(obj, nRound);
+
+  if (parent && typeof parent === "object" && String(parent.type || "") === "metatasks_generator") {
+    parent.n_round = nRound;
+  }
+
+  persistProgram();
+  renderProgram();
+}
+
+function editIfElseBlock(block) {
+  const obj = block && typeof block === "object" ? block : null;
+  if (!obj) return;
+  const cur = String(obj.condition || "").trim() || "on_debug_failure";
+  const raw = window.prompt(t("ui.prompt.if_condition"), cur);
+  if (raw === null) return;
+  const cond = String(raw || "").trim() || "on_debug_failure";
+  if (cond !== "on_debug_failure") {
+    window.alert("v0 supports only condition: on_debug_failure");
+    return;
+  }
+  obj.condition = cond;
+  persistProgram();
+  renderProgram();
+}
+
 function renderProgram() {
   els.canvas.querySelectorAll(".program").forEach((n) => n.remove());
   if (!program.length) {
@@ -450,7 +607,7 @@ function renderProgram() {
   wrap.className = "program";
   const INDENT_PX = 18;
 
-  const renderBlocks = (list, depth, parentType) => {
+  const renderBlocks = (list, depth, parentType, parentObj) => {
     const blocks = Array.isArray(list) ? list : [];
     blocks.forEach((b, idx) => {
       const obj = b && typeof b === "object" ? b : {};
@@ -468,6 +625,20 @@ function renderProgram() {
       const prefix = parentType === "for_n_round" ? `Round ${idx + 1}: ` : "";
       label.textContent = prefix + formatProgramBlockLabel(obj, idx);
       row.appendChild(label);
+
+      if (type === "update_readme" || type === "metatasks_generator" || type === "for_n_round" || type === "if_else") {
+        const edit = document.createElement("button");
+        edit.className = "prog-bind";
+        edit.type = "button";
+        edit.textContent = t("ui.btn.edit");
+        edit.addEventListener("click", () => {
+          if (type === "update_readme") editUpdateReadmeBlock(obj);
+          else if (type === "metatasks_generator") editMetaTasksGeneratorBlock(obj);
+          else if (type === "for_n_round") editForNRoundBlock(obj, { parent: parentObj });
+          else if (type === "if_else") editIfElseBlock(obj);
+        });
+        row.appendChild(edit);
+      }
 
       if (isActionBindableBlockType(type)) {
         const bind = document.createElement("button");
@@ -520,17 +691,17 @@ function renderProgram() {
       wrap.appendChild(row);
 
       if (type === "metatasks_generator") {
-        renderBlocks(obj.children, depth + 1, type);
+        renderBlocks(obj.children, depth + 1, type, obj);
       } else if (type === "for_n_round" || type === "for_each_task") {
-        renderBlocks(obj.body, depth + 1, type);
+        renderBlocks(obj.body, depth + 1, type, obj);
       } else if (type === "if_else") {
-        renderBlocks(obj.if_body, depth + 1, type);
-        if (Array.isArray(obj.else_body) && obj.else_body.length) renderBlocks(obj.else_body, depth + 1, type);
+        renderBlocks(obj.if_body, depth + 1, type, obj);
+        if (Array.isArray(obj.else_body) && obj.else_body.length) renderBlocks(obj.else_body, depth + 1, type, obj);
       }
     });
   };
 
-  renderBlocks(program, 0, "");
+  renderBlocks(program, 0, "", null);
   els.canvas.appendChild(wrap);
 }
 
@@ -1098,6 +1269,45 @@ function clearActionForm() {
   if (els.actionTimeoutCmd) els.actionTimeoutCmd.value = "";
 }
 
+function renderActionPalette() {
+  if (!els.toolbox) return;
+
+  // Remove any previous dynamic palette section.
+  els.toolbox.querySelectorAll('[data-palette="actions"]').forEach((n) => n.remove());
+
+  const items = Array.isArray(actionsIndex) ? actionsIndex : [];
+  if (!items.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.dataset.palette = "actions";
+
+  const divider = document.createElement("div");
+  divider.className = "divider";
+  wrap.appendChild(divider);
+
+  items.forEach((it) => {
+    const id = it && typeof it.id === "number" ? it.id : null;
+    if (id === null) return;
+    const title = String((it && it.title) || "").trim() || `Action #${id}`;
+    const enabled = Boolean(it && it.enabled);
+    const readonly = Boolean(it && it.readonly);
+    const stepType = defaultStepTypeForActionId(id);
+    const cls = (BLOCK_META[stepType] && BLOCK_META[stepType].cls) || "block--work";
+
+    const el = document.createElement("div");
+    el.className = `block ${cls}`;
+    el.draggable = true;
+    el.dataset.paletteKind = "action";
+    el.dataset.actionId = String(id);
+    el.dataset.defaultStep = stepType;
+    el.title = `#${id}${readonly ? " (readonly)" : ""}${enabled ? "" : " (disabled)"}`;
+    el.textContent = `${title}${readonly ? " \u00b7 readonly" : ""}${enabled ? "" : " \u00b7 disabled"}`;
+    wrap.appendChild(el);
+  });
+
+  els.toolbox.appendChild(wrap);
+}
+
 function renderActionsList() {
   if (!els.actionsList) return;
   els.actionsList.innerHTML = "";
@@ -1152,6 +1362,7 @@ async function refreshActionsList({ keepSelection } = {}) {
         selectedAction = null;
       }
     }
+    renderActionPalette();
     renderActionsList();
     updateActionsButtons();
   } catch (e) {
@@ -1696,12 +1907,23 @@ async function refreshStatus() {
 }
 
 function bindDnD() {
-  document.querySelectorAll(".toolbox .block").forEach((el) => {
-    el.addEventListener("dragstart", (ev) => {
-      ev.dataTransfer.setData("text/plain", el.dataset.block);
+  // Use event delegation so dynamically injected palette blocks (actions) work without re-binding.
+  if (els.toolbox) {
+    els.toolbox.addEventListener("dragstart", (ev) => {
+      const t = ev && ev.target && ev.target.closest ? ev.target.closest(".block") : null;
+      if (!t || !els.toolbox.contains(t)) return;
+      const actionId = t.dataset.actionId;
+      const blockType = t.dataset.block;
+      if (actionId) {
+        ev.dataTransfer.setData("text/plain", `action:${actionId}`);
+      } else if (blockType) {
+        ev.dataTransfer.setData("text/plain", `block:${blockType}`);
+      } else {
+        return;
+      }
       ev.dataTransfer.effectAllowed = "copy";
     });
-  });
+  }
 
   els.canvas.addEventListener("dragover", (ev) => {
     ev.preventDefault();
@@ -1710,7 +1932,23 @@ function bindDnD() {
 
   els.canvas.addEventListener("drop", (ev) => {
     ev.preventDefault();
-    const type = ev.dataTransfer.getData("text/plain");
+    const payload = ev.dataTransfer.getData("text/plain");
+    if (!payload) return;
+    const m = /^([a-z_]+):(.*)$/.exec(String(payload || ""));
+    const kind = m ? m[1] : "block";
+    const value = m ? m[2] : String(payload || "");
+
+    if (kind === "action") {
+      const id = Number(String(value || "").trim());
+      if (!Number.isFinite(id)) return;
+      const stepType = defaultStepTypeForActionId(id);
+      program.push({ type: stepType, action_ref: { id: Math.trunc(id) } });
+      persistProgram();
+      renderProgram();
+      return;
+    }
+
+    const type = String(value || "").trim();
     if (!type) return;
     if (type === "update_readme") {
       const raw = window.prompt(
@@ -2035,6 +2273,7 @@ function boot() {
   loadChat();
   refreshLogs({ reset: true });
   updateActionsButtons();
+  refreshActionsList({ keepSelection: true });
 
   window.setInterval(refreshHealth, 2000);
   window.setInterval(refreshStatus, 2000);

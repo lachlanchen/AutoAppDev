@@ -123,7 +123,11 @@
         "Paste AAPS v1 here (AUTOAPPDEV_PIPELINE 1 ...), or paste an annotated .sh (lines starting with # AAPS:) and click Import...",
 
       "ui.btn.bind": "Bind",
+      "ui.btn.edit": "Edit",
       "ui.prompt.action_ref": "Action ref (id or slug). Blank to clear.",
+      "ui.prompt.n_round": "N_ROUND? (1-10)",
+      "ui.prompt.task_list_path": "Task list path? (repo-relative)",
+      "ui.prompt.if_condition": "If condition? (v0: on_debug_failure)",
       "ui.alert.invalid_id": "Invalid id",
       "ui.alert.invalid_slug": "Invalid slug",
 
