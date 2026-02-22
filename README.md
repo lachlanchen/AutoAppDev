@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/figs/banner.png" alt="LazyingArt banner" />
+</p>
+
 # AutoAppDev
 
 Reusable scripts + guides for building apps step-by-step from screenshots/markdown with Codex as a non-interactive tool.
@@ -44,3 +48,10 @@ The controller app aims to embody the same concepts as Scratch-like blocks/actio
 - `scripts/generate_screenshot_docs.sh`: Screenshot -> markdown description generator (Codex-driven).
 - `scripts/setup_backend_env.sh`: Backend conda env bootstrap for local runs.
 - `examples/ralph-wiggum-example.sh`: Example Codex CLI automation helper.
+
+## Sponsor & Donate
+
+- GitHub Sponsors: https://github.com/sponsors/lachlanchen
+- Donate: https://chat.lazying.art/donate
+- PayPal: https://paypal.me/RongzhouChen
+- Stripe: https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
