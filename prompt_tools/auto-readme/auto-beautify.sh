@@ -38,6 +38,7 @@ Required action:
 
 Beautification requirements:
 - Keep the existing README structure and depth unless a change clearly improves clarity.
+- Only increment and polish from the current README; do not delete substantive existing sections/content unless exact duplicates or clearly invalid.
 - Keep content repository-accurate.
 - Make layout more attractive with tasteful emojis, tables, and visual sectioning.
 - Add color cues using Markdown-compatible badge styles (e.g., shields.io) where useful.
