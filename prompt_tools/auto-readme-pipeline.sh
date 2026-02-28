@@ -129,10 +129,10 @@ echo "[5/6] Insert language link bar into all README variants"
   cd "$repo_path"
   files=(README.md)
   if [[ "$i18n_mode" -eq 1 ]]; then
-    while IFS='|' read -r _ _ rel; do
-      [[ -n "${rel:-}" ]] || continue
+    while IFS= read -r p; do
+      rel="${p#"$repo_path"/}"
       files+=("$rel")
-    done < "$translation_plan_file"
+    done < <(find "$repo_path/i18n" -maxdepth 1 -type f -name 'README.*.md' | sort)
   else
     while IFS= read -r rel; do
       [[ -n "${rel:-}" ]] || continue
@@ -151,46 +151,39 @@ echo "[5/6] Insert language link bar into all README variants"
     awk '
       BEGIN {
         in_block = 0
-        state = "prefix"
       }
-      state == "prefix" {
-        if ($0 ~ /^[[:space:]]*Languages:/) { next }
-        if ($0 ~ /^\*\*Languages:\*\*/) { next }
-        if ($0 ~ /\[English\]\(/ && $0 ~ /README\.md/ && $0 ~ /README\./) { next }
-        if ($0 ~ /(English|中文|日本語|한국어|Tiếng Việt|العربية|Français|Español|Deutsch|Русский)/ && $0 ~ /[·|]/) { next }
-        if ($0 ~ /README(\.[a-zA-Z-]+)?\.md/ && $0 ~ /(English|中文|日本語|한국어|Tiếng Việt|العربية|Français|Español|Deutsch|Русский)/) { next }
-        if ($0 ~ /^\["'\''!\[/) { next }
-        if ($0 == "") { next }
+      {
+        if (in_block == 1) {
+          block = block $0 "\n"
+          if ($0 ~ /Languages|README(\.[a-zA-Z-]+)?\.md/) {
+            has_lang = 1
+          }
+          if ($0 ~ /^<\/p>$/) {
+            in_block = 0
+            if (has_lang) {
+              block = ""
+              has_lang = 0
+              next
+            }
+            printf "%s", block
+            block = ""
+          }
+          next
+        }
         if ($0 ~ /^<p([[:space:]][^>]*)?>$/) {
           in_block = 1
           block = $0 "\n"
           has_lang = ($0 ~ /Languages|README(\.[a-zA-Z-]+)?\.md/)
           next
         }
-        state = "body"
+        if ($0 ~ /^[[:space:]]*Languages:/) { next }
+        if ($0 ~ /^\*\*Languages:\*\*/) { next }
+        if ($0 ~ /\[English\]\(/ && $0 ~ /README\.md/ && $0 ~ /README\./) { next }
+        if ($0 ~ /(English|中文|日本語|한국어|Tiếng Việt|العربية|Français|Español|Deutsch|Русский)/ && $0 ~ /[·|]/) { next }
+        if ($0 ~ /README(\.[a-zA-Z-]+)?\.md/ && $0 ~ /(English|中文|日本語|한국어|Tiếng Việt|العربية|Français|Español|Deutsch|Русский)/) { next }
+        if ($0 ~ /^\["'\''!\[/) { next }
         print
-        next
       }
-      in_block == 1 {
-        block = block $0 "\n"
-        if ($0 ~ /Languages|README(\.[a-zA-Z-]+)?\.md/) {
-          has_lang = 1
-        }
-        if ($0 ~ /^<\/p>$/) {
-          in_block = 0
-          if (has_lang) {
-            block = ""
-            has_lang = 0
-            next
-          }
-          printf "%s", block
-          block = ""
-          state = "body"
-          next
-        }
-        next
-      }
-      { print }
     ' "$f" > "$tmp_file"
     {
       printf '%s\n\n' "$nav_block"
