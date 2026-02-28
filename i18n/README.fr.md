@@ -2,6 +2,8 @@
 
 
 
+
+
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
@@ -22,7 +24,7 @@ Scripts réutilisables + guides pour construire des applications étape par éta
 
 > 🎯 **Mission :** Rendre les pipelines de développement d'applications déterministes, reprenables et pilotés par des artefacts.
 >
-> 🧩 **Principe de conception :** Plan -> Work -> Verify -> Summary -> Commit/Push.
+> 🧩 **Principe de conception :** Plan -> Travail -> Vérification -> Synthèse -> Commit/Push.
 
 ### 🎛️ Signaux Du Projet
 
@@ -51,10 +53,10 @@ Scripts réutilisables + guides pour construire des applications étape par éta
 - Phase commit: `Selfdev: 52 pwa_action_palette_dynamic_and_editable_blocks summary`
 - Progress: 51 / 55 tasks done
 - Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
-- Philosophy: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
+- Philosophie : Plan -> Travail -> Vérification -> Synthèse -> Commit/Push (linéaire, reprenable)
 
-This section is updated by `scripts/auto-autoappdev-development.sh`.
-Do not edit content between the markers.
+Cette section est mise à jour par `scripts/auto-autoappdev-development.sh`.
+Ne modifiez pas le contenu entre les marqueurs.
 
 <!-- AUTOAPPDEV:STATUS:END -->
 
@@ -84,7 +86,6 @@ Do not edit content between the markers.
 - [🤝 Contribuer](#-contribuer)
 - [❤️ Support](#-support)
 - [📄 Licence](#-licence)
-- [❤️ Sponsor & Donate](#-sponsor--donate)
 
 ## 🚀 Vue D'ensemble
 AutoAppDev est un projet contrôleur pour des pipelines de développement applicatif longs et reprenables. Il combine :
@@ -108,10 +109,10 @@ Le projet est optimisé pour une exécution agentique prévisible avec un séque
 AutoAppDev traite les agents comme des outils et maintient la stabilité via une boucle stricte et reprenable :
 
 1. Plan
-2. Implement
-3. Debug/verify (with timeouts)
-4. Fix
-5. Summarize + log
+2. Implémentation
+3. Débogage/vérification (avec timeouts)
+4. Correction
+5. Synthèse + journalisation
 6. Commit + push
 
 L'application contrôleur vise à incarner les mêmes concepts sous forme de blocs/actions de type Scratch (y compris une action commune `update_readme`) afin que chaque espace de travail reste à jour et reproductible.
@@ -171,7 +172,7 @@ Tornado backend (backend/app.py)
 ```
 
 ### Responsabilités Du Backend
-- Exposer les API du contrôleur pour les scripts, actions, plan, cycle de vie pipeline, logs, inbox/outbox, config workspace.
+- Exposer les API du contrôleur pour les scripts, actions, plan, cycle de vie pipeline, logs, inbox/outbox, config de l'espace de travail.
 - Valider et persister les assets de scripts pipeline.
 - Coordonner l'état d'exécution pipeline et les transitions de statut.
 - Fournir un comportement de repli déterministe lorsque le pool DB est indisponible.
@@ -311,7 +312,7 @@ conda run -n autoappdev python -m backend.db_smoketest
 
 ## ⚡ Démarrage Rapide
 ```bash
-# from repo root
+# Depuis la racine du dépôt
 cp .env.example .env
 ./scripts/setup_autoappdev_env.sh
 conda run -n autoappdev python -m backend.apply_schema
@@ -321,7 +322,7 @@ conda run -n autoappdev python -m backend.apply_schema
 Puis ouvrir :
 - PWA : `http://127.0.0.1:5173/`
 - Base API backend : `http://127.0.0.1:8788`
-- Health check : `http://127.0.0.1:8788/api/health`
+- Vérification d'état : `http://127.0.0.1:8788/api/health`
 
 Vérification rapide en une commande :
 ```bash
@@ -334,7 +335,7 @@ Carte rapide des endpoints :
 | --- | --- |
 | Interface PWA | `http://127.0.0.1:5173/` |
 | API backend | `http://127.0.0.1:8788` |
-| Endpoint health | `http://127.0.0.1:8788/api/health` |
+| Endpoint de santé | `http://127.0.0.1:8788/api/health` |
 
 ## ⚙️ Configuration
 Fichier principal : `.env` (voir `docs/env.md` et `.env.example`).
@@ -618,28 +619,15 @@ Les remotes du dépôt incluent actuellement :
 - `origin` : `git@github.com:lachlanchen/AutoAppDev.git`
 - D'autres remotes peuvent être présents dans des clones locaux pour des dépôts liés (exemple trouvé dans cet espace : `novel`).
 
-## ❤️ Support
-
-| Donate | PayPal | Stripe |
-|---|---|---|
-| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
-
-![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
-![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
-![Maintained](https://img.shields.io/badge/Maintained-Yes-0e9f6e)
-
 ## 📄 Licence
 Aucun fichier `LICENSE` racine n'a été détecté dans cet instantané du dépôt.
 
 Note d'hypothèse :
 - Tant qu'un fichier de licence n'est pas ajouté, considérez que les conditions d'usage/de redistribution ne sont pas spécifiées et confirmez avec le mainteneur.
 
-## ❤️ Sponsor & Donate
-| Channel | Link |
-| --- | --- |
-| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
-| Donate | https://chat.lazying.art/donate |
-| PayPal | https://paypal.me/RongzhouChen |
-| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
 
-Si ce projet aide votre workflow, le sponsoring soutient directement la poursuite des tâches self-dev, la qualité de la documentation et le durcissement des outils.
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |

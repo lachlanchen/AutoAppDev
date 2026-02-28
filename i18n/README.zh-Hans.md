@@ -2,6 +2,7 @@
 
 
 
+
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
@@ -18,9 +19,9 @@
 ![API](https://img.shields.io/badge/API-JSON%20HTTP-0ea5e9)
 ![State Machine](https://img.shields.io/badge/Lifecycle-start%2Fpause%2Fresume%2Fstop-f59e0b)
 
-可复用脚本与指南，使用 Codex 作为非交互式工具，从截图/Markdown 逐步构建应用。
+可复用脚本和指南，使用 Codex 作为非交互式工具，从截图/Markdown 逐步构建应用。
 
-> 🎯 **使命：** 让应用开发流水线具备确定性、可恢复、并以工件为驱动。
+> 🎯 **使命：** 让应用开发流水线具备确定性、可恢复、且以工件为驱动。
 >
 > 🧩 **设计原则：** Plan -> Work -> Verify -> Summary -> Commit/Push.
 
@@ -31,7 +32,7 @@
 | 运行时模型 | Tornado backend + static PWA controller |
 | 流水线执行 | 确定性且可恢复（`start/pause/resume/stop`） |
 | 持久化策略 | PostgreSQL 优先，并带兼容回退行为 |
-| 文档流 | 规范根 README + 自动化 `i18n/` 变体 |
+| 文档流程 | 以根 README 为规范来源，配套自动化 `i18n/` 变体 |
 
 ### 🔗 快速导航
 
@@ -61,7 +62,7 @@
 ## 🗂️ 目录
 - [🚀 概览](#-概览)
 - [🧭 方法论](#-方法论)
-- [✨ 功能特性](#-功能特性)
+- [✨ 特性](#-特性)
 - [📌 一览](#-一览)
 - [🏗️ 架构](#️-架构)
 - [📚 内容索引](#-内容索引)
@@ -79,79 +80,79 @@
 - [🔐 安全说明](#-安全说明)
 - [🔧 故障排查](#-故障排查)
 - [🌐 README 与 i18n 工作流](#-readme-与-i18n-工作流)
+- [📘 README 生成上下文](#-readme-生成上下文)
 - [❓ FAQ](#-faq)
 - [🗺️ 路线图](#️-路线图)
 - [🤝 贡献](#-贡献)
 - [❤️ Support](#-support)
 - [📄 许可证](#-许可证)
-- [❤️ 赞助与捐赠](#️-赞助与捐赠)
 
 ## 🚀 概览
-AutoAppDev 是一个面向长时间运行、可恢复的应用开发流水线控制器项目，组合了：
+AutoAppDev 是一个面向长时间运行、可恢复的应用开发流水线控制器项目，结合了：
 
-1. 使用 PostgreSQL 持久化（并在存储代码中提供本地 JSON 回退行为）的 Tornado 后端 API。
-2. 类 Scratch 的静态 PWA 控制器界面。
-3. 用于流水线编写、确定性代码生成、自研循环与 README 自动化的脚本和文档。
+1. 一个基于 PostgreSQL 持久化的 Tornado 后端 API（存储代码中包含本地 JSON 回退行为）。
+2. 一个 Scratch 风格的静态 PWA 控制器界面。
+3. 一套用于流水线编写、确定性代码生成、self-dev 循环与 README 自动化的脚本与文档。
 
-该项目针对可预测的代理执行进行了优化，采用严格顺序和面向工件的工作流历史。
+该项目专为可预测的代理执行进行优化，采用严格顺序和以工件为导向的工作流历史。
 
-### 🎨 为什么存在这个仓库
+### 🎨 为什么有这个仓库
 
 | 主题 | 实际含义 |
 | --- | --- |
-| 确定性 | 规范化流水线 IR + parser/import/codegen 工作流，强调可重复性 |
-| 可恢复 | 对长时间运行任务使用显式生命周期状态机（`start/pause/resume/stop`） |
+| 确定性 | 规范化流水线 IR + parser/import/codegen 流程，面向可复现结果 |
+| 可恢复性 | 对长时间运行任务提供显式生命周期状态机（`start/pause/resume/stop`） |
 | 可运维性 | 运行日志、inbox/outbox 通道，以及脚本驱动的验证循环 |
-| 文档优先 | 合同/规范/示例位于 `docs/`，并配套自动化多语言 README 流程 |
+| 文档优先 | 规范与示例位于 `docs/`，并配套多语言 README 流程 |
 
 ## 🧭 方法论
-AutoAppDev 将代理视为工具，通过严格、可恢复的循环来保持工作稳定：
+AutoAppDev 将 agent 视作执行工具，通过严格且可恢复的循环保持工作稳定：
 
-1. Plan
-2. Implement
-3. Debug/verify (with timeouts)
-4. Fix
-5. Summarize + log
-6. Commit + push
+1. Plan（规划）
+2. Implement（实现）
+3. Debug/verify（带超时）
+4. Fix（修复）
+5. Summarize + log（总结 + 日志）
+6. Commit + push（提交 + 推送）
 
-控制器应用旨在以类 Scratch 的块/动作体现同样概念（包括通用 `update_readme` action），从而让每个工作区都保持最新且可复现。
+控制器应用目标是通过 Scratch 风格的块/动作体现同样的理念（含通用 `update_readme` action），确保每个 workspace 保持同步且可复现。
 
 ### 🔁 生命周期状态意图
 
 | 状态迁移 | 运行意图 |
 | --- | --- |
-| `start` | 从 stopped/ready 状态开始流水线 |
-| `pause` | 在不丢失上下文的前提下安全暂停长任务 |
-| `resume` | 从保存的运行时状态/工件继续执行 |
+| `start` | 从 stopped/ready 状态启动流水线 |
+| `pause` | 在不丢失上下文的前提下安全暂停长期执行 |
+| `resume` | 从已保存运行时状态/工件继续执行 |
 | `stop` | 结束执行并回到非运行状态 |
 
-## ✨ 功能特性
+## ✨ 特性
 - 可恢复的流水线生命周期控制：start、pause、resume、stop。
-- 面向 AAPS 流水线脚本（`.aaps`）和规范 IR（`autoappdev_ir` v1）的脚本库 API。
+- 脚本库 API，支持 AAPS 流水线脚本（`.aaps`）和标准 IR（`autoappdev_ir` v1）。
 - 确定性的 parser/import 流程：
-  - 解析格式化 AAPS 脚本。
-  - 通过 `# AAPS:` 注释导入标注过的 shell。
+  - 解析格式化的 AAPS 脚本。
+  - 通过 `# AAPS:` 注释导入带注解的 shell。
   - 可选的 Codex 辅助解析回退（`AUTOAPPDEV_ENABLE_LLM_PARSE=1`）。
-- 动作注册表支持内置动作 + 可编辑/自定义动作（只读内置动作可 clone/edit）。
-- 类 Scratch PWA 积木与运行时加载动作面板（`GET /api/actions`）。
+- 动作注册表包含内置动作与可编辑/自定义动作（只读内置动作支持 clone/edit）。
+- Scratch 风格的 PWA 块与运行时加载动作面板（`GET /api/actions`）。
 - 运行时消息通道：
-  - Inbox（`/api/inbox`）用于操作员 -> 流水线指导。
-  - Outbox（`/api/outbox`）包含从 `runtime/outbox` 的文件队列摄取。
-- 后端与流水线日志增量流式输出（`/api/logs`, `/api/logs/tail`）。
-- 从规范 IR 进行确定性 runner 代码生成（`scripts/pipeline_codegen/generate_runner_from_ir.py`）。
-- 用于仓库迭代演进的自研驱动（`scripts/auto-autoappdev-development.sh`）。
-- README 自动化流水线及 `i18n/` 下的多语言生成脚手架。
+  - Inbox（`/api/inbox`）用于操作者到流水线的指引。
+  - Outbox（`/api/outbox`）支持从 `runtime/outbox` 的文件队列摄取。
+- 来自后端与流水线日志的增量流式输出（`/api/logs`, `/api/logs/tail`）。
+- 基于标准 IR 的确定性 runner 代码生成（`scripts/pipeline_codegen/generate_runner_from_ir.py`）。
+- 用于仓库迭代演进的 self-dev 驱动（`scripts/auto-autoappdev-development.sh`）。
+- 具备多语言生成脚手架的 README 自动化流水线（`i18n/`）。
 
 ## 📌 一览
 
-| 区域 | 详情 |
+| 领域 | 说明 |
 | --- | --- |
-| 核心运行时 | Tornado backend + static PWA frontend |
-| 持久化 | PostgreSQL 优先，并在 `backend/storage.py` 内提供兼容行为 |
-| 流水线模型 | 规范 IR（`autoappdev_ir` v1）与 AAPS 脚本格式 |
+| 核心运行时 | Tornado backend + static PWA 前端 |
+| 持久化 | PostgreSQL 优先，`backend/storage.py` 中兼容回退 |
+| 流水线模型 | 标准 IR（`autoappdev_ir` v1）与 AAPS 脚本格式 |
 | 控制流 | Start / Pause / Resume / Stop 生命周期 |
-| 开发模式 | 可恢复自研循环 + 确定性脚本/codegen 工作流 |
-| README/i18n | 带 `i18n/` 脚手架的自动化 README 流水线 |
+| 开发模式 | 可恢复 self-dev 循环 + 确定性脚本/codegen 工作流 |
+| README/i18n | 基于 `i18n/` 脚手架的自动化 README 流程 |
 
 ## 🏗️ 架构
 
@@ -170,35 +171,35 @@ Tornado backend (backend/app.py)
         +--> scripts/ (pipeline runner + codegen helpers)
 ```
 
-### Backend 职责
-- 暴露控制器 API：scripts、actions、plan、pipeline lifecycle、logs、inbox/outbox、workspace config。
+### 后端职责
+- 提供 scripts、actions、plan、pipeline lifecycle、logs、inbox/outbox、workspace config 等控制器 API。
 - 校验并持久化流水线脚本资产。
-- 协调流水线执行状态与状态迁移。
-- 在 DB 连接池不可用时提供确定性回退行为。
+- 协调流水线执行状态及其状态变更。
+- 当数据库连接池不可用时提供确定性回退。
 
-### Frontend 职责
-- 渲染类 Scratch 积木 UI 与流水线编辑流程。
-- 从后端注册表动态加载动作面板。
-- 驱动生命周期控制并监控状态/日志/消息。
+### 前端职责
+- 渲染 Scratch 风格的块式 UI 与流水线编辑流程。
+- 从后端动态加载动作面板（action palette）。
+- 驱动生命周期控制并监控状态、日志、消息。
 
 ## 📚 内容索引
-最常用文档、脚本与示例的参考映射：
+常用文档、脚本和示例的快速映射：
 
-- `docs/auto-development-guide.md`：长期运行、可恢复自动开发代理的方法论与要求（中英双语）。
-- `docs/ORDERING_RATIONALE.md`：截图驱动步骤排序的示例依据。
+- `docs/auto-development-guide.md`：Bilingual（EN/ZH）长时间运行、可恢复自动开发代理的理念与要求。
+- `docs/ORDERING_RATIONALE.md`：截图驱动步骤顺序示例依据。
 - `docs/controller-mvp-scope.md`：控制器 MVP 范围（页面 + 最小 API）。
-- `docs/end-to-end-demo-checklist.md`：确定性手动端到端演示检查清单（backend + PWA happy path）。
+- `docs/end-to-end-demo-checklist.md`：确定性的人工端到端演示检查清单（backend + PWA happy path）。
 - `docs/env.md`：环境变量（`.env`）约定。
-- `docs/api-contracts.md`：控制器 API 请求/响应契约。
-- `docs/pipeline-formatted-script-spec.md`：标准流水线脚本格式（AAPS）与规范 IR schema（TASK -> STEP -> ACTION）。
-- `docs/pipeline-runner-codegen.md`：从规范 IR 生成可运行 bash pipeline runner 的确定性生成器。
-- `docs/common-actions.md`：通用 action 契约/规范（含 `update_readme`）。
-- `docs/workspace-layout.md`：标准工作区目录 + 契约（`materials/interactions/outputs/docs/references/scripts/tools/logs/auto-apps`）。
-- `scripts/run_autoappdev_tmux.sh`：在 tmux 中启动 AutoAppDev 应用（backend + PWA）。
-- `scripts/run_autoappdev_selfdev_tmux.sh`：在 tmux 中启动 AutoAppDev 自研驱动。
+- `docs/api-contracts.md`：控制器 API 请求与响应契约。
+- `docs/pipeline-formatted-script-spec.md`：标准流水线脚本格式（AAPS）与标准 IR schema（TASK -> STEP -> ACTION）。
+- `docs/pipeline-runner-codegen.md`：从标准 IR 生成可执行 bash runner 的确定性生成器。
+- `docs/common-actions.md`：通用 action 契约与规范（含 `update_readme`）。
+- `docs/workspace-layout.md`：标准 workspace 目录与约定（`materials/interactions/outputs/docs/references/scripts/tools/logs/auto-apps`）。
+- `scripts/run_autoappdev_tmux.sh`：在 tmux 中启动 AutoAppDev（backend + PWA）。
+- `scripts/run_autoappdev_selfdev_tmux.sh`：在 tmux 中启动 AutoAppDev self-dev 驱动。
 - `scripts/app-auto-development.sh`：线性流水线驱动（`plan -> backend -> PWA -> Android -> iOS -> review -> summary`），支持 resume/state。
-- `scripts/generate_screenshot_docs.sh`：截图 -> Markdown 描述生成器（Codex 驱动）。
-- `scripts/setup_autoappdev_env.sh`：本地运行主 conda 环境引导脚本。
+- `scripts/generate_screenshot_docs.sh`：截图 -> markdown 描述生成器（由 Codex 驱动）。
+- `scripts/setup_autoappdev_env.sh`：本地运行主 conda 环境初始化脚本。
 - `scripts/setup_backend_env.sh`：后端环境辅助脚本。
 - `examples/ralph-wiggum-example.sh`：Codex CLI 自动化助手示例。
 
@@ -244,21 +245,21 @@ AutoAppDev/
 ```
 
 ## ✅ 前置要求
-- 具备 `bash` 的操作系统。
+- 支持 `bash` 的操作系统。
 - Python `3.11+`。
-- 用于安装脚本的 Conda（`conda`）。
-- 用于一键 backend+PWA 或自研会话的 `tmux`。
-- `DATABASE_URL` 可达的 PostgreSQL。
+- Conda（`conda`）用于提供的设置脚本。
+- `tmux`，用于一键启动 backend+PWA 或 self-dev 会话。
+- 可通过 `DATABASE_URL` 访问的 PostgreSQL。
 - 可选：`codex` CLI（用于 Codex 驱动流程：self-dev、parse-llm 回退、auto-readme 流水线）。
 
-快速要求矩阵：
+快速需求矩阵：
 
-| 组件 | 必需性 | 用途 |
+| 组件 | 必需 | 用途 |
 | --- | --- | --- |
 | `bash` | 是 | 脚本执行 |
 | Python `3.11+` | 是 | 后端 + codegen 工具 |
-| Conda | 是（推荐流程） | 环境引导脚本 |
-| PostgreSQL | 是（首选模式） | 通过 `DATABASE_URL` 进行主持久化 |
+| Conda | 是（推荐） | 环境初始化脚本 |
+| PostgreSQL | 是（首选） | 通过 `DATABASE_URL` 提供主持久化 |
 | `tmux` | 推荐 | 托管 backend/PWA 与 self-dev 会话 |
 | `codex` CLI | 可选 | LLM 辅助解析与 README/self-dev 自动化 |
 
@@ -266,16 +267,16 @@ AutoAppDev/
 
 | 主题 | 当前预期 |
 | --- | --- |
-| 本地 OS | 主要目标为 Linux/macOS shell（`bash` 脚本） |
+| 本地操作系统 | 以 Linux/macOS shell 为主（`bash` 脚本） |
 | Python 运行时 | `3.11`（由 `scripts/setup_autoappdev_env.sh` 管理） |
-| 持久化模式 | PostgreSQL 为首选并视为规范方案 |
+| 持久化模式 | PostgreSQL 为首选并作为标准 |
 | 回退行为 | `backend/storage.py` 在降级场景中包含 JSON 兼容回退 |
 | 网络模型 | 本地 localhost 分端口开发（backend + static PWA） |
-| 代理工具 | 除非使用 LLM 辅助解析或 self-dev 自动化，否则 `codex` CLI 为可选 |
+| 代理工具 | 除非使用 LLM 辅助解析或 self-dev 自动化，否则 `codex` CLI 可选 |
 
-本 README 使用的假设：
-- 除非章节另有说明，你在仓库根目录执行命令。
-- 启动后端服务前，`.env` 已完成配置。
+本文档所依据的假设：
+- 除非章节另有说明，命令均在仓库根目录执行。
+- 启动后端服务前已配置 `.env`。
 - 推荐的一键工作流依赖 `conda` 与 `tmux`。
 
 ## 🛠️ 安装
@@ -292,7 +293,7 @@ cp .env.example .env
 编辑 `.env` 并至少设置：
 - `SECRET_KEY`
 - `DATABASE_URL`
-- `AUTOAPPDEV_HOST` 和 `AUTOAPPDEV_PORT`（或 `PORT`）
+- `AUTOAPPDEV_HOST` 与 `AUTOAPPDEV_PORT`（或 `PORT`）
 
 ### 3) 创建/更新后端环境
 ```bash
@@ -321,7 +322,7 @@ conda run -n autoappdev python -m backend.apply_schema
 然后打开：
 - PWA: `http://127.0.0.1:5173/`
 - Backend API base: `http://127.0.0.1:8788`
-- Health check: `http://127.0.0.1:8788/api/health`
+- 健康检查: `http://127.0.0.1:8788/api/health`
 
 一条命令做 smoke-check：
 ```bash
@@ -337,20 +338,20 @@ curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool
 | Health endpoint | `http://127.0.0.1:8788/api/health` |
 
 ## ⚙️ 配置
-主配置文件：`.env`（参见 `docs/env.md` 与 `.env.example`）。
+主配置文件：`.env`（见 `docs/env.md` 和 `.env.example`）。
 
 ### 重要变量
 
-| Variable | Purpose |
+| 变量 | 用途 |
 | --- | --- |
-| `SECRET_KEY` | Required by convention |
-| `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `PORT` | Backend bind settings |
-| `DATABASE_URL` | PostgreSQL DSN (preferred) |
-| `AUTOAPPDEV_RUNTIME_DIR` | Override runtime dir (default `./runtime`) |
-| `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT` | Default pipeline run target |
-| `AUTOAPPDEV_ENABLE_LLM_PARSE=1` | Enable `/api/scripts/parse-llm` |
-| `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK` | Codex defaults for actions/endpoints |
-| `AI_API_BASE_URL`, `AI_API_KEY` | Reserved for future integrations |
+| `SECRET_KEY` | 约定上的必需值 |
+| `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `PORT` | 后端绑定设置 |
+| `DATABASE_URL` | PostgreSQL DSN（推荐） |
+| `AUTOAPPDEV_RUNTIME_DIR` | 覆盖运行时目录（默认 `./runtime`） |
+| `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT` | 默认流水线运行目标 |
+| `AUTOAPPDEV_ENABLE_LLM_PARSE=1` | 启用 `/api/scripts/parse-llm` |
+| `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK` | Codex 的 actions/endpoints 默认值 |
+| `AI_API_BASE_URL`, `AI_API_KEY` | 预留给未来集成 |
 
 快速校验 `.env`：
 ```bash
@@ -373,9 +374,9 @@ PY'
 | 模式 | 命令 | 说明 |
 | --- | --- | --- |
 | 启动 backend + PWA（推荐） | `./scripts/run_autoappdev_tmux.sh --restart` | Backend `http://127.0.0.1:8788`，PWA `http://127.0.0.1:5173/` |
-| 仅启动 backend | `conda run -n autoappdev python -m backend.app` | 使用 `.env` 里的绑定与 DB 设置 |
-| 仅启动 PWA 静态服务 | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | 适合仅前端检查 |
-| 在 tmux 运行 self-dev 驱动 | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | 可恢复自研循环 |
+| 仅启动 backend | `conda run -n autoappdev python -m backend.app` | 使用 `.env` 里的 bind 与 DB 配置 |
+| 仅启动 PWA 静态服务 | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | 适用于前端单独检查 |
+| 在 tmux 中运行 self-dev 驱动 | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | 可恢复的 self-dev 循环 |
 
 ### 常用脚本参数
 - `./scripts/run_autoappdev_tmux.sh --help`
@@ -387,7 +388,7 @@ PY'
 ### 解析并存储脚本
 - 通过 API 解析 AAPS：`POST /api/scripts/parse`
 - 导入带注释 shell：`POST /api/scripts/import-shell`
-- 可选 LLM 解析：`POST /api/scripts/parse-llm`（需要 `AUTOAPPDEV_ENABLE_LLM_PARSE=1`）
+- 可选的 LLM 解析：`POST /api/scripts/parse-llm`（需要 `AUTOAPPDEV_ENABLE_LLM_PARSE=1`）
 
 ### 流水线控制 API
 - `GET /api/pipeline`
@@ -399,16 +400,16 @@ PY'
 
 ### 其他高频 API
 - 健康/版本/配置：`/api/health`, `/api/version`, `/api/config`
-- 计划/脚本：`/api/plan`, `/api/scripts`, `/api/scripts/<id>`
-- 动作：`/api/actions`, `/api/actions/<id>`, `/api/actions/<id>/clone`, `/api/actions/update-readme`
+- Plan 和脚本：`/api/plan`, `/api/scripts`, `/api/scripts/<id>`
+- Actions：`/api/actions`, `/api/actions/<id>`, `/api/actions/<id>/clone`, `/api/actions/update-readme`
 - 消息：`/api/chat`, `/api/inbox`, `/api/outbox`
 - 日志：`/api/logs`, `/api/logs/tail`
 
-请求/响应结构见 `docs/api-contracts.md`。
+详细请求/响应结构见 `docs/api-contracts.md`。
 
 ## 🧭 运维 Runbook
 
-### Runbook：拉起完整本地栈
+### Runbook：启动完整本地栈
 ```bash
 cp .env.example .env
 ./scripts/setup_autoappdev_env.sh
@@ -418,8 +419,8 @@ conda run -n autoappdev python -m backend.apply_schema
 
 验证检查点：
 - `curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool`
-- 打开 `http://127.0.0.1:5173/`，确认 UI 能加载 `/api/config`。
-- 可选：打开 `/api/version`，确认返回预期后端元数据。
+- 打开 `http://127.0.0.1:5173/` 并确认 UI 可加载 `/api/config`。
+- 可选：打开 `/api/version`，确认返回预期的后端元数据。
 
 ### Runbook：仅后端调试
 ```bash
@@ -452,8 +453,8 @@ scripts/pipeline_codegen/smoke_meta_round_v0.sh
 | Scripts | `GET/POST /api/scripts`, `GET/PUT/DELETE /api/scripts/<id>`, `POST /api/scripts/parse`, `POST /api/scripts/import-shell`, `POST /api/scripts/parse-llm` |
 | Action 注册表 | `GET/POST /api/actions`, `GET/PUT/DELETE /api/actions/<id>`, `POST /api/actions/<id>/clone`, `POST /api/actions/update-readme` |
 | Pipeline 运行时 | `GET /api/pipeline`, `GET /api/pipeline/status`, `POST /api/pipeline/start`, `POST /api/pipeline/pause`, `POST /api/pipeline/resume`, `POST /api/pipeline/stop` |
-| 消息 + 日志 | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET /api/outbox`, `GET /api/logs`, `GET /api/logs/tail` |
-| 工作区设置 | `GET/POST /api/workspaces/<name>/config` |
+| 消息 + 日志 | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET/POST /api/outbox`, `GET/POST /api/logs`, `GET/POST /api/logs/tail` |
+| Workspace 设置 | `GET/POST /api/workspaces/<name>/config` |
 
 ## 🧪 示例
 ### AAPS 示例
@@ -486,7 +487,7 @@ scripts/pipeline_codegen/smoke_codegen.sh
 export AUTOAPPDEV_PIPELINE_SCRIPT=scripts/pipeline_demo.sh
 conda run -n autoappdev python -m backend.app
 ```
-然后使用 PWA 的 Start/Pause/Resume/Stop 控件，并检查 `/api/logs`。
+然后使用 PWA 的 Start/Pause/Resume/Stop 控件并检查 `/api/logs`。
 
 ### 从带注释 shell 导入
 ```bash
@@ -500,51 +501,51 @@ JSON
 ```
 
 ## 🧱 开发说明
-- 后端基于 Tornado，针对本地开发体验设计（包括对 localhost 分端口的宽松 CORS）。
-- 存储层为 PostgreSQL 优先，并在 `backend/storage.py` 中提供兼容行为。
-- PWA 的 block key 与脚本 `STEP.block` 值有意保持一致（`plan`, `work`, `debug`, `fix`, `summary`, `commit_push`）。
+- 后端基于 Tornado，面向本地开发体验优化（包括 localhost 分端口时的宽松 CORS）。
+- 持久化以 PostgreSQL 为主，并在 `backend/storage.py` 中提供兼容回退。
+- PWA 的 block key 与脚本 `STEP.block` 值保持一致：`plan`、`work`、`debug`、`fix`、`summary`、`commit_push`。
 - 内置动作为只读；编辑前请先 clone。
-- `update_readme` action 受到路径安全约束，仅允许更新 `auto-apps/<workspace>/README.md` 下的工作区 README 目标。
-- 部分文档/脚本仍保留历史路径或命名（`HeyCyan`, `LightMind`），继承于项目演进过程。当前仓库规范路径是本仓库根目录。
-- 根目录 `i18n/` 已存在。多语言运行期望语言 README 文件放在此目录。
+- `update_readme` action 受到路径安全限制，仅允许更新 `auto-apps/<workspace>/README.md` 下的 workspace README 目标。
+- 某些文档/脚本中仍保留历史路径或命名（`HeyCyan`、`LightMind`），源于仓库演进。当前仓库的规范路径是本仓库根目录。
+- 根目录 `i18n/` 已存在；多语言 README 文件在 `i18n/` 下维护。
 
 ### 工作模型与状态文件
 - 运行时默认目录为 `./runtime`，可通过 `AUTOAPPDEV_RUNTIME_DIR` 覆盖。
-- 自研自动化状态/历史记录位于 `references/selfdev/`。
-- README 流水线工件记录在 `.auto-readme-work/<timestamp>/`。
+- self-dev 自动化状态与历史记录保存在 `references/selfdev/`。
+- README 流水线制品记录在 `.auto-readme-work/<timestamp>/`。
 
 ### 测试现状（当前）
-- 仓库包含 smoke 检查与确定性演示脚本。
-- 根元数据中目前未定义完整的顶层自动化测试套件/CI 清单。
-- 当前假设：验证主要由脚本驱动（`scripts/pipeline_codegen/smoke_*.sh`、`backend.db_smoketest`、端到端检查清单）。
+- 仓库包含 smoke 检查和确定性演示脚本。
+- 仓库根元数据尚未定义完整的顶层自动化测试套件/CI 清单。
+- 假设验证主要通过脚本驱动（`scripts/pipeline_codegen/smoke_*.sh`、`backend.db_smoketest`、端到端检查清单）。
 
 ## 🔐 安全说明
-- `update_readme` action 被有意限制为工作区 README 目标（`auto-apps/<workspace>/README.md`），并带有路径穿越防护。
-- Action 注册表校验会强制规范化 action spec 字段，并对支持的 reasoning level 值做边界限制。
-- 仓库脚本假设在可信本地环境执行；在共享环境或接近生产的环境运行前请先审阅脚本内容。
-- `.env` 可能包含敏感值（`DATABASE_URL`、API keys）。请勿提交 `.env`，并在本地开发之外使用环境级密钥管理。
+- `update_readme` action 有意限制到工作区 README 目标（`auto-apps/<workspace>/README.md`），并有路径穿越防护。
+- 动作注册表校验会对 action spec 字段进行规范化，并对支持的推理级别值进行边界控制。
+- 仓库脚本默认假设在可信本地环境执行；在共享或接近生产环境运行前请先审阅脚本。
+- `.env` 可能包含敏感值（`DATABASE_URL`、API keys）。请勿提交 `.env`，在本地开发之外使用合适的机密管理方式。
 
 ## 🔧 故障排查
 
-| 症状 | 检查项 |
+| 症状 | 排查要点 |
 | --- | --- |
-| `tmux not found` | 安装 `tmux`，或手动分别运行 backend/PWA。 |
-| 后端启动因缺少环境变量失败 | 对照 `.env.example` 与 `docs/env.md` 复查 `.env`。 |
-| 数据库错误（连接/认证/schema） | 检查 `DATABASE_URL`；重新执行 `conda run -n autoappdev python -m backend.apply_schema`；可选连通性检查：`conda run -n autoappdev python -m backend.db_smoketest`。 |
-| PWA 能打开但无法调用 API | 确认 backend 在预期 host/port 监听；重新执行 `./scripts/run_autoappdev_tmux.sh` 生成 `pwa/config.local.js`。 |
+| `tmux not found` | 安装 `tmux`，或手动分别启动 backend/PWA。 |
+| 后端启动因缺失环境变量失败 | 对照 `.env.example` 与 `docs/env.md` 复查 `.env`。 |
+| 数据库报错（连接/认证/schema） | 检查 `DATABASE_URL`；重跑 `conda run -n autoappdev python -m backend.apply_schema`；可选连接性检查：`conda run -n autoappdev python -m backend.db_smoketest`。 |
+| PWA 可打开但无法调用 API | 确认 backend 在预期 host/port 监听；重新运行 `./scripts/run_autoappdev_tmux.sh` 以重新生成 `pwa/config.local.js`。 |
 | Pipeline Start 返回 invalid transition | 先检查当前 pipeline 状态；从 `stopped` 状态启动。 |
-| UI 没有日志更新 | 确认 `runtime/logs/pipeline.log` 正在写入；直接调用 `/api/logs` 与 `/api/logs/tail` 以隔离 UI 或 backend 问题。 |
+| UI 无日志更新 | 确认 `runtime/logs/pipeline.log` 正在写入；直接使用 `/api/logs` 与 `/api/logs/tail` 定位是 UI 还是 backend 问题。 |
 | LLM parse endpoint 显示 disabled | 设置 `AUTOAPPDEV_ENABLE_LLM_PARSE=1` 并重启 backend。 |
-| `conda run -n autoappdev ...` 失败 | 重新执行 `./scripts/setup_autoappdev_env.sh`；确认 conda 环境 `autoappdev` 存在（`conda env list`）。 |
-| 前端 API 目标错误 | 确认 `pwa/config.local.js` 存在且指向当前 backend host/port。 |
+| `conda run -n autoappdev ...` 失败 | 重跑 `./scripts/setup_autoappdev_env.sh`；确认 conda 环境 `autoappdev` 存在（`conda env list`）。 |
+| 前端 API 指向错误 | 确认 `pwa/config.local.js` 存在并指向当前 backend host/port。 |
 
-如需确定性的手动验证路径，请使用 `docs/end-to-end-demo-checklist.md`。
+如果需要进行确定性手动验证路径，请使用 `docs/end-to-end-demo-checklist.md`。
 
 ## 🌐 README 与 i18n 工作流
-- 根 README 是 README 自动化流水线使用的规范来源。
-- 多语言变体应放在 `i18n/` 下。
-- i18n 目录状态：✅ 本仓库已存在。
-- 本仓库当前语言集合：
+- 根 README 是 README 自动化流水线的规范源。
+- 多语言变体应放在 `i18n/` 目录下。
+- i18n 目录状态：✅ 已在仓库中存在。
+- 当前仓库语言清单：
   - `i18n/README.ar.md`
   - `i18n/README.de.md`
   - `i18n/README.es.md`
@@ -555,18 +556,18 @@ JSON
   - `i18n/README.vi.md`
   - `i18n/README.zh-Hans.md`
   - `i18n/README.zh-Hant.md`
-- 每个 README 变体顶部都应保持单行语言导航（不要重复语言栏）。
+- 每个 README 变体顶部仅保留一条语言导航行（不重复）。
 - README 流水线入口：`prompt_tools/auto-readme-pipeline.sh`。
 
 ### i18n 生成约束（严格）
-- 更新规范 README 内容时，始终要处理多语言生成。
-- 逐个语言文件顺序生成/更新，不要批量混合处理。
-- 每个变体顶部保持且仅保持一条 language-options 导航行。
-- 不要在同一个文件中重复语言栏。
-- 在翻译中保留规范命令片段、链接、API 路径和徽章意图。
+- 更新根 README 内容时，始终执行多语言生成。
+- 逐个语言文件生成/更新（顺序执行，不要并行批量）。
+- 每个变体顶部保持且仅保持一条语言导航行。
+- 不要在同一文件重复语言栏。
+- 翻译时保持规范命令片段、链接、API 路径和徽章语义不变。
 
-建议逐个生成顺序：
-1. `README.md`（规范英文源）
+建议顺序：
+1. `README.md`
 2. `i18n/README.ar.md`
 3. `i18n/README.de.md`
 4. `i18n/README.es.md`
@@ -580,67 +581,67 @@ JSON
 
 语言覆盖表：
 
-| Language | File |
+| 语言 | 文件 |
 | --- | --- |
+
+## 📘 Readme 生成上下文
+
+- 流水线运行时间戳：`20260301_064935`
+- 触发条件：`./README.md` 首次完整草稿生成
+- 输入用户提示：`probe prompt`
+- 目标：生成完整、可读的 README 草稿，包含 required sections 与支持信息
+- 使用的源码快照：
+  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
+  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
+- 本文件基于仓库内容生成并作为规范起点。
 
 ## ❓ FAQ
 
 ### PostgreSQL 是必须的吗？
-正常运行场景下推荐且默认应使用 PostgreSQL。存储层包含回退兼容行为，但类生产使用应假设 `DATABASE_URL` 可用并指向 PostgreSQL。
+推荐并且预计在正常运行时使用 PostgreSQL。存储层包含兼容回退，但生产类场景应假设 `DATABASE_URL` 可用并指向 PostgreSQL。
 
 ### 为什么同时有 `AUTOAPPDEV_PORT` 和 `PORT`？
-`AUTOAPPDEV_PORT` 是项目专用变量。`PORT` 作为更通用的部署别名存在。除非你有意在启动路径中覆盖行为，否则应保持两者一致。
+`AUTOAPPDEV_PORT` 是项目专用变量；`PORT` 则是更通用的部署友好别名。除非有意覆盖启动路径行为，否则应保持二者一致。
 
-### 如果我只想查看 API，从哪里开始？
-仅启动 backend（`conda run -n autoappdev python -m backend.app`），然后依次访问 `/api/health`、`/api/version`、`/api/config`，再查看 `docs/api-contracts.md` 中列出的 script/action 端点。
+### 只想查看 API 应该从哪里开始？
+仅启动 backend（`conda run -n autoappdev python -m backend.app`），先访问 `/api/health`、`/api/version`、`/api/config`，再使用 `docs/api-contracts.md` 中列出的 script/action 端点。
 
 ### 多语言 README 会自动生成吗？
-会。仓库包含 `prompt_tools/auto-readme-pipeline.sh`，语言变体维护在 `i18n/` 下，并在每个变体顶部保留单行语言导航。
+会。仓库包含 `prompt_tools/auto-readme-pipeline.sh`，语言变体维护在 `i18n/`，且每个文件顶部都保留一条语言导航。
 
 ## 🗺️ 路线图
-- 完成当前 `51 / 55` 之外的剩余 self-dev 任务。
-- 扩展 workspace/materials/context 工具与更强的安全路径契约。
-- 继续改进 action palette UX 与可编辑 action 工作流。
-- 持续增强 `i18n/` 与运行时语言切换的多语言 README/UI 支持。
-- 强化 smoke/integration 检查与 CI 覆盖（当前已有脚本驱动 smoke 检查；根目录尚无完整 CI 清单文档）。
-- 持续加固围绕 AAPS v1 与规范 IR 的 parser/import/codegen 确定性。
+- 完成当前 `51 / 55` 之外的 remaining self-dev 任务。
+- 扩展 workspace/materials/context 工具与更严格的安全路径约束。
+- 继续改进 action palette 的 UX 与可编辑动作流程。
+- 加强 `i18n/` 与运行时语言切换的多语言 README/UI 支持。
+- 强化 smoke/integration 检查与 CI 覆盖（目前已有脚本驱动的 smoke 检查，根目录尚无完整 CI 清单）。
+- 围绕 AAPS v1 与标准 IR 进一步固化 parser/import/codegen 的确定性。
 
 ## 🤝 贡献
-欢迎通过 issue 和 pull request 参与贡献。
+欢迎通过 issue 与 pull request 参与贡献。
 
 建议流程：
 1. Fork 并创建功能分支。
-2. 保持改动聚焦且可复现。
-3. 尽可能优先使用确定性脚本/测试。
-4. 当行为/契约变化时同步更新文档（`docs/*`、API 契约、示例）。
-5. 提交 PR 时附上背景、验证步骤与任何运行时假设。
+2. 保持改动聚焦、可复现。
+3. 尽可能优先采用确定性脚本和测试。
+4. 行为或契约变化时同步更新文档（`docs/*`、API 契约、示例）。
+5. 提交 PR 时附上上下文、验证步骤与运行时假设。
 
-当前仓库远程包含：
+仓库远程目前包括：
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
-- 在本地克隆中可能还存在与相关仓库关联的附加 remote（本工作区示例：`novel`）。
+- 本地克隆中可能还包含与相关仓库关联的附加 remote（本工作区示例：`novel`）。
+
+## 📄 许可证
+![License](https://img.shields.io/badge/License-Not%20Detected-C53030?logo=law&logoColor=white)
+
+当前仓库快照未检测到根目录 `LICENSE` 文件。
+
+说明：
+- 在添加许可证文件前，视使用和再分发条款为未明确，并向维护者确认。
+
 
 ## ❤️ Support
 
 | Donate | PayPal | Stripe |
-|---|---|---|
-| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
-
-![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
-![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
-![Maintained](https://img.shields.io/badge/Maintained-Yes-0e9f6e)
-
-## 📄 许可证
-当前仓库快照中未检测到根目录 `LICENSE` 文件。
-
-假设说明：
-- 在补充许可证文件前，请将使用/再分发条款视为未明确，并与维护者确认。
-
-## ❤️ 赞助与捐赠
-| 渠道 | 链接 |
-| --- | --- |
-| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
-| Donate | https://chat.lazying.art/donate |
-| PayPal | https://paypal.me/RongzhouChen |
-| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
-
-如果这个项目对你的工作流有帮助，赞助将直接支持持续的 self-dev 任务、文档质量提升和工具链加固。
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |

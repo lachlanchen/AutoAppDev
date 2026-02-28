@@ -2,6 +2,7 @@
 
 
 
+
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 
@@ -85,7 +86,6 @@
 - [🤝 المساهمة](#-contributing)
 - [❤️ Support](#-support)
 - [📄 الترخيص](#-license)
-- [❤️ الرعاية والتبرع](#-sponsor--donate)
 
 ## 🚀 نظرة عامة
 AutoAppDev هو مشروع متحكم لخطوط تطوير تطبيقات طويلة التشغيل وقابلة للاستئناف. يجمع بين:
@@ -619,27 +619,15 @@ JSON
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - قد توجد remotes إضافية في النسخ المحلية للمستودعات ذات الصلة (مثال موجود في workspace هذا: `novel`).
 
-## ❤️ Support
-| Donate | PayPal | Stripe |
-|---|---|---|
-| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
-
-![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
-![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
-![Maintained](https://img.shields.io/badge/Maintained-Yes-0e9f6e)
-
 ## 📄 الترخيص
 لم يتم اكتشاف ملف `LICENSE` في جذر هذه اللقطة من المستودع.
 
 ملاحظة افتراضية:
 - حتى يتم إضافة ملف ترخيص، اعتبر شروط الاستخدام/إعادة التوزيع غير محددة وتحقق منها مع مسؤول الصيانة.
 
-## ❤️ Sponsor & Donate
-| القناة | الرابط |
-| --- | --- |
-| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
-| Donate | https://chat.lazying.art/donate |
-| PayPal | https://paypal.me/RongzhouChen |
-| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
 
-إذا كان هذا المشروع يساعد سير عملك، فإن الرعاية تدعم مباشرة مهام التطوير الذاتي المستمرة، وجودة الوثائق، وتقوية الأدوات.
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |

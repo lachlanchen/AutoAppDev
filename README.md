@@ -2,6 +2,7 @@
 
 
 
+
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
@@ -17,12 +18,17 @@
 ![Automation](https://img.shields.io/badge/Automation-README%20Pipeline-f97316)
 ![API](https://img.shields.io/badge/API-JSON%20HTTP-0ea5e9)
 ![State Machine](https://img.shields.io/badge/Lifecycle-start%2Fpause%2Fresume%2Fstop-f59e0b)
+![Control Flow](https://img.shields.io/badge/Control%20Flow-Plan%20%E2%86%92%20Work%20%E2%86%92%20Verify%20%E2%86%92%20Summary-0f766e)
+
+---
 
 Reusable scripts + guides for building apps step-by-step from screenshots/markdown with Codex as a non-interactive tool.
 
 > 🎯 **Mission:** Make app-development pipelines deterministic, resumable, and artifact-driven.
 >
 > 🧩 **Design principle:** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+---
 
 ### 🎛️ Project Signals
 
@@ -79,12 +85,22 @@ Do not edit content between the markers.
 - [🔐 Safety Notes](#-safety-notes)
 - [🔧 Troubleshooting](#-troubleshooting)
 - [🌐 README & i18n Workflow](#-readme--i18n-workflow)
+- [📘 Readme Generation Context](#-readme-generation-context)
 - [❓ FAQ](#-faq)
 - [🗺️ Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
 - [❤️ Support](#-support)
 - [📄 License](#-license)
-- [❤️ Sponsor & Donate](#-sponsor--donate)
+
+## 🧭 Repository Snapshot
+
+| Focus | Current setup |
+| --- | --- |
+| Core loop | Plan → Work → Debug → Fix → Summary → Commit/Push |
+| Runtime model | Tornado backend + static PWA controller |
+| State machine | `start` / `pause` / `resume` / `stop` |
+| Persistence | PostgreSQL-first with JSON fallback compatibility |
+| Documentation | Canonical `README.md` plus multilingual `i18n/` outputs |
 
 ## 🚀 Overview
 AutoAppDev is a controller project for long-running, resumable app-development pipelines. It combines:
@@ -452,7 +468,7 @@ Core API groups at a glance:
 | Scripts | `GET/POST /api/scripts`, `GET/PUT/DELETE /api/scripts/<id>`, `POST /api/scripts/parse`, `POST /api/scripts/import-shell`, `POST /api/scripts/parse-llm` |
 | Action registry | `GET/POST /api/actions`, `GET/PUT/DELETE /api/actions/<id>`, `POST /api/actions/<id>/clone`, `POST /api/actions/update-readme` |
 | Pipeline runtime | `GET /api/pipeline`, `GET /api/pipeline/status`, `POST /api/pipeline/start`, `POST /api/pipeline/pause`, `POST /api/pipeline/resume`, `POST /api/pipeline/stop` |
-| Messaging + logs | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET /api/outbox`, `GET /api/logs`, `GET /api/logs/tail` |
+| Messaging + logs | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET/POST /api/outbox`, `GET/POST /api/logs`, `GET /api/logs/tail` |
 | Workspace settings | `GET/POST /api/workspaces/<name>/config` |
 
 ## 🧪 Examples
@@ -582,6 +598,17 @@ Language coverage table:
 | Language | File |
 | --- | --- |
 
+## 📘 Readme Generation Context
+
+- Pipeline run timestamp: `20260301_064935`
+- Trigger: `./README.md` first complete draft generation
+- Input user prompt: `probe prompt`
+- Goal: generate a complete, beautiful README draft with required sections and support information
+- Source snapshot used:
+  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
+  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
+- This file was generated from repository contents and preserved as a canonical draft entry point.
+
 ## ❓ FAQ
 
 ### Is PostgreSQL mandatory?
@@ -618,28 +645,18 @@ Repository remotes currently include:
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - Additional remotes may be present in local clones for related repositories (example found in this workspace: `novel`).
 
+---
+
 ## ❤️ Support
 
 | Donate | PayPal | Stripe |
-|---|---|---|
-| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
-
-![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
-![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
-![Maintained](https://img.shields.io/badge/Maintained-Yes-0e9f6e)
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 ## 📄 License
+![License](https://img.shields.io/badge/License-Not%20Detected-C53030?logo=law&logoColor=white)
+
 No root `LICENSE` file was detected in this repository snapshot.
 
 Assumption note:
 - Until a license file is added, treat usage/redistribution terms as unspecified and confirm with the maintainer.
-
-## ❤️ Sponsor & Donate
-| Channel | Link |
-| --- | --- |
-| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
-| Donate | https://chat.lazying.art/donate |
-| PayPal | https://paypal.me/RongzhouChen |
-| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
-
-If this project helps your workflow, sponsorship directly supports continued self-dev tasks, docs quality, and tooling hardening.

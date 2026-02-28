@@ -17,12 +17,17 @@
 ![Automation](https://img.shields.io/badge/Automation-README%20Pipeline-f97316)
 ![API](https://img.shields.io/badge/API-JSON%20HTTP-0ea5e9)
 ![State Machine](https://img.shields.io/badge/Lifecycle-start%2Fpause%2Fresume%2Fstop-f59e0b)
+![Control Flow](https://img.shields.io/badge/Control%20Flow-Plan%20%E2%86%92%20Work%20%E2%86%92%20Verify%20%E2%86%92%20Summary-0f766e)
+
+---
 
 Wiederverwendbare Skripte und Leitfäden, um Apps schrittweise aus Screenshots/Markdown zu erstellen, wobei Codex als nicht-interaktives Tool eingesetzt wird.
 
 > 🎯 **Mission:** App-Entwicklungs-Pipelines deterministisch, fortsetzbar und artefaktgetrieben machen.
 >
 > 🧩 **Designprinzip:** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+---
 
 ### 🎛️ Projektsignale
 
@@ -79,12 +84,12 @@ Inhalte zwischen den Markern nicht manuell bearbeiten.
 - [🔐 Sicherheitshinweise](#-safety-notes)
 - [🔧 Troubleshooting](#-troubleshooting)
 - [🌐 README & i18n Workflow](#-readme--i18n-workflow)
+- [📘 Readme Generation Context](#-readme-generation-context)
 - [❓ FAQ](#-faq)
 - [🗺️ Roadmap](#-roadmap)
 - [🤝 Mitwirken](#-contributing)
 - [❤️ Support](#-support)
 - [📄 Lizenz](#-license)
-- [❤️ Sponsor & Donate](#-sponsor--donate)
 
 ## 🚀 Überblick
 AutoAppDev ist ein Controller-Projekt für langlebige, fortsetzbare App-Entwicklungs-Pipelines. Es kombiniert:
@@ -114,7 +119,7 @@ AutoAppDev behandelt Agents als Werkzeuge und stabilisiert die Arbeit über eine
 5. Summarize + log
 6. Commit + push
 
-Die Controller-App soll dieselben Konzepte als Scratch-ähnliche Blöcke/Aktionen verkörpern (einschließlich einer gemeinsamen `update_readme`-Aktion), damit jeder Workspace aktuell und reproduzierbar bleibt.
+Die Controller-App soll dieselben Konzepte als Scratch-ähnliche Blöcke/Aktionen verkörpern (einschließlich einer gemeinsamen `update_readme`-Action), damit jeder Workspace aktuell und reproduzierbar bleibt.
 
 ### 🔁 Zielbild der Lifecycle-States
 
@@ -139,7 +144,7 @@ Die Controller-App soll dieselben Konzepte als Scratch-ähnliche Blöcke/Aktione
   - Outbox (`/api/outbox`) inkl. File-Queue-Ingestion aus `runtime/outbox`.
 - Inkrementelles Log-Streaming aus Backend- und Pipeline-Logs (`/api/logs`, `/api/logs/tail`).
 - Deterministische Runner-Codegenerierung aus kanonischer IR (`scripts/pipeline_codegen/generate_runner_from_ir.py`).
-- Self-Dev-Treiber für iterative Repository-Weiterentwicklung (`scripts/auto-autoappdev-development.sh`).
+- Self-dev-Treiber für iterative Repository-Weiterentwicklung (`scripts/auto-autoappdev-development.sh`).
 - README-Automatisierungspipeline mit mehrsprachigem Gerüst unter `i18n/`.
 
 ## 📌 Auf einen Blick
@@ -251,7 +256,7 @@ AutoAppDev/
 - PostgreSQL erreichbar über `DATABASE_URL`.
 - Optional: `codex` CLI für Codex-gestützte Flows (Self-Dev, parse-llm-Fallback, Auto-README-Pipeline).
 
-Schnelle Anforderungsmatrix:
+Quick requirement matrix:
 
 | Komponente | Erforderlich | Zweck |
 | --- | --- | --- |
@@ -452,7 +457,7 @@ Kern-API-Gruppen auf einen Blick:
 | Scripts | `GET/POST /api/scripts`, `GET/PUT/DELETE /api/scripts/<id>`, `POST /api/scripts/parse`, `POST /api/scripts/import-shell`, `POST /api/scripts/parse-llm` |
 | Action Registry | `GET/POST /api/actions`, `GET/PUT/DELETE /api/actions/<id>`, `POST /api/actions/<id>/clone`, `POST /api/actions/update-readme` |
 | Pipeline-Laufzeit | `GET /api/pipeline`, `GET /api/pipeline/status`, `POST /api/pipeline/start`, `POST /api/pipeline/pause`, `POST /api/pipeline/resume`, `POST /api/pipeline/stop` |
-| Messaging + Logs | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET /api/outbox`, `GET /api/logs`, `GET /api/logs/tail` |
+| Messaging + Logs | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET/POST /api/outbox`, `GET/POST /api/logs`, `GET/POST /api/logs/tail` |
 | Workspace-Einstellungen | `GET/POST /api/workspaces/<name>/config` |
 
 ## 🧪 Beispiele
@@ -513,7 +518,7 @@ JSON
 - Self-Dev-Automationsstatus/-historie wird unter `references/selfdev/` geführt.
 - README-Pipeline-Artefakte werden unter `.auto-readme-work/<timestamp>/` abgelegt.
 
-### Test-Status (aktuell)
+### Test-Posten (aktuell)
 - Das Repository enthält Smoke-Checks und deterministische Demo-Skripte.
 - Eine vollständige top-level Test-Suite/CI-Manifest ist in den Root-Metadaten aktuell nicht definiert.
 - Annahme: Verifikation ist derzeit primär skriptgetrieben (`scripts/pipeline_codegen/smoke_*.sh`, `backend.db_smoketest`, End-to-End-Checkliste).
@@ -582,6 +587,17 @@ Sprachabdeckungstabelle:
 | Sprache | Datei |
 | --- | --- |
 
+## 📘 Readme Generation Context
+
+- Pipeline-Durchlauf-Zeitstempel: `20260301_064935`
+- Auslöser: `./README.md`
+- Eingabe-User-Prompt: `probe prompt`
+- Ziel: vollständigen, schön formatierten README-Entwurf mit erforderlichen Abschnitten und Support-Informationen erzeugen
+- Eingabesnapshot verwendet:
+  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
+  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
+- Diese Datei wurde aus Repository-Inhalten generiert und als kanonischer Eingangs-Entwurf gespeichert.
+
 ## ❓ FAQ
 
 ### Ist PostgreSQL zwingend?
@@ -618,28 +634,18 @@ Repository-Remotes enthalten derzeit:
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - Zusätzliche Remotes können in lokalen Klonen vorhanden sein (Beispiel in diesem Workspace: `novel`).
 
+---
+
 ## ❤️ Support
 
 | Donate | PayPal | Stripe |
-|---|---|---|
-| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
-![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
-![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
-![Maintained](https://img.shields.io/badge/Maintained-Yes-0e9f6e)
+## 📄 License
+![License](https://img.shields.io/badge/License-Not%20Detected-C53030?logo=law&logoColor=white)
 
-## 📄 Lizenz
-In diesem Repository-Snapshot wurde keine `LICENSE`-Datei im Root gefunden.
+Im Snapshot dieses Repositories wurde keine `LICENSE`-Datei im Root gefunden.
 
-Hinweis zur Annahme:
+Annahmehinweis:
 - Bis eine Lizenzdatei ergänzt wird, gelten Nutzungs-/Weitergabebedingungen als nicht spezifiziert und sollten mit dem Maintainer geklärt werden.
-
-## ❤️ Sponsor & Donate
-| Channel | Link |
-| --- | --- |
-| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
-| Donate | https://chat.lazying.art/donate |
-| PayPal | https://paypal.me/RongzhouChen |
-| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
-
-Wenn dieses Projekt deinen Workflow unterstützt, trägt Sponsoring direkt zur Fortführung von Self-Dev-Tasks, zur Dokumentationsqualität und zur Härtung der Tooling-Bausteine bei.
