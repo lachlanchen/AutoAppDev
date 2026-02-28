@@ -41,9 +41,12 @@ Required actions:
 
 README requirements:
 - Markdown only.
+- Read the existing README first (if present) and use it as the primary source of truth before restructuring.
 - Include: title, badges/placeholders if relevant, overview, features, project structure, prerequisites, installation, usage, configuration, examples, development notes, troubleshooting, roadmap, contribution, license.
 - Prefer repository-accurate commands and paths.
 - If information is unknown, state assumptions clearly.
+- Do not over-simplify: preserve substantive technical details, links, commands, and important sections from the existing README.
+- Preserve donation/sponsor/support information if present.
 
 Important:
 - This step writes only the README file above.

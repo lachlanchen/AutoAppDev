@@ -37,10 +37,13 @@ Required action:
 - Rewrite and improve $readme_path in-place.
 
 Beautification requirements:
+- Keep the existing README structure and depth unless a change clearly improves clarity.
 - Keep content repository-accurate.
 - Make layout more attractive with tasteful emojis, tables, and visual sectioning.
 - Add color cues using Markdown-compatible badge styles (e.g., shields.io) where useful.
 - Keep readability high; avoid decorative noise.
+- Preserve meaningful technical detail; do not collapse rich README content into a short summary.
+- Preserve donation/sponsor/support sections and important links if they already exist.
 
 Important:
 - Update only the README file above.
