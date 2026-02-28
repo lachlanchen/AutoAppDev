@@ -107,26 +107,33 @@ echo "[3/5] Beautify README"
 
 echo "[4/5] Generate multilingual READMEs"
 : > "$translated_files_file"
-while IFS='|' read -r lang_code lang_label output_name; do
-  [[ -n "${output_name:-}" ]] || continue
-  output_path="$repo_path/$output_name"
-  step_note="Translating README into $lang_label ($lang_code) as part of multilingual batch generation."
-  "$translate_tool" \
-    "$repo_path" \
-    "$user_prompt" \
-    "$pipeline_context_file" \
-    "$readme_path" \
-    "$lang_label" \
-    "$lang_code" \
-    "$output_path" \
-    "$language_nav_line" \
-    "$step_note"
-  printf '%s\n' "$output_name" >> "$translated_files_file"
-done < "$translation_plan_file"
+if [[ "$i18n_mode" -eq 1 ]]; then
+  while IFS='|' read -r lang_code lang_label output_name; do
+    [[ -n "${output_name:-}" ]] || continue
+    output_path="$repo_path/$output_name"
+    step_note="Translating README into $lang_label ($lang_code) as part of multilingual batch generation."
+    "$translate_tool" \
+      "$repo_path" \
+      "$user_prompt" \
+      "$pipeline_context_file" \
+      "$readme_path" \
+      "$lang_label" \
+      "$lang_code" \
+      "$output_path" \
+      "$language_nav_line" \
+      "$step_note"
+    printf '%s\n' "$output_name" >> "$translated_files_file"
+  done < "$translation_plan_file"
+else
+  echo "No i18n folder detected; skip multilingual generation."
+fi
 
 echo "[5/6] Insert language link bar into all README variants"
 (
   cd "$repo_path"
+  if [[ "$i18n_mode" -ne 1 ]]; then
+    exit 0
+  fi
   files=(README.md)
   if [[ "$i18n_mode" -eq 1 ]]; then
     while IFS= read -r p; do
@@ -226,12 +233,6 @@ if [[ "$commit_and_push" == "--commit-and-push" ]]; then
       fi
     else
       git add README.md
-      while IFS= read -r rel; do
-        [[ -n "${rel:-}" ]] || continue
-        if [[ -f "$rel" ]]; then
-          git add "$rel"
-        fi
-      done < "$translated_files_file"
     fi
     if git diff --cached --quiet; then
       echo "No README changes to commit."
