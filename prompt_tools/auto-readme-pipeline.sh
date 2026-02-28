@@ -77,28 +77,18 @@ cat > "$pipeline_context_file" <<CTX
 - Each step must remain self-contained and not depend on prior session memory.
 CTX
 
-default_plan=$'en|English|README.en.md\nar|Arabic|README.ar.md\nes|Spanish|README.es.md\nfr|French|README.fr.md\nja|Japanese|README.ja.md\nko|Korean|README.ko.md\nvi|Vietnamese|README.vi.md\nzh-CN|Chinese Simplified|README.zh-CN.md\nzh-TW|Chinese Traditional|README.zh-TW.md\nde|Deutsch|README.de.md\nru|Russian|README.ru.md'
 i18n_plan=$'ar|Arabic|i18n/README.ar.md\nes|Spanish|i18n/README.es.md\nfr|French|i18n/README.fr.md\nja|Japanese|i18n/README.ja.md\nko|Korean|i18n/README.ko.md\nvi|Vietnamese|i18n/README.vi.md\nzh-Hans|Chinese Simplified|i18n/README.zh-Hans.md\nzh-Hant|Chinese Traditional|i18n/README.zh-Hant.md\nde|Deutsch|i18n/README.de.md\nru|Russian|i18n/README.ru.md'
 
-i18n_mode=0
-if compgen -G "$repo_path/i18n/README.*.md" > /dev/null; then
-  i18n_mode=1
-fi
-
-if [[ "$i18n_mode" -eq 1 ]]; then
-  printf '%s\n' "$i18n_plan" > "$translation_plan_file"
-else
-  printf '%s\n' "$default_plan" > "$translation_plan_file"
-fi
+# Always run multilingual mode; create i18n when missing.
+i18n_mode=1
+mkdir -p "$repo_path/i18n"
+printf '%s\n' "$i18n_plan" > "$translation_plan_file"
 
 # Build canonical nav lines (no "Languages:" label).
 root_nav_line='[English](README.md) · [العربية](i18n/README.ar.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Tiếng Việt](i18n/README.vi.md) · [中文 (简体)](i18n/README.zh-Hans.md) · [中文（繁體）](i18n/README.zh-Hant.md) · [Deutsch](i18n/README.de.md) · [Русский](i18n/README.ru.md)'
 i18n_nav_line='[English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)'
 
-language_nav_line="$root_nav_line"
-if [[ "$i18n_mode" -eq 1 ]]; then
-  language_nav_line="$i18n_nav_line"
-fi
+language_nav_line="$i18n_nav_line"
 root_nav_block_file="$work_dir/language-nav-root.md"
 i18n_nav_block_file="$work_dir/language-nav-i18n.md"
 printf '%s\n' "$root_nav_line" > "$root_nav_block_file"
@@ -115,45 +105,31 @@ echo "[3/5] Beautify README"
 
 echo "[4/5] Generate multilingual READMEs"
 : > "$translated_files_file"
-if [[ "$i18n_mode" -eq 1 ]]; then
-  while IFS='|' read -r lang_code lang_label output_name; do
-    [[ -n "${output_name:-}" ]] || continue
-    output_path="$repo_path/$output_name"
-    step_note="Translating README into $lang_label ($lang_code) as part of multilingual batch generation."
-    "$translate_tool" \
-      "$repo_path" \
-      "$user_prompt" \
-      "$pipeline_context_file" \
-      "$readme_path" \
-      "$lang_label" \
-      "$lang_code" \
-      "$output_path" \
-      "$language_nav_line" \
-      "$step_note"
-    printf '%s\n' "$output_name" >> "$translated_files_file"
-  done < "$translation_plan_file"
-else
-  echo "No i18n folder detected; skip multilingual generation."
-fi
+while IFS='|' read -r lang_code lang_label output_name; do
+  [[ -n "${output_name:-}" ]] || continue
+  output_path="$repo_path/$output_name"
+  step_note="Translating README into $lang_label ($lang_code) as part of multilingual batch generation."
+  "$translate_tool" \
+    "$repo_path" \
+    "$user_prompt" \
+    "$pipeline_context_file" \
+    "$readme_path" \
+    "$lang_label" \
+    "$lang_code" \
+    "$output_path" \
+    "$language_nav_line" \
+    "$step_note"
+  printf '%s\n' "$output_name" >> "$translated_files_file"
+done < "$translation_plan_file"
 
 echo "[5/6] Insert language link bar into all README variants"
 (
   cd "$repo_path"
-  if [[ "$i18n_mode" -ne 1 ]]; then
-    exit 0
-  fi
   files=(README.md)
-  if [[ "$i18n_mode" -eq 1 ]]; then
-    while IFS= read -r p; do
-      rel="${p#"$repo_path"/}"
-      files+=("$rel")
-    done < <(find "$repo_path/i18n" -maxdepth 1 -type f -name 'README.*.md' | sort)
-  else
-    while IFS= read -r rel; do
-      [[ -n "${rel:-}" ]] || continue
-      files+=("$rel")
-    done < "$translated_files_file"
-  fi
+  while IFS= read -r p; do
+    rel="${p#"$repo_path"/}"
+    files+=("$rel")
+  done < <(find "$repo_path/i18n" -maxdepth 1 -type f -name 'README.*.md' | sort)
   for f in "${files[@]}"; do
     if [[ ! -f "$f" ]]; then
       continue
@@ -236,14 +212,10 @@ if [[ "$commit_and_push" == "--commit-and-push" ]]; then
     # Ensure no pre-existing staged changes leak into this auto commit.
     git reset >/dev/null
 
-    if [[ "$i18n_mode" -eq 1 ]]; then
-      git add README.md i18n/README.*.md
-      # Stage removals of any root README.<lang>.md files after normalization.
-      if compgen -G "$repo_path/README.*.md" > /dev/null; then
-        git add -A README.*.md
-      fi
-    else
-      git add README.md
+    git add README.md i18n/README.*.md
+    # Stage removals of any root README.<lang>.md files after normalization.
+    if compgen -G "$repo_path/README.*.md" > /dev/null; then
+      git add -A README.*.md
     fi
 
     # Safety guard: only allow README targets in this auto commit.
