@@ -26,12 +26,15 @@ if [[ ! -d "$repo_path/.git" ]]; then
   exit 1
 fi
 
-# Safety guard: never run on repos with tracked-file changes already present.
-# This prevents accidental inclusion of unrelated staged/unstaged changes.
-if ! git -C "$repo_path" diff --quiet || ! git -C "$repo_path" diff --cached --quiet; then
-  echo "Refusing to run: repo has existing tracked-file changes: $repo_path"
-  echo "Please commit/stash/reset first, then rerun."
-  exit 2
+# Safety guard: by default, refuse dirty tracked repos.
+# Set AUTO_README_ALLOW_DIRTY=1 to bypass this guard intentionally.
+if [[ "${AUTO_README_ALLOW_DIRTY:-0}" != "1" ]]; then
+  if ! git -C "$repo_path" diff --quiet || ! git -C "$repo_path" diff --cached --quiet; then
+    echo "Refusing to run: repo has existing tracked-file changes: $repo_path"
+    echo "Please commit/stash/reset first, then rerun."
+    echo "Or set AUTO_README_ALLOW_DIRTY=1 to bypass."
+    exit 2
+  fi
 fi
 
 auto_dir="$script_dir/auto-readme"
