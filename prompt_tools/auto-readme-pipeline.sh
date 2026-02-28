@@ -228,7 +228,9 @@ if [[ "$commit_and_push" == "--commit-and-push" ]]; then
     if [[ "$i18n_mode" -eq 1 ]]; then
       git add README.md i18n/README.*.md
       # Stage removals of any root README.<lang>.md files after normalization.
-      git add -A README.*.md
+      if compgen -G "$repo_path/README.*.md" > /dev/null; then
+        git add -A README.*.md
+      fi
     else
       git add README.md
       while IFS= read -r rel; do
