@@ -69,7 +69,8 @@ cat > "$pipeline_context_file" <<CTX
 - Each step must remain self-contained and not depend on prior session memory.
 CTX
 
-default_plan=$'en|English|README.en.md\nzh-TW|Chinese Traditional|README.zh-TW.md\nzh-CN|Chinese Simplified|README.zh-CN.md\nja|Japanese|README.ja.md\nko|Korean|README.ko.md\nvi|Vietnamese|README.vi.md\nar|Arabic|README.ar.md\nfr|French|README.fr.md\nes|Spanish|README.es.md\nde|Deutsch|README.de.md\nru|Russian|README.ru.md'
+default_plan=$'en|English|README.en.md\nar|Arabic|README.ar.md\nes|Spanish|README.es.md\nfr|French|README.fr.md\nja|Japanese|README.ja.md\nko|Korean|README.ko.md\nvi|Vietnamese|README.vi.md\nzh-CN|Chinese Simplified|README.zh-CN.md\nzh-TW|Chinese Traditional|README.zh-TW.md\nde|Deutsch|README.de.md\nru|Russian|README.ru.md'
+i18n_plan=$'ar|Arabic|i18n/README.ar.md\nes|Spanish|i18n/README.es.md\nfr|French|i18n/README.fr.md\nja|Japanese|i18n/README.ja.md\nko|Korean|i18n/README.ko.md\nvi|Vietnamese|i18n/README.vi.md\nzh-Hans|Chinese Simplified|i18n/README.zh-Hans.md\nzh-Hant|Chinese Traditional|i18n/README.zh-Hant.md\nde|Deutsch|i18n/README.de.md\nru|Russian|i18n/README.ru.md'
 
 i18n_mode=0
 if compgen -G "$repo_path/i18n/README.*.md" > /dev/null; then
@@ -77,74 +78,23 @@ if compgen -G "$repo_path/i18n/README.*.md" > /dev/null; then
 fi
 
 if [[ "$i18n_mode" -eq 1 ]]; then
-  : > "$translation_plan_file"
-  while IFS= read -r p; do
-    f="$(basename "$p")"
-    suffix="${f#README.}"
-    suffix="${suffix%.md}"
-    case "$suffix" in
-      zh-Hant|zh-TW) code="zh-Hant"; label="Chinese Traditional" ;;
-      zh-Hans|zh-CN) code="zh-Hans"; label="Chinese Simplified" ;;
-      ja) code="ja"; label="Japanese" ;;
-      ko) code="ko"; label="Korean" ;;
-      vi) code="vi"; label="Vietnamese" ;;
-      ar) code="ar"; label="Arabic" ;;
-      fr) code="fr"; label="French" ;;
-      es) code="es"; label="Spanish" ;;
-      de) code="de"; label="Deutsch" ;;
-      ru) code="ru"; label="Russian" ;;
-      en) code="en"; label="English" ;;
-      *) code="$suffix"; label="$suffix" ;;
-    esac
-    # In i18n mode, skip English variant to avoid duplicate root/i18n English files.
-    if [[ "$code" == "en" ]]; then
-      continue
-    fi
-    printf '%s|%s|i18n/%s\n' "$code" "$label" "$f" >> "$translation_plan_file"
-  done < <(find "$repo_path/i18n" -maxdepth 1 -type f -name 'README.*.md' | sort)
+  printf '%s\n' "$i18n_plan" > "$translation_plan_file"
 else
   printf '%s\n' "$default_plan" > "$translation_plan_file"
 fi
 
-# Build language nav line/block from plan (single canonical top nav).
-declare -a nav_items
-nav_items=("[English](README.md)")
+# Build canonical nav lines (no "Languages:" label).
+root_nav_line='[English](README.md) · [العربية](i18n/README.ar.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Tiếng Việt](i18n/README.vi.md) · [中文 (简体)](i18n/README.zh-Hans.md) · [中文（繁體）](i18n/README.zh-Hant.md) · [Deutsch](i18n/README.de.md) · [Русский](i18n/README.ru.md)'
+i18n_nav_line='[English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)'
+
+language_nav_line="$root_nav_line"
 if [[ "$i18n_mode" -eq 1 ]]; then
-  nav_items=("[English](../README.md)")
+  language_nav_line="$i18n_nav_line"
 fi
-while IFS='|' read -r lang_code lang_label output_name; do
-  [[ -n "${output_name:-}" ]] || continue
-  href="$output_name"
-  if [[ "$i18n_mode" -eq 1 ]]; then
-    href="$(basename "$output_name")"
-  fi
-  case "$lang_code" in
-    zh-Hant|zh-TW) text="中文（繁體）" ;;
-    zh-Hans|zh-CN) text="中文 (简体)" ;;
-    ja) text="日本語" ;;
-    ko) text="한국어" ;;
-    vi) text="Tiếng Việt" ;;
-    ar) text="العربية" ;;
-    fr) text="Français" ;;
-    es) text="Español" ;;
-    de) text="Deutsch" ;;
-    ru) text="Русский" ;;
-    en) text="English" ;;
-    *) text="$lang_label" ;;
-  esac
-  nav_items+=("[$text]($href)")
-done < "$translation_plan_file"
-
-language_nav_line="**Languages:** "
-for i in "${!nav_items[@]}"; do
-  if [[ "$i" -gt 0 ]]; then
-    language_nav_line+=" · "
-  fi
-  language_nav_line+="${nav_items[$i]}"
-done
-language_nav_block_file="$work_dir/language-nav-block.html"
-
-printf '%s\n' "$language_nav_line" > "$language_nav_block_file"
+root_nav_block_file="$work_dir/language-nav-root.md"
+i18n_nav_block_file="$work_dir/language-nav-i18n.md"
+printf '%s\n' "$root_nav_line" > "$root_nav_block_file"
+printf '%s\n' "$i18n_nav_line" > "$i18n_nav_block_file"
 
 echo "[1/5] Analyze repository structure"
 "$structure_tool" "$repo_path" "$user_prompt" "$pipeline_context_file" "$structure_output_file"
@@ -177,15 +127,25 @@ done < "$translation_plan_file"
 echo "[5/6] Insert language link bar into all README variants"
 (
   cd "$repo_path"
-  nav_block="$(cat "$language_nav_block_file")"
   files=(README.md)
-  while IFS= read -r rel; do
-    [[ -n "${rel:-}" ]] || continue
-    files+=("$rel")
-  done < "$translated_files_file"
+  if [[ "$i18n_mode" -eq 1 ]]; then
+    while IFS='|' read -r _ _ rel; do
+      [[ -n "${rel:-}" ]] || continue
+      files+=("$rel")
+    done < "$translation_plan_file"
+  else
+    while IFS= read -r rel; do
+      [[ -n "${rel:-}" ]] || continue
+      files+=("$rel")
+    done < "$translated_files_file"
+  fi
   for f in "${files[@]}"; do
     if [[ ! -f "$f" ]]; then
       continue
+    fi
+    nav_block="$(cat "$root_nav_block_file")"
+    if [[ "$f" == i18n/* ]]; then
+      nav_block="$(cat "$i18n_nav_block_file")"
     fi
     tmp_file="$(mktemp)"
     awk '
@@ -194,8 +154,12 @@ echo "[5/6] Insert language link bar into all README variants"
         state = "prefix"
       }
       state == "prefix" {
+        if ($0 ~ /^[[:space:]]*Languages:/) { next }
         if ($0 ~ /^\*\*Languages:\*\*/) { next }
+        if ($0 ~ /\[English\]\(/ && $0 ~ /README\.md/ && $0 ~ /README\./) { next }
+        if ($0 ~ /(English|中文|日本語|한국어|Tiếng Việt|العربية|Français|Español|Deutsch|Русский)/ && $0 ~ /[·|]/) { next }
         if ($0 ~ /README(\.[a-zA-Z-]+)?\.md/ && $0 ~ /(English|中文|日本語|한국어|Tiếng Việt|العربية|Français|Español|Deutsch|Русский)/) { next }
+        if ($0 ~ /^\["'\''!\[/) { next }
         if ($0 == "") { next }
         if ($0 ~ /^<p([[:space:]][^>]*)?>$/) {
           in_block = 1
@@ -238,6 +202,7 @@ echo "[5/6] Insert language link bar into all README variants"
 
 echo "[6/7] Normalize i18n/root README layout"
 if [[ "$i18n_mode" -eq 1 ]]; then
+  mkdir -p "$repo_path/i18n"
   while IFS= read -r p; do
     b="$(basename "$p")"
     # Keep canonical root README.md; move/merge language variants to i18n.
@@ -248,7 +213,6 @@ if [[ "$i18n_mode" -eq 1 ]]; then
     if [[ -f "$dest" ]]; then
       rm -f "$p"
     else
-      mkdir -p "$repo_path/i18n"
       mv "$p" "$dest"
       if ! grep -Fxq "i18n/$b" "$translated_files_file"; then
         printf 'i18n/%s\n' "$b" >> "$translated_files_file"
