@@ -1,9 +1,8 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/figs/banner.png" alt="LazyingArt banner" />
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
+
 
 # AutoAppDev
 
@@ -24,6 +23,15 @@
 > 🎯 **المهمة:** جعل خطوط تطوير التطبيقات حتمية، قابلة للاستئناف، ومعتمدة على المخرجات.
 >
 > 🧩 **مبدأ التصميم:** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+### 🎛️ إشارات المشروع
+
+| الإشارة | التوجه الحالي |
+| --- | --- |
+| نموذج وقت التشغيل | واجهة خلفية Tornado + متحكم PWA ثابت |
+| تنفيذ خط المعالجة | حتمي وقابل للاستئناف (`start/pause/resume/stop`) |
+| استراتيجية الاستمرارية | PostgreSQL أولًا مع سلوك توافق احتياطي |
+| تدفق التوثيق | README مرجعي في الجذر + نسخ `i18n/` مؤتمتة |
 
 ### 🔗 تنقل سريع
 
@@ -74,7 +82,7 @@
 - [❓ الأسئلة الشائعة](#-faq)
 - [🗺️ خارطة الطريق](#-roadmap)
 - [🤝 المساهمة](#-contributing)
-- [🙌 الدعم](#-support)
+- [❤️ Support](#-support)
 - [📄 الترخيص](#-license)
 - [❤️ الرعاية والتبرع](#-sponsor--donate)
 
@@ -558,16 +566,16 @@ JSON
 - حافظ على مقاطع الأوامر المرجعية، والروابط، ومسارات API، ومعنى الشارات عبر الترجمات.
 
 الترتيب المقترح للتوليد واحدًا تلو الآخر:
-2. `i18n/README.ar.md`
-3. `i18n/README.de.md`
-4. `i18n/README.es.md`
-5. `i18n/README.fr.md`
-6. `i18n/README.ja.md`
-7. `i18n/README.ko.md`
-8. `i18n/README.ru.md`
-9. `i18n/README.vi.md`
-10. `i18n/README.zh-Hans.md`
-11. `i18n/README.zh-Hant.md`
+1. `i18n/README.ar.md`
+2. `i18n/README.de.md`
+3. `i18n/README.es.md`
+4. `i18n/README.fr.md`
+5. `i18n/README.ja.md`
+6. `i18n/README.ko.md`
+7. `i18n/README.ru.md`
+8. `i18n/README.vi.md`
+9. `i18n/README.zh-Hans.md`
+10. `i18n/README.zh-Hant.md`
 
 جدول تغطية اللغات:
 
@@ -610,9 +618,10 @@ JSON
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - قد توجد remotes إضافية في النسخ المحلية للمستودعات ذات الصلة (مثال موجود في workspace هذا: `novel`).
 
-## 🙌 الدعم
-- GitHub issues وطلبات السحب لتقارير الأخطاء ومقترحات الميزات.
-- روابط الرعاية/التبرع مدرجة أدناه.
+## ❤️ Support
+| Donate | PayPal | Stripe |
+|---|---|---|
+| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 ![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
 ![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
@@ -624,10 +633,12 @@ JSON
 ملاحظة افتراضية:
 - حتى يتم إضافة ملف ترخيص، اعتبر شروط الاستخدام/إعادة التوزيع غير محددة وتحقق منها مع مسؤول الصيانة.
 
-## ❤️ الرعاية والتبرع
-- GitHub Sponsors: https://github.com/sponsors/lachlanchen
-- Donate: https://chat.lazying.art/donate
-- PayPal: https://paypal.me/RongzhouChen
-- Stripe: https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
+## ❤️ Sponsor & Donate
+| القناة | الرابط |
+| --- | --- |
+| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
+| Donate | https://chat.lazying.art/donate |
+| PayPal | https://paypal.me/RongzhouChen |
+| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
 
 إذا كان هذا المشروع يساعد سير عملك، فإن الرعاية تدعم مباشرة مهام التطوير الذاتي المستمرة، وجودة الوثائق، وتقوية الأدوات.

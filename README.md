@@ -1,9 +1,7 @@
 [English](README.md) · [العربية](i18n/README.ar.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Tiếng Việt](i18n/README.vi.md) · [中文 (简体)](i18n/README.zh-Hans.md) · [中文（繁體）](i18n/README.zh-Hant.md) · [Deutsch](i18n/README.de.md) · [Русский](i18n/README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/figs/banner.png" alt="LazyingArt banner" />
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
 
@@ -24,6 +22,15 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 > 🎯 **Mission:** Make app-development pipelines deterministic, resumable, and artifact-driven.
 >
 > 🧩 **Design principle:** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+### 🎛️ Project Signals
+
+| Signal | Current Direction |
+| --- | --- |
+| Runtime model | Tornado backend + static PWA controller |
+| Pipeline execution | Deterministic and resumable (`start/pause/resume/stop`) |
+| Persistence strategy | PostgreSQL-first with compatibility fallback behavior |
+| Documentation flow | Canonical root README + automated `i18n/` variants |
 
 ### 🔗 Quick Navigation
 
@@ -74,7 +81,7 @@ Do not edit content between the markers.
 - [❓ FAQ](#-faq)
 - [🗺️ Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
-- [🙌 Support](#-support)
+- [❤️ Support](#-support)
 - [📄 License](#-license)
 - [❤️ Sponsor & Donate](#-sponsor--donate)
 
@@ -558,16 +565,16 @@ For a deterministic manual verification path, use `docs/end-to-end-demo-checklis
 - Preserve canonical command snippets, links, API paths, and badge intent across translations.
 
 Suggested one-by-one generation order:
-2. `i18n/README.ar.md`
-3. `i18n/README.de.md`
-4. `i18n/README.es.md`
-5. `i18n/README.fr.md`
-6. `i18n/README.ja.md`
-7. `i18n/README.ko.md`
-8. `i18n/README.ru.md`
-9. `i18n/README.vi.md`
-10. `i18n/README.zh-Hans.md`
-11. `i18n/README.zh-Hant.md`
+1. `i18n/README.ar.md`
+2. `i18n/README.de.md`
+3. `i18n/README.es.md`
+4. `i18n/README.fr.md`
+5. `i18n/README.ja.md`
+6. `i18n/README.ko.md`
+7. `i18n/README.ru.md`
+8. `i18n/README.vi.md`
+9. `i18n/README.zh-Hans.md`
+10. `i18n/README.zh-Hant.md`
 
 Language coverage table:
 
@@ -610,9 +617,11 @@ Repository remotes currently include:
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - Additional remotes may be present in local clones for related repositories (example found in this workspace: `novel`).
 
-## 🙌 Support
-- GitHub issues and pull requests for bug reports and feature proposals.
-- Sponsor/donate links are listed below.
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+|---|---|---|
+| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 ![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
 ![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
@@ -625,9 +634,11 @@ Assumption note:
 - Until a license file is added, treat usage/redistribution terms as unspecified and confirm with the maintainer.
 
 ## ❤️ Sponsor & Donate
-- GitHub Sponsors: https://github.com/sponsors/lachlanchen
-- Donate: https://chat.lazying.art/donate
-- PayPal: https://paypal.me/RongzhouChen
-- Stripe: https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
+| Channel | Link |
+| --- | --- |
+| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
+| Donate | https://chat.lazying.art/donate |
+| PayPal | https://paypal.me/RongzhouChen |
+| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
 
 If this project helps your workflow, sponsorship directly supports continued self-dev tasks, docs quality, and tooling hardening.

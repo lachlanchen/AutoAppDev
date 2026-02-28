@@ -1,9 +1,7 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/figs/banner.png" alt="LazyingArt banner" />
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
 
@@ -19,21 +17,30 @@
 ![API](https://img.shields.io/badge/API-JSON%20HTTP-0ea5e9)
 ![State Machine](https://img.shields.io/badge/Lifecycle-start%2Fpause%2Fresume%2Fstop-f59e0b)
 
-Переиспользуемые скрипты и руководства для поэтапной разработки приложений из скриншотов/markdown, где Codex используется как неинтерактивный инструмент.
+Переиспользуемые скрипты и руководства для пошаговой разработки приложений из скриншотов/markdown, где Codex используется как неинтерактивный инструмент.
 
 > 🎯 **Миссия:** сделать пайплайны разработки приложений детерминированными, возобновляемыми и ориентированными на артефакты.
 >
 > 🧩 **Принцип дизайна:** Plan -> Work -> Verify -> Summary -> Commit/Push.
 
-### 🔗 Быстрая навигация
+### 🎛️ Project Signals
+
+| Signal | Current Direction |
+| --- | --- |
+| Runtime model | Tornado backend + static PWA controller |
+| Pipeline execution | Детерминированное и возобновляемое (`start/pause/resume/stop`) |
+| Persistence strategy | PostgreSQL-first с fallback-совместимостью |
+| Documentation flow | Канонический корневой README + автоматические варианты в `i18n/` |
+
+### 🔗 Quick Navigation
 
 | Что нужно | Перейти к |
 | --- | --- |
 | Первый локальный запуск | [⚡ Quick Start](#-quick-start) |
 | Окружение и обязательные переменные | [⚙️ Configuration](#-configuration) |
-| Поверхность API | [📡 API Snapshot](#-api-snapshot) |
+| API-обзор | [📡 API Snapshot](#-api-snapshot) |
 | Плейбуки запуска/отладки | [🧭 Operational Runbooks](#-operational-runbooks) |
-| Правила генерации README/i18n | [🌐 README & i18n Workflow](#-readme--i18n-workflow) |
+| Правила README/i18n | [🌐 README & i18n Workflow](#-readme--i18n-workflow) |
 | Матрица устранения неполадок | [🔧 Troubleshooting](#-troubleshooting) |
 
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
@@ -50,7 +57,7 @@
 
 <!-- AUTOAPPDEV:STATUS:END -->
 
-## 🗂️ Содержание
+## 🗂️ Table of Contents
 - [🚀 Overview](#-overview)
 - [🧭 Philosophy](#-philosophy)
 - [✨ Features](#-features)
@@ -74,27 +81,27 @@
 - [❓ FAQ](#-faq)
 - [🗺️ Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
-- [🙌 Support](#-support)
+- [❤️ Support](#-support)
 - [📄 License](#-license)
 - [❤️ Sponsor & Donate](#-sponsor--donate)
 
 ## 🚀 Overview
 AutoAppDev — управляющий проект для долгоживущих и возобновляемых пайплайнов разработки приложений. Он объединяет:
 
-1. Backend API на Tornado с PostgreSQL-персистентностью (плюс локальный JSON fallback в коде storage).
+1. Backend API на Tornado с PostgreSQL-персистентностью (плюс локальное fallback-поведение JSON в коде storage).
 2. Статический управляющий PWA-интерфейс в стиле Scratch.
 3. Скрипты и документацию для авторинга пайплайнов, детерминированной генерации кода, циклов self-dev и автоматизации README.
 
 Проект оптимизирован под предсказуемое выполнение агентами со строгой последовательностью и историей, ориентированной на артефакты.
 
-### 🎨 Зачем существует этот репозиторий
+### 🎨 Why this repo exists
 
-| Тема | Как это проявляется на практике |
+| Theme | Что это означает на практике |
 | --- | --- |
-| Детерминизм | Канонический pipeline IR + parser/import/codegen-процессы, спроектированные для повторяемости |
-| Возобновляемость | Явная машина состояний жизненного цикла (`start/pause/resume/stop`) для долгих прогонов |
-| Эксплуатация | Runtime-логи, inbox/outbox-каналы и циклы проверки, управляемые скриптами |
-| Документация прежде всего | Контракты/спеки/примеры находятся в `docs/`, с автоматизированным многоязычным README-потоком |
+| Determinism | Канонический pipeline IR + parser/import/codegen-потоки, спроектированные для повторяемости |
+| Resumability | Явная машина состояний (`start/pause/resume/stop`) для долгих запусков |
+| Operability | Runtime-логи, inbox/outbox-каналы и циклы верификации на основе скриптов |
+| Documentation-first | Контракты/спеки/примеры живут в `docs/`, с автоматическим многоязычным README-потоком |
 
 ## 🧭 Philosophy
 AutoAppDev рассматривает агентов как инструменты и стабилизирует работу через строгий возобновляемый цикл:
@@ -106,44 +113,44 @@ AutoAppDev рассматривает агентов как инструмент
 5. Summarize + log
 6. Commit + push
 
-Приложение-контроллер стремится воплощать те же идеи в Scratch-подобных блоках/действиях (включая общее действие `update_readme`), чтобы каждый workspace оставался актуальным и воспроизводимым.
+Приложение-контроллер стремится отражать те же идеи в Scratch-подобных блоках/действиях (включая общее действие `update_readme`), чтобы каждый workspace оставался актуальным и воспроизводимым.
 
-### 🔁 Назначение состояний жизненного цикла
+### 🔁 Lifecycle state intent
 
-| Переход состояния | Операционный смысл |
+| State transition | Операционный смысл |
 | --- | --- |
 | `start` | Запустить пайплайн из состояния stopped/ready |
-| `pause` | Безопасно приостановить долгий запуск без потери контекста |
+| `pause` | Безопасно приостановить длительное выполнение без потери контекста |
 | `resume` | Продолжить из сохраненного runtime-состояния/артефактов |
-| `stop` | Завершить выполнение и вернуться в состояние без запуска |
+| `stop` | Завершить выполнение и вернуться в неактивное состояние |
 
 ## ✨ Features
 - Возобновляемое управление жизненным циклом пайплайна: start, pause, resume, stop.
-- Скриптовые API-библиотеки для AAPS pipeline scripts (`.aaps`) и canonical IR (`autoappdev_ir` v1).
-- Детерминированный parser/import-процесс:
+- Script library API для AAPS pipeline scripts (`.aaps`) и canonical IR (`autoappdev_ir` v1).
+- Детерминированный parser/import-поток:
   - Разбор форматированных AAPS-скриптов.
   - Импорт аннотированного shell через комментарии `# AAPS:`.
   - Опциональный Codex-assisted parse fallback (`AUTOAPPDEV_ENABLE_LLM_PARSE=1`).
 - Реестр действий со встроенными и редактируемыми/кастомными действиями (clone/edit-поток для readonly built-ins).
-- Scratch-подобные PWA-блоки и палитра действий, подгружаемая в рантайме (`GET /api/actions`).
-- Каналы сообщений runtime:
-  - Inbox (`/api/inbox`) для инструкций от оператора к пайплайну.
-  - Outbox (`/api/outbox`) с поддержкой ingest файловой очереди из `runtime/outbox`.
+- Scratch-подобные PWA-блоки и runtime-палитра действий (`GET /api/actions`).
+- Runtime-каналы сообщений:
+  - Inbox (`/api/inbox`) для указаний оператор -> пайплайн.
+  - Outbox (`/api/outbox`) с ingest файловой очереди из `runtime/outbox`.
 - Инкрементальный стриминг логов backend и pipeline (`/api/logs`, `/api/logs/tail`).
 - Детерминированная генерация runner-кода из canonical IR (`scripts/pipeline_codegen/generate_runner_from_ir.py`).
 - Self-dev драйвер для итеративного развития репозитория (`scripts/auto-autoappdev-development.sh`).
-- Пайплайн автоматизации README с каркасом мультиязычной генерации в `i18n/`.
+- Пайплайн автоматизации README с каркасом многоязычной генерации в `i18n/`.
 
 ## 📌 At A Glance
 
-| Область | Детали |
+| Area | Details |
 | --- | --- |
 | Core runtime | Tornado backend + static PWA frontend |
-| Persistence | PostgreSQL-first with compatibility behavior in `backend/storage.py` |
-| Pipeline model | Canonical IR (`autoappdev_ir` v1) and AAPS script format |
-| Control flow | Start / Pause / Resume / Stop lifecycle |
-| Dev mode | Resumable self-dev loop + deterministic script/codegen workflows |
-| README/i18n | Automated README pipeline with `i18n/` scaffolding |
+| Persistence | PostgreSQL-first с compatibility-поведением в `backend/storage.py` |
+| Pipeline model | Canonical IR (`autoappdev_ir` v1) и формат AAPS |
+| Control flow | Жизненный цикл Start / Pause / Resume / Stop |
+| Dev mode | Возобновляемый self-dev цикл + детерминированные script/codegen-потоки |
+| README/i18n | Автоматизированный README-пайплайн с каркасом `i18n/` |
 
 ## 🏗️ Architecture
 
@@ -162,13 +169,13 @@ Tornado backend (backend/app.py)
         +--> scripts/ (pipeline runner + codegen helpers)
 ```
 
-### Обязанности backend
+### Backend responsibilities
 - Предоставлять controller API для скриптов, действий, плана, жизненного цикла пайплайна, логов, inbox/outbox и конфигурации workspace.
-- Валидировать и сохранять assets скриптов пайплайна.
-- Координировать состояние выполнения пайплайна и переходы статуса.
-- Давать детерминированное fallback-поведение, когда DB pool недоступен.
+- Валидировать и сохранять ассеты скриптов пайплайна.
+- Координировать состояние выполнения пайплайна и переходы статусов.
+- Обеспечивать детерминированное fallback-поведение при недоступности DB pool.
 
-### Обязанности frontend
+### Frontend responsibilities
 - Рендерить Scratch-подобный UI блоков и поток редактирования пайплайна.
 - Динамически загружать палитру действий из backend-реестра.
 - Управлять lifecycle-контролами и мониторить статус/логи/сообщения.
@@ -177,20 +184,20 @@ Tornado backend (backend/app.py)
 Справочная карта наиболее используемых документов, скриптов и примеров:
 
 - `docs/auto-development-guide.md`: Двуязычная (EN/ZH) философия и требования к долгоживущему, возобновляемому агенту auto-development.
-- `docs/ORDERING_RATIONALE.md`: Пример обоснования последовательности шагов на основе скриншотов.
-- `docs/controller-mvp-scope.md`: Scope MVP-контроллера (экраны + минимальные API).
-- `docs/end-to-end-demo-checklist.md`: Детерминированный ручной чеклист сквозной демо-проверки (backend + happy path PWA).
+- `docs/ORDERING_RATIONALE.md`: Пример обоснования последовательности screenshot-driven шагов.
+- `docs/controller-mvp-scope.md`: Границы Controller MVP (экраны + минимальные API).
+- `docs/end-to-end-demo-checklist.md`: Детерминированный ручной чеклист end-to-end демо (backend + PWA happy path).
 - `docs/env.md`: Соглашения по переменным окружения (`.env`).
 - `docs/api-contracts.md`: Контракты API запросов/ответов контроллера.
 - `docs/pipeline-formatted-script-spec.md`: Стандартный формат pipeline script (AAPS) и схема canonical IR (TASK -> STEP -> ACTION).
-- `docs/pipeline-runner-codegen.md`: Детерминированный генератор исполняемых bash pipeline runner'ов из canonical IR.
+- `docs/pipeline-runner-codegen.md`: Детерминированный генератор исполняемых bash pipeline runner из canonical IR.
 - `docs/common-actions.md`: Контракты/спеки common actions (включая `update_readme`).
 - `docs/workspace-layout.md`: Стандартные папки workspace + контракты (`materials/interactions/outputs/docs/references/scripts/tools/logs/auto-apps`).
-- `scripts/run_autoappdev_tmux.sh`: Запуск приложения AutoAppDev (backend + PWA) в tmux.
+- `scripts/run_autoappdev_tmux.sh`: Запуск AutoAppDev (backend + PWA) в tmux.
 - `scripts/run_autoappdev_selfdev_tmux.sh`: Запуск self-dev драйвера AutoAppDev в tmux.
 - `scripts/app-auto-development.sh`: Линейный pipeline driver (`plan -> backend -> PWA -> Android -> iOS -> review -> summary`) с поддержкой resume/state.
 - `scripts/generate_screenshot_docs.sh`: Генератор описаний screenshot -> markdown (на базе Codex).
-- `scripts/setup_autoappdev_env.sh`: Основной скрипт bootstrap conda-среды для локальных запусков.
+- `scripts/setup_autoappdev_env.sh`: Основной bootstrap-скрипт conda-среды для локального запуска.
 - `scripts/setup_backend_env.sh`: Вспомогательный скрипт окружения backend.
 - `examples/ralph-wiggum-example.sh`: Пример helper-скрипта автоматизации Codex CLI.
 
@@ -239,45 +246,45 @@ AutoAppDev/
 - ОС с `bash`.
 - Python `3.11+`.
 - Conda (`conda`) для предоставленных setup-скриптов.
-- `tmux` для одно-командных backend+PWA или self-dev сессий.
+- `tmux` для one-command backend+PWA или self-dev сессий.
 - PostgreSQL, доступный по `DATABASE_URL`.
-- Опционально: CLI `codex` для сценариев Codex-powered (self-dev, parse-llm fallback, auto-readme pipeline).
+- Опционально: `codex` CLI для Codex-powered сценариев (self-dev, parse-llm fallback, auto-readme pipeline).
 
-Быстрая матрица требований:
+Краткая матрица требований:
 
-| Компонент | Обязательно | Назначение |
+| Component | Required | Purpose |
 | --- | --- | --- |
-| `bash` | Да | Выполнение скриптов |
-| Python `3.11+` | Да | Backend + инструменты codegen |
-| Conda | Да (рекомендуемый поток) | Скрипты bootstrap окружения |
-| PostgreSQL | Да (предпочтительный режим) | Основная персистентность через `DATABASE_URL` |
-| `tmux` | Рекомендуется | Управляемые сессии backend/PWA и self-dev |
-| `codex` CLI | Опционально | LLM-assisted parse и README/self-dev automation |
+| `bash` | Yes | Выполнение скриптов |
+| Python `3.11+` | Yes | Backend + codegen-инструменты |
+| Conda | Yes (recommended flow) | Скрипты bootstrap окружения |
+| PostgreSQL | Yes (preferred mode) | Основная персистентность через `DATABASE_URL` |
+| `tmux` | Recommended | Управляемые сессии backend/PWA и self-dev |
+| `codex` CLI | Optional | LLM-assisted parse и README/self-dev automation |
 
 ## 🧩 Compatibility & Assumptions
 
-| Тема | Текущее ожидание |
+| Topic | Current expectation |
 | --- | --- |
-| Local OS | Linux/macOS shell'ы являются основной целью (`bash` scripts) |
+| Local OS | Linux/macOS shells — основная цель (`bash` scripts) |
 | Python runtime | `3.11` (управляется `scripts/setup_autoappdev_env.sh`) |
-| Persistence mode | PostgreSQL предпочитается и считается каноническим режимом |
+| Persistence mode | PostgreSQL предпочтителен и считается каноническим |
 | Fallback behavior | `backend/storage.py` включает JSON compatibility fallback для деградированных сценариев |
 | Network model | Локальная split-port модель разработки (backend + static PWA) |
-| Agent tooling | CLI `codex` опционален, кроме случаев LLM-assisted parse или self-dev automation |
+| Agent tooling | `codex` CLI опционален, кроме LLM-assisted parse и self-dev automation |
 
-Предположения, используемые в этом README:
-- Вы выполняете команды из корня репозитория, если не указано иное.
+Предположения в этом README:
+- Команды выполняются из корня репозитория, если раздел не говорит обратное.
 - `.env` настроен до запуска backend-сервисов.
-- `conda` и `tmux` доступны для рекомендуемых one-command workflow.
+- `conda` и `tmux` доступны для рекомендуемых one-command сценариев.
 
 ## 🛠️ Installation
-### 1) Клонируйте репозиторий и перейдите в него
+### 1) Clone and enter repo
 ```bash
 git clone git@github.com:lachlanchen/AutoAppDev.git
 cd AutoAppDev
 ```
 
-### 2) Настройте окружение
+### 2) Configure environment
 ```bash
 cp .env.example .env
 ```
@@ -286,17 +293,17 @@ cp .env.example .env
 - `DATABASE_URL`
 - `AUTOAPPDEV_HOST` и `AUTOAPPDEV_PORT` (или `PORT`)
 
-### 3) Создайте/обновите backend-окружение
+### 3) Create/update backend environment
 ```bash
 ./scripts/setup_autoappdev_env.sh
 ```
 
-### 4) Примените схему базы данных
+### 4) Apply database schema
 ```bash
 conda run -n autoappdev python -m backend.apply_schema
 ```
 
-### 5) Опционально: smoke-тест базы данных
+### 5) Optional: database smoke test
 ```bash
 conda run -n autoappdev python -m backend.db_smoketest
 ```
@@ -312,17 +319,17 @@ conda run -n autoappdev python -m backend.apply_schema
 
 Затем откройте:
 - PWA: `http://127.0.0.1:5173/`
-- Базовый URL Backend API: `http://127.0.0.1:8788`
+- Backend API base: `http://127.0.0.1:8788`
 - Health check: `http://127.0.0.1:8788/api/health`
 
-Smoke-проверка одной командой:
+Smoke-check одной командой:
 ```bash
 curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool
 ```
 
-Краткая карта endpoint'ов:
+Краткая карта endpoint-ов:
 
-| Поверхность | URL |
+| Surface | URL |
 | --- | --- |
 | PWA UI | `http://127.0.0.1:5173/` |
 | Backend API | `http://127.0.0.1:8788` |
@@ -331,7 +338,7 @@ curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool
 ## ⚙️ Configuration
 Основной файл: `.env` (см. `docs/env.md` и `.env.example`).
 
-### Важные переменные
+### Important variables
 
 | Variable | Purpose |
 | --- | --- |
@@ -344,7 +351,7 @@ curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool
 | `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK` | Codex defaults for actions/endpoints |
 | `AI_API_BASE_URL`, `AI_API_KEY` | Reserved for future integrations |
 
-Быстрая валидация `.env`:
+Быстрая проверка `.env`:
 ```bash
 bash -lc 'set -euo pipefail; test -f .env; set -a; source .env; set +a; \
 python3 - <<"PY"\
@@ -362,26 +369,26 @@ PY'
 
 ## ▶️ Usage
 
-| Режим | Команда | Примечания |
+| Mode | Command | Notes |
 | --- | --- | --- |
-| Запуск backend + PWA (рекомендуется) | `./scripts/run_autoappdev_tmux.sh --restart` | Backend `http://127.0.0.1:8788`, PWA `http://127.0.0.1:5173/` |
-| Запуск только backend | `conda run -n autoappdev python -m backend.app` | Использует `.env` bind + настройки БД |
-| Запуск только статического сервера PWA | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | Удобно для проверок только фронтенда |
-| Запуск self-dev драйвера в tmux | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | Возобновляемый цикл self-development |
+| Start backend + PWA (recommended) | `./scripts/run_autoappdev_tmux.sh --restart` | Backend `http://127.0.0.1:8788`, PWA `http://127.0.0.1:5173/` |
+| Start backend only | `conda run -n autoappdev python -m backend.app` | Использует bind/DB настройки из `.env` |
+| Start PWA static server only | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | Удобно для frontend-only проверок |
+| Run self-dev driver in tmux | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | Возобновляемый self-development цикл |
 
-### Часто используемые опции скриптов
+### Common script options
 - `./scripts/run_autoappdev_tmux.sh --help`
 - `./scripts/run_autoappdev_tmux.sh --backend-port 8790 --pwa-port 5174`
 - `./scripts/run_autoappdev_tmux.sh --detached`
 - `./scripts/run_autoappdev_selfdev_tmux.sh --help`
 - `./scripts/run_autoappdev_selfdev_tmux.sh --start-at 14 --reasoning xhigh`
 
-### Разбор и сохранение скриптов
+### Parse and store scripts
 - Parse AAPS via API: `POST /api/scripts/parse`
 - Import annotated shell: `POST /api/scripts/import-shell`
 - Optional LLM parse: `POST /api/scripts/parse-llm` (requires `AUTOAPPDEV_ENABLE_LLM_PARSE=1`)
 
-### API управления пайплайном
+### Pipeline control APIs
 - `GET /api/pipeline`
 - `GET /api/pipeline/status`
 - `POST /api/pipeline/start`
@@ -389,7 +396,7 @@ PY'
 - `POST /api/pipeline/resume`
 - `POST /api/pipeline/stop`
 
-### Другие часто используемые API
+### Other frequently used APIs
 - Health/version/config: `/api/health`, `/api/version`, `/api/config`
 - Plan/scripts: `/api/plan`, `/api/scripts`, `/api/scripts/<id>`
 - Actions: `/api/actions`, `/api/actions/<id>`, `/api/actions/<id>/clone`, `/api/actions/update-readme`
@@ -400,7 +407,7 @@ PY'
 
 ## 🧭 Operational Runbooks
 
-### Runbook: поднять полный локальный стек
+### Runbook: bring up the full local stack
 ```bash
 cp .env.example .env
 ./scripts/setup_autoappdev_env.sh
@@ -410,17 +417,17 @@ conda run -n autoappdev python -m backend.apply_schema
 
 Контрольные точки валидации:
 - `curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool`
-- Откройте `http://127.0.0.1:5173/` и подтвердите, что UI может загрузить `/api/config`.
+- Откройте `http://127.0.0.1:5173/` и убедитесь, что UI может загрузить `/api/config`.
 - Опционально: откройте `/api/version` и проверьте, что возвращаются ожидаемые backend-метаданные.
 
-### Runbook: отладка только backend
+### Runbook: backend-only debugging
 ```bash
 conda run -n autoappdev python -m backend.app
 curl -sS http://127.0.0.1:8788/api/version
 curl -sS http://127.0.0.1:8788/api/pipeline/status | python3 -m json.tool
 ```
 
-### Runbook: детерминированный smoke codegen
+### Runbook: deterministic codegen smoke
 ```bash
 python3 scripts/pipeline_codegen/generate_runner_from_ir.py \
   --in examples/pipeline_ir_codegen_demo_v0.json \
@@ -435,9 +442,9 @@ scripts/pipeline_codegen/smoke_meta_round_v0.sh
 
 ## 📡 API Snapshot
 
-Основные группы API в одном месте:
+Core API groups at a glance:
 
-| Категория | Endpoints |
+| Category | Endpoints |
 | --- | --- |
 | Health + runtime info | `GET /api/health`, `GET /api/version`, `GET /api/config`, `POST /api/config` |
 | Plan model | `GET /api/plan`, `POST /api/plan` |
@@ -448,7 +455,7 @@ scripts/pipeline_codegen/smoke_meta_round_v0.sh
 | Workspace settings | `GET/POST /api/workspaces/<name>/config` |
 
 ## 🧪 Examples
-### Пример AAPS
+### AAPS example
 ```text
 AUTOAPPDEV_PIPELINE 1
 
@@ -463,7 +470,7 @@ ACTION {"id":"a1","kind":"note","params":{"text":"Read context and outline steps
 - `examples/pipeline_shell_annotated_v0.sh`
 - `examples/pipeline_ir_codegen_demo_v0.json`
 
-### Детерминированная генерация runner
+### Deterministic runner generation
 ```bash
 python3 scripts/pipeline_codegen/generate_runner_from_ir.py \
   --in examples/pipeline_ir_codegen_demo_v0.json \
@@ -473,14 +480,14 @@ bash -n /tmp/autoappdev_runner.sh
 scripts/pipeline_codegen/smoke_codegen.sh
 ```
 
-### Детерминированный demo pipeline
+### Deterministic demo pipeline
 ```bash
 export AUTOAPPDEV_PIPELINE_SCRIPT=scripts/pipeline_demo.sh
 conda run -n autoappdev python -m backend.app
 ```
 Затем используйте в PWA контролы Start/Pause/Resume/Stop и проверьте `/api/logs`.
 
-### Импорт из аннотированного shell
+### Import from annotated shell
 ```bash
 curl -sS -X POST http://127.0.0.1:8788/api/scripts/import-shell \
   -H 'Content-Type: application/json' \
@@ -493,42 +500,42 @@ JSON
 
 ## 🧱 Development Notes
 - Backend основан на Tornado и спроектирован для удобной локальной разработки (включая permissive CORS для localhost с разными портами).
-- Storage работает в PostgreSQL-first режиме с compatibility behavior в `backend/storage.py`.
-- Ключи блоков PWA и значения `STEP.block` в скриптах намеренно выровнены (`plan`, `work`, `debug`, `fix`, `summary`, `commit_push`).
+- Storage работает в PostgreSQL-first режиме с compatibility-поведением в `backend/storage.py`.
+- Ключи PWA-блоков и значения `STEP.block` намеренно выровнены (`plan`, `work`, `debug`, `fix`, `summary`, `commit_push`).
 - Built-in actions readonly; перед редактированием сначала клонируйте.
 - Действие `update_readme` ограничено path-safety: только README-цели workspace в `auto-apps/<workspace>/README.md`.
-- В некоторых docs/scripts есть исторические ссылки на пути/имена (`HeyCyan`, `LightMind`), унаследованные в эволюции проекта. Текущий канонический путь — корень этого репозитория.
-- Корневая директория `i18n/` существует. В мультиязычных прогонах языковые README ожидаются именно там.
+- В некоторых docs/scripts есть исторические ссылки на пути/имена (`HeyCyan`, `LightMind`), унаследованные от эволюции проекта. Канонический путь сейчас — корень этого репозитория.
+- Корневая директория `i18n/` присутствует. В многоязычных прогонах языковые README ожидаются именно там.
 
-### Рабочая модель и файлы состояния
-- По умолчанию runtime находится в `./runtime`, если не переопределен `AUTOAPPDEV_RUNTIME_DIR`.
+### Working model and state files
+- По умолчанию runtime находится в `./runtime`, если не переопределён `AUTOAPPDEV_RUNTIME_DIR`.
 - Состояние/история self-dev automation отслеживаются в `references/selfdev/`.
-- Артефакты README-пайплайна записываются в `.auto-readme-work/<timestamp>/`.
+- Артефакты README-пайплайна пишутся в `.auto-readme-work/<timestamp>/`.
 
-### Подход к тестированию (текущее состояние)
+### Testing posture (current)
 - Репозиторий включает smoke-проверки и детерминированные demo-скрипты.
-- Полноценный верхнеуровневый набор автотестов/CI-манифест сейчас не определен в корневых метаданных.
+- Полноценный верхнеуровневый набор автотестов/CI-манифест в корне сейчас не определён.
 - Предположение: валидация пока в основном script-driven (`scripts/pipeline_codegen/smoke_*.sh`, `backend.db_smoketest`, end-to-end checklist).
 
 ## 🔐 Safety Notes
-- Действие `update_readme` намеренно ограничено целями workspace README (`auto-apps/<workspace>/README.md`) с защитой от path traversal.
+- Действие `update_readme` намеренно ограничено workspace README-целями (`auto-apps/<workspace>/README.md`) и защищено от path traversal.
 - Валидация action registry принудительно нормализует поля action spec и ограничивает значения для поддерживаемых reasoning levels.
-- Скрипты репозитория предполагают доверенную локальную среду выполнения; перед запуском в общих или около-прод средах проверяйте содержимое скриптов.
-- `.env` может содержать чувствительные значения (`DATABASE_URL`, API keys). Не коммитьте `.env`; используйте управление секретами вне локальной разработки.
+- Скрипты репозитория предполагают доверенное локальное выполнение; перед запуском в shared или production-adjacent средах проверяйте содержимое скриптов.
+- `.env` может содержать чувствительные данные (`DATABASE_URL`, API keys). Не коммитьте `.env`; используйте внешний secret management.
 
 ## 🔧 Troubleshooting
 
-| Симптом | Что проверить |
+| Symptom | What to check |
 | --- | --- |
 | `tmux not found` | Установите `tmux` или запускайте backend/PWA вручную. |
-| Backend не стартует из-за отсутствующих env | Снова проверьте `.env` по `.env.example` и `docs/env.md`. |
-| Ошибки базы данных (connection/auth/schema) | Проверьте `DATABASE_URL`; повторно выполните `conda run -n autoappdev python -m backend.apply_schema`; опциональная проверка подключения: `conda run -n autoappdev python -m backend.db_smoketest`. |
-| PWA загружается, но не вызывает API | Убедитесь, что backend слушает ожидаемый host/port; пересоздайте `pwa/config.local.js`, повторно запустив `./scripts/run_autoappdev_tmux.sh`. |
-| Pipeline Start возвращает invalid transition | Сначала проверьте текущее состояние пайплайна; запуск должен идти из состояния `stopped`. |
-| В UI нет обновлений логов | Подтвердите, что пишется `runtime/logs/pipeline.log`; используйте `/api/logs` и `/api/logs/tail` напрямую, чтобы отделить проблемы UI от backend. |
-| LLM parse endpoint возвращает disabled | Установите `AUTOAPPDEV_ENABLE_LLM_PARSE=1` и перезапустите backend. |
-| `conda run -n autoappdev ...` завершается с ошибкой | Повторно выполните `./scripts/setup_autoappdev_env.sh`; проверьте, что conda env `autoappdev` существует (`conda env list`). |
-| Неверная API-цель во frontend | Проверьте, что `pwa/config.local.js` существует и указывает на активный backend host/port. |
+| Backend fails on startup due to missing env | Сверьте `.env` с `.env.example` и `docs/env.md`. |
+| Database errors (connection/auth/schema) | Проверьте `DATABASE_URL`; повторно выполните `conda run -n autoappdev python -m backend.apply_schema`; опционально: `conda run -n autoappdev python -m backend.db_smoketest`. |
+| PWA loads but cannot call API | Убедитесь, что backend слушает ожидаемый host/port; пересоздайте `pwa/config.local.js`, повторно запустив `./scripts/run_autoappdev_tmux.sh`. |
+| Pipeline Start returns invalid transition | Сначала проверьте текущий статус пайплайна; запуск должен идти из `stopped`. |
+| No log updates in UI | Убедитесь, что пишется `runtime/logs/pipeline.log`; используйте `/api/logs` и `/api/logs/tail` напрямую для разделения UI/backend проблемы. |
+| LLM parse endpoint returns disabled | Установите `AUTOAPPDEV_ENABLE_LLM_PARSE=1` и перезапустите backend. |
+| `conda run -n autoappdev ...` fails | Повторно выполните `./scripts/setup_autoappdev_env.sh`; проверьте наличие env `autoappdev` (`conda env list`). |
+| Wrong API target in frontend | Проверьте, что `pwa/config.local.js` существует и указывает на активный backend host/port. |
 
 Для детерминированного ручного пути валидации используйте `docs/end-to-end-demo-checklist.md`.
 
@@ -536,7 +543,7 @@ JSON
 - Корневой README — канонический источник для пайплайна автоматизации README.
 - Многоязычные варианты ожидаются в `i18n/`.
 - Статус директории i18n: ✅ присутствует в этом репозитории.
-- Текущий набор языков в репозитории:
+- Текущий языковой набор в репозитории:
   - `i18n/README.ar.md`
   - `i18n/README.de.md`
   - `i18n/README.es.md`
@@ -547,53 +554,52 @@ JSON
   - `i18n/README.vi.md`
   - `i18n/README.zh-Hans.md`
   - `i18n/README.zh-Hant.md`
-- Языковая навигация должна оставаться одной строкой вверху каждого варианта README (без дублирующихся language bar).
-- Entrypoint README-пайплайна: `prompt_tools/auto-readme-pipeline.sh`.
+- Языковая навигация должна оставаться одной строкой вверху каждого README-варианта (без дублирования language bar).
+- Точка входа README-пайплайна: `prompt_tools/auto-readme-pipeline.sh`.
 
-### Ограничения генерации i18n (строго)
+### i18n generation constraints (strict)
 - При обновлении канонического README всегда выполняйте многоязычную генерацию.
-- Генерируйте/обновляйте языковые файлы по одному (последовательно), а не неоднозначными массовыми пакетами.
+- Генерируйте/обновляйте языковые файлы по одному (последовательно), а не массово и неоднозначно.
 - Сохраняйте ровно одну строку language-options вверху каждого варианта.
 - Не дублируйте language bar внутри одного файла.
-- Сохраняйте канонические command snippets, ссылки, API-path и смысл badge'ей во всех переводах.
+- Сохраняйте канонические snippets команд, ссылки, API-path и смысл badge во всех переводах.
 
-Рекомендуемый порядок по одному файлу:
-1. `README.md` (канонический источник на английском)
-2. `i18n/README.ar.md`
-3. `i18n/README.de.md`
-4. `i18n/README.es.md`
-5. `i18n/README.fr.md`
-6. `i18n/README.ja.md`
-7. `i18n/README.ko.md`
-8. `i18n/README.ru.md`
-9. `i18n/README.vi.md`
-10. `i18n/README.zh-Hans.md`
-11. `i18n/README.zh-Hant.md`
+Рекомендуемый порядок генерации по одному файлу:
+1. `i18n/README.ar.md`
+2. `i18n/README.de.md`
+3. `i18n/README.es.md`
+4. `i18n/README.fr.md`
+5. `i18n/README.ja.md`
+6. `i18n/README.ko.md`
+7. `i18n/README.ru.md`
+8. `i18n/README.vi.md`
+9. `i18n/README.zh-Hans.md`
+10. `i18n/README.zh-Hant.md`
 
 Таблица покрытия языков:
 
-| Язык | Файл |
+| Language | File |
 | --- | --- |
 
 ## ❓ FAQ
 
-### PostgreSQL обязателен?
-Предпочтителен и ожидается для нормальной эксплуатации. Слой storage содержит fallback-совместимость, но для production-like использования предполагается доступный PostgreSQL через `DATABASE_URL`.
+### Is PostgreSQL mandatory?
+Предпочтителен и ожидается для нормальной работы. Слой storage содержит fallback-совместимость, но для production-like сценариев предполагается доступный PostgreSQL через `DATABASE_URL`.
 
-### Почему есть и `AUTOAPPDEV_PORT`, и `PORT`?
-`AUTOAPPDEV_PORT` — project-specific переменная. `PORT` — deployment-friendly алиас. Держите их синхронизированными, если только вы намеренно не переопределяете поведение в своем сценарии запуска.
+### Why both `AUTOAPPDEV_PORT` and `PORT`?
+`AUTOAPPDEV_PORT` — project-specific переменная. `PORT` — deployment-friendly алиас. Держите их синхронизированными, если вы намеренно не переопределяете поведение запуска.
 
-### С чего начать, если я хочу только посмотреть API?
-Запустите только backend (`conda run -n autoappdev python -m backend.app`) и используйте `/api/health`, `/api/version`, `/api/config`, затем script/action endpoint'ы из `docs/api-contracts.md`.
+### Where should I start if I only want to inspect APIs?
+Запустите только backend (`conda run -n autoappdev python -m backend.app`) и используйте `/api/health`, `/api/version`, `/api/config`, затем script/action endpoint-ы из `docs/api-contracts.md`.
 
-### Многоязычные README генерируются автоматически?
-Да. В репозитории есть `prompt_tools/auto-readme-pipeline.sh`, а языковые варианты поддерживаются в `i18n/` с одной строкой языковой навигации вверху каждого варианта.
+### Are multilingual READMEs generated automatically?
+Да. В репозитории есть `prompt_tools/auto-readme-pipeline.sh`, а языковые варианты поддерживаются в `i18n/` с одной строкой language navigation вверху каждого файла.
 
 ## 🗺️ Roadmap
 - Завершить оставшиеся self-dev задачи сверх текущего статуса `51 / 55`.
-- Расширить инструменты workspace/materials/context и усилить safe-path контракты.
-- Продолжать улучшать UX палитры действий и редактируемые workflows действий.
-- Углубить поддержку многоязычного README/UI в `i18n/` и переключение языка в рантайме.
+- Расширить workspace/materials/context tooling и усилить safe-path контракты.
+- Продолжать улучшать UX палитры действий и редактируемые action workflows.
+- Углубить поддержку многоязычного README/UI в `i18n/` и runtime-переключение языков.
 - Усилить smoke/integration проверки и покрытие CI (сейчас есть script-driven smoke checks; полный CI manifest в корне не задокументирован).
 - Продолжить усиление детерминизма parser/import/codegen вокруг AAPS v1 и canonical IR.
 
@@ -602,33 +608,37 @@ JSON
 
 Рекомендуемый workflow:
 1. Сделайте fork и создайте feature branch.
-2. Делайте изменения сфокусированными и воспроизводимыми.
+2. Держите изменения сфокусированными и воспроизводимыми.
 3. По возможности предпочитайте детерминированные scripts/tests.
-4. Обновляйте документацию при изменении поведения/контрактов (`docs/*`, API contracts, examples).
+4. Обновляйте docs при изменении поведения/контрактов (`docs/*`, API contracts, examples).
 5. Откройте PR с контекстом, шагами валидации и предположениями о runtime.
 
-Текущие удаленные репозитории включают:
+Текущие remotes репозитория включают:
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
-- В локальных клонах могут присутствовать дополнительные remote для связанных репозиториев (пример в этом workspace: `novel`).
+- В локальных клонах могут быть дополнительные remotes для связанных репозиториев (пример в этом workspace: `novel`).
 
-## 🙌 Support
-- GitHub issues и pull requests для сообщений об ошибках и предложений функций.
-- Ссылки sponsor/donate приведены ниже.
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+|---|---|---|
+| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 ![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
 ![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
 ![Maintained](https://img.shields.io/badge/Maintained-Yes-0e9f6e)
 
 ## 📄 License
-В этом снимке репозитория не обнаружен корневой файл `LICENSE`.
+В текущем снимке репозитория корневой файл `LICENSE` не обнаружен.
 
-Примечание-предположение:
-- Пока файл лицензии не добавлен, считайте условия использования/распространения неуточненными и уточняйте их у мейнтейнера.
+Примечание:
+- Пока файл лицензии не добавлен, условия использования/распространения считаются неуточненными; уточняйте у мейнтейнера.
 
 ## ❤️ Sponsor & Donate
-- GitHub Sponsors: https://github.com/sponsors/lachlanchen
-- Donate: https://chat.lazying.art/donate
-- PayPal: https://paypal.me/RongzhouChen
-- Stripe: https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
+| Channel | Link |
+| --- | --- |
+| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
+| Donate | https://chat.lazying.art/donate |
+| PayPal | https://paypal.me/RongzhouChen |
+| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
 
-Если проект помогает вашему workflow, sponsorship напрямую поддерживает дальнейшие self-dev задачи, качество документации и усиление инструментов.
+Если проект помогает вашему workflow, sponsorship напрямую поддерживает дальнейшие self-dev задачи, качество документации и развитие инструментов.

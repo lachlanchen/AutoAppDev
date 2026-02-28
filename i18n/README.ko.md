@@ -1,9 +1,7 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/figs/banner.png" alt="LazyingArt banner" />
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
 
@@ -24,6 +22,15 @@
 > 🎯 **Mission:** 앱 개발 파이프라인을 결정적(deterministic)이고, 재개 가능하며, 아티팩트 중심으로 만드는 것.
 >
 > 🧩 **Design principle:** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+### 🎛️ Project Signals
+
+| 신호 | 현재 방향 |
+| --- | --- |
+| Runtime model | Tornado backend + static PWA controller |
+| Pipeline execution | 결정적이며 재개 가능 (`start/pause/resume/stop`) |
+| Persistence strategy | PostgreSQL 우선 + 호환성 폴백 동작 |
+| Documentation flow | 루트 README를 기준으로 자동 생성되는 `i18n/` 변형 |
 
 ### 🔗 Quick Navigation
 
@@ -74,7 +81,7 @@
 - [❓ FAQ](#-faq)
 - [🗺️ Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
-- [🙌 Support](#-support)
+- [❤️ Support](#-support)
 - [📄 License](#-license)
 - [❤️ Sponsor & Donate](#-sponsor--donate)
 
@@ -558,16 +565,16 @@ JSON
 - 번역본에서도 canonical 명령 스니펫, 링크, API 경로, 배지 의도를 보존하세요.
 
 권장 one-by-one 생성 순서:
-2. `i18n/README.ar.md`
-3. `i18n/README.de.md`
-4. `i18n/README.es.md`
-5. `i18n/README.fr.md`
-6. `i18n/README.ja.md`
-7. `i18n/README.ko.md`
-8. `i18n/README.ru.md`
-9. `i18n/README.vi.md`
-10. `i18n/README.zh-Hans.md`
-11. `i18n/README.zh-Hant.md`
+1. `i18n/README.ar.md`
+2. `i18n/README.de.md`
+3. `i18n/README.es.md`
+4. `i18n/README.fr.md`
+5. `i18n/README.ja.md`
+6. `i18n/README.ko.md`
+7. `i18n/README.ru.md`
+8. `i18n/README.vi.md`
+9. `i18n/README.zh-Hans.md`
+10. `i18n/README.zh-Hant.md`
 
 Language coverage table:
 
@@ -610,9 +617,11 @@ backend-only로 실행(`conda run -n autoappdev python -m backend.app`)한 뒤 `
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - 관련 저장소를 위해 로컬 clone에 추가 remote가 있을 수 있습니다(이 워크스페이스에서 발견된 예: `novel`).
 
-## 🙌 Support
-- 버그 리포트/기능 제안은 GitHub issues 및 pull requests를 사용하세요.
-- 스폰서/후원 링크는 아래에 있습니다.
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+|---|---|---|
+| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 ![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
 ![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
@@ -625,9 +634,11 @@ Assumption note:
 - 라이선스 파일이 추가되기 전까지 사용/재배포 조건은 미지정 상태로 보고, 유지관리자에게 확인하세요.
 
 ## ❤️ Sponsor & Donate
-- GitHub Sponsors: https://github.com/sponsors/lachlanchen
-- Donate: https://chat.lazying.art/donate
-- PayPal: https://paypal.me/RongzhouChen
-- Stripe: https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
+| 채널 | 링크 |
+| --- | --- |
+| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
+| Donate | https://chat.lazying.art/donate |
+| PayPal | https://paypal.me/RongzhouChen |
+| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
 
 이 프로젝트가 워크플로에 도움이 되었다면, 후원은 self-dev 작업 지속, 문서 품질 개선, 툴링 강화에 직접적인 도움이 됩니다.

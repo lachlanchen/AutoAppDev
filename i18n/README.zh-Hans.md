@@ -1,9 +1,7 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/figs/banner.png" alt="LazyingArt banner" />
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
 
@@ -24,6 +22,15 @@
 > 🎯 **使命：** 让应用开发流水线具备确定性、可恢复、并以工件为驱动。
 >
 > 🧩 **设计原则：** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+### 🎛️ 项目信号
+
+| 信号 | 当前方向 |
+| --- | --- |
+| 运行时模型 | Tornado backend + static PWA controller |
+| 流水线执行 | 确定性且可恢复（`start/pause/resume/stop`） |
+| 持久化策略 | PostgreSQL 优先，并带兼容回退行为 |
+| 文档流 | 规范根 README + 自动化 `i18n/` 变体 |
 
 ### 🔗 快速导航
 
@@ -74,7 +81,7 @@
 - [❓ FAQ](#-faq)
 - [🗺️ 路线图](#️-路线图)
 - [🤝 贡献](#-贡献)
-- [🙌 支持](#-支持)
+- [❤️ Support](#-support)
 - [📄 许可证](#-许可证)
 - [❤️ 赞助与捐赠](#️-赞助与捐赠)
 
@@ -611,9 +618,11 @@ JSON
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - 在本地克隆中可能还存在与相关仓库关联的附加 remote（本工作区示例：`novel`）。
 
-## 🙌 支持
-- 通过 GitHub issues 和 pull requests 提交缺陷报告与功能提案。
-- 赞助/捐赠链接见下方。
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+|---|---|---|
+| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 ![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
 ![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
@@ -626,9 +635,11 @@ JSON
 - 在补充许可证文件前，请将使用/再分发条款视为未明确，并与维护者确认。
 
 ## ❤️ 赞助与捐赠
-- GitHub Sponsors: https://github.com/sponsors/lachlanchen
-- Donate: https://chat.lazying.art/donate
-- PayPal: https://paypal.me/RongzhouChen
-- Stripe: https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
+| 渠道 | 链接 |
+| --- | --- |
+| GitHub Sponsors | https://github.com/sponsors/lachlanchen |
+| Donate | https://chat.lazying.art/donate |
+| PayPal | https://paypal.me/RongzhouChen |
+| Stripe | https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400 |
 
 如果这个项目对你的工作流有帮助，赞助将直接支持持续的 self-dev 任务、文档质量提升和工具链加固。

@@ -1,9 +1,7 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/figs/banner.png" alt="LazyingArt banner" />
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev
 
@@ -24,6 +22,15 @@
 > 🎯 **使命：** 讓應用開發流水線具備確定性、可恢復、並以工件為驅動。
 >
 > 🧩 **設計原則：** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+### 🎛️ 專案訊號
+
+| 訊號 | 目前方向 |
+| --- | --- |
+| 執行時模型 | Tornado backend + static PWA controller |
+| 流水線執行 | 確定性且可恢復（`start/pause/resume/stop`） |
+| 持久化策略 | PostgreSQL 優先，並帶相容回退行為 |
+| 文件流程 | 以根 README 為規範來源，並自動生成 `i18n/` 變體 |
 
 ### 🔗 快速導航
 
@@ -74,7 +81,7 @@
 - [❓ FAQ](#-faq)
 - [🗺️ 路線圖](#️-路線圖)
 - [🤝 貢獻](#-貢獻)
-- [🙌 支援](#-支援)
+- [❤️ Support](#-support)
 - [📄 許可證](#-許可證)
 - [❤️ 贊助與捐贈](#️-贊助與捐贈)
 
@@ -611,9 +618,11 @@ JSON
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
 - 在本地克隆中可能還存在與相關倉庫關聯的附加 remote（本工作區示例：`novel`）。
 
-## 🙌 支援
-- 透過 GitHub issues 和 pull requests 提交缺陷報告與功能提案。
-- 贊助/捐贈連結見下方。
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+|---|---|---|
+| [![Donate](https://img.shields.io/badge/Donate-LazyingArt-0EA5E9?style=for-the-badge&logo=ko-fi&logoColor=white)](https://chat.lazying.art/donate) | [![PayPal](https://img.shields.io/badge/PayPal-RongzhouChen-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/RongzhouChen) | [![Stripe](https://img.shields.io/badge/Stripe-Donate-635BFF?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 ![Issues Welcome](https://img.shields.io/badge/Issues-Welcome-2ea043)
 ![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-1f6feb)
