@@ -4,9 +4,10 @@
 
 
 
+
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
-# AutoAppDev
+# AutoAppDev 🚀
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![Backend](https://img.shields.io/badge/Backend-Tornado-222222)
@@ -624,6 +625,8 @@ Aucun fichier `LICENSE` racine n'a été détecté dans cet instantané du dép�
 
 Note d'hypothèse :
 - Tant qu'un fichier de licence n'est pas ajouté, considérez que les conditions d'usage/de redistribution ne sont pas spécifiées et confirmez avec le mainteneur.
+
+
 
 
 ## ❤️ Support

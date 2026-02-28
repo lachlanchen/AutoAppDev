@@ -5,7 +5,7 @@
 
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
-# AutoAppDev
+# AutoAppDev 🚀
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![Backend](https://img.shields.io/badge/Backend-Tornado-222222)
@@ -19,10 +19,15 @@
 ![API](https://img.shields.io/badge/API-JSON%20HTTP-0ea5e9)
 ![State Machine](https://img.shields.io/badge/Lifecycle-start%2Fpause%2Fresume%2Fstop-f59e0b)
 ![Control Flow](https://img.shields.io/badge/Control%20Flow-Plan%20%E2%86%92%20Work%20%E2%86%92%20Verify%20%E2%86%92%20Summary-0f766e)
+![GitHub stars](https://img.shields.io/github/stars/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%231DA1F2)
+![GitHub forks](https://img.shields.io/github/forks/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%2300A4A6)
+![GitHub issues](https://img.shields.io/github/issues/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%23ef4444)
 
-Reusable scripts + guides for building apps step-by-step from screenshots/markdown with Codex as a non-interactive tool.
+---
 
-> 🎯 **Sứ mệnh:** Làm cho quy trình phát triển ứng dụng trở nên có tính xác định rõ ràng, có thể tiếp tục, và hướng theo artifact.
+Các script và hướng dẫn có thể tái sử dụng để xây dựng ứng dụng theo từng bước từ ảnh chụp màn hình/markdown với Codex như một công cụ không tương tác.
+
+> 🎯 **Sứ mệnh:** Làm cho pipeline phát triển ứng dụng trở nên xác định, tiếp tục được, và hướng theo artifact.
 >
 > 🧩 **Nguyên tắc thiết kế:** Plan -> Work -> Verify -> Summary -> Commit/Push.
 
@@ -30,35 +35,35 @@ Reusable scripts + guides for building apps step-by-step from screenshots/markdo
 
 ### 🎛️ Tín hiệu dự án
 
-| Signal | Hướng phát triển hiện tại |
+| Tín hiệu | Hướng đi hiện tại |
 | --- | --- |
-| Mô hình runtime | Backend Tornado + controller PWA tĩnh |
-| Thực thi pipeline | Tất định và có thể tiếp tục (`start/pause/resume/stop`) |
-| Chiến lược lưu trữ | PostgreSQL-first với hành vi fallback tương thích |
+| Mô hình chạy | Backend Tornado + bộ điều khiển PWA tĩnh |
+| Thực thi pipeline | Xác định và có thể tiếp tục (`start/pause/resume/stop`) |
+| Chiến lược lưu trữ | PostgreSQL-first với hành vi dự phòng tương thích |
 | Luồng tài liệu | README gốc canonical + các biến thể `i18n/` tự động |
 
 ### 🔗 Điều hướng nhanh
 
 | Nhu cầu | Truy cập |
 | --- | --- |
-| Chạy local lần đầu | [⚡ Khởi Động Nhanh](#-khởi-động-nhanh) |
-| Biến môi trường và biến cần thiết | [⚙️ Cấu Hình](#️-cấu-hình) |
-| Bề mặt API | [📡 Ảnh Chụp Nhanh API](#-ảnh-chụp-nhanh-api) |
-| Runbook vận hành/debug | [🧭 Runbook Vận Hành](#-runbook-vận-hành) |
-| Quy tắc README/i18n | [🌐 Quy Trình README & i18n](#-quy-trình-readme--i18n) |
-| Bảng xử lý sự cố | [🔧 Xử Lý Sự Cố](#-xử-lý-sự-cố) |
+| Chạy local lần đầu | [⚡ Khởi động nhanh](#-khởi-động-nhanh) |
+| Cấu hình môi trường và biến bắt buộc | [⚙️ Cấu hình](#️-cấu-hình) |
+| Bề mặt API | [📡 Ảnh chụp nhanh API](#-ảnh-chụp-nhanh-api) |
+| Runbook vận hành/gỡ lỗi | [🧭 Runbook vận hành](#-runbook-vận-hành) |
+| Quy tắc README/i18n | [🌐 Quy trình README & i18n](#-quy-trình-readme--i18n) |
+| Bảng xử lý sự cố | [🔧 Xử lý sự cố](#-xử-lý-sự-cố) |
 
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
-## Trạng thái tự phát triển (tự động cập nhật)
+## Trạng thái tự phát triển (cập nhật tự động)
 
-- Updated: 2026-02-16T00:27:20Z
-- Phase commit: `Selfdev: 52 pwa_action_palette_dynamic_and_editable_blocks summary`
+- Cập nhật: 2026-02-16T00:27:20Z
+- Cam kết giai đoạn: `Selfdev: 52 pwa_action_palette_dynamic_and_editable_blocks summary`
 - Tiến độ: 51 / 55 tasks done
-- Codex session: `019c6056-f33a-7f31-b08f-0ca40c365351`
+- Phiên làm việc Codex: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Triết lý: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
 
 Phần này được cập nhật bởi `scripts/auto-autoappdev-development.sh`.
-Không chỉnh sửa nội dung giữa marker.
+Không chỉnh sửa nội dung giữa các marker.
 
 <!-- AUTOAPPDEV:STATUS:END -->
 
@@ -66,16 +71,16 @@ Không chỉnh sửa nội dung giữa marker.
 - [🚀 Tổng quan](#-tổng-quan)
 - [🧭 Triết lý](#-triết-lý)
 - [✨ Tính năng](#-tính-năng)
-- [📌 Tóm tắt nhanh](#-tóm-tắt-nhanh)
+- [📌 Tổng quan nhanh](#-tổng-quan-nhanh)
 - [🏗️ Kiến trúc](#-kiến-trúc)
 - [📚 Nội dung](#-nội-dung)
 - [🗂️ Cấu trúc dự án](#-cấu-trúc-dự-án)
-- [✅ Điều kiện tiên quyết](#-điều-kiện-tiên-quyết)
+- [✅ Yêu cầu tiên quyết](#-yêu-cầu-tiên-quyết)
 - [🧩 Tương thích & giả định](#-tương-thích--giả-định)
 - [🛠️ Cài đặt](#-cài-đặt)
 - [⚡ Khởi động nhanh](#-khởi-động-nhanh)
 - [⚙️ Cấu hình](#️-cấu-hình)
-- [▶️ Sử dụng](#-sử-dụng)
+- [▶️ Cách dùng](#-cách-dùng)
 - [🧭 Runbook vận hành](#-runbook-vận-hành)
 - [📡 Ảnh chụp nhanh API](#-ảnh-chụp-nhanh-api)
 - [🧪 Ví dụ](#-ví-dụ)
@@ -83,7 +88,7 @@ Không chỉnh sửa nội dung giữa marker.
 - [🔐 Lưu ý an toàn](#-lưu-ý-an-toàn)
 - [🔧 Xử lý sự cố](#-xử-lý-sự-cố)
 - [🌐 Quy trình README & i18n](#-quy-trình-readme--i18n)
-- [📘 Ngữ cảnh tạo README](#️-ngữ-cảnh-tạo-readme)
+- [📘 Bối cảnh tạo README](#-bối-cảnh-tạo-readme)
 - [❓ FAQ](#-faq)
 - [🗺️ Lộ trình](#-lộ-trình)
 - [🤝 Đóng góp](#-đóng-góp)
@@ -91,25 +96,25 @@ Không chỉnh sửa nội dung giữa marker.
 - [📄 Giấy phép](#-giấy-phép)
 
 ## 🚀 Tổng quan
-AutoAppDev là một dự án điều khiển pipeline phát triển ứng dụng chạy dài, có thể tạm dừng và tiếp tục lại. Nó kết hợp:
+AutoAppDev là một dự án điều khiển pipeline phát triển ứng dụng chạy dài, có thể tiếp tục. Nó kết hợp:
 
-1. Backend API bằng Tornado với PostgreSQL làm persistence (kèm cơ chế fallback JSON cục bộ trong mã lưu trữ).
-2. Giao diện controller PWA tĩnh theo phong cách Scratch.
-3. Các script và tài liệu cho việc soạn pipeline, sinh mã deterministic, vòng lặp tự phát triển, và tự động hóa README.
+1. Một API backend Tornado với persistence PostgreSQL (cùng hành vi dự phòng JSON cục bộ trong mã lưu trữ).
+2. Giao diện bộ điều khiển PWA tĩnh kiểu Scratch.
+3. Các script và tài liệu cho việc biên soạn pipeline, sinh mã có tính xác định, vòng lặp tự phát triển và tự động hóa README.
 
-Dự án này được tối ưu cho việc chạy agent theo trình tự chặt chẽ với lịch sử workflow dựa trên artifact.
+Dự án được tối ưu cho việc chạy agent theo thứ tự nghiêm ngặt với lịch sử workflow dựa trên artifact.
 
-### 🎨 Vì sao dự án này tồn tại
+### 🎨 Lý do dự án này tồn tại
 
 | Chủ đề | Ý nghĩa thực tế |
 | --- | --- |
-| Determinism | IR pipeline canonical + các workflow parser/import/codegen được thiết kế để tái lập tốt |
-| Resumability | Mạy trạng thái vòng đời rõ ràng (`start/pause/resume/stop`) cho các lần chạy dài |
-| Operability | Nhật ký runtime, inbox/outbox, và vòng lặp verify chạy bằng script |
-| Documentation-first | Hợp đồng/specs/examples nằm trong `docs/`, cùng luồng README đa ngôn ngữ tự động |
+| Tính xác định | Pipeline IR chuẩn + quy trình parser/import/codegen được thiết kế để có tính lặp lại |
+| Khả năng tiếp tục | State machine vòng đời rõ ràng (`start/pause/resume/stop`) cho các lần chạy dài |
+| Khả năng vận hành | Nhật ký runtime, kênh inbox/outbox, và vòng lặp xác minh do script điều khiển |
+| Ưu tiên tài liệu | Hợp đồng/specs/examples nằm trong `docs/`, cùng luồng README đa ngôn ngữ tự động |
 
 ## 🧭 Triết lý
-AutoAppDev xem các agent như công cụ và giữ công việc ổn định nhờ vòng lặp nghiêm ngặt, có thể tiếp tục:
+AutoAppDev coi agent như công cụ và giữ cho công việc ổn định qua vòng lặp nghiêm ngặt có thể tiếp tục:
 
 1. Plan
 2. Implement
@@ -118,42 +123,42 @@ AutoAppDev xem các agent như công cụ và giữ công việc ổn định nh
 5. Summarize + log
 6. Commit + push
 
-Ứng dụng controller hướng tới việc hiện thực các khái niệm tương tự kiểu Scratch block/action (bao gồm action mặc định `update_readme`) để mỗi workspace luôn luôn mới và có thể tái tạo.
+Ứng dụng controller nhằm hiện thực cùng khái niệm như block/action theo kiểu Scratch (kể cả `update_readme` action chuẩn) để mỗi workspace luôn ở trạng thái cập nhật và tái lập được.
 
-### 🔁 Ý định trạng thái vòng đời
+### 🔁 Ý định của state machine vòng đời
 
 | Chuyển trạng thái | Mục đích vận hành |
 | --- | --- |
-| `start` | Bắt đầu pipeline từ trạng thái stopped/ready |
+| `start` | Bắt đầu một pipeline từ trạng thái stopped/ready |
 | `pause` | Tạm dừng thực thi dài hạn an toàn mà không mất ngữ cảnh |
-| `resume` | Tiếp tục từ trạng thái/runtime artifact đã lưu |
+| `resume` | Tiếp tục từ runtime state/artifact đã lưu |
 | `stop` | Kết thúc thực thi và quay về trạng thái không chạy |
 
 ## ✨ Tính năng
 - Điều khiển vòng đời pipeline có thể tiếp tục: start, pause, resume, stop.
-- Thư viện API cho script pipeline AAPS (`.aaps`) và canonical IR (`autoappdev_ir` v1).
-- Pipeline parser/import deterministic:
+- API thư viện script cho pipeline AAPS (`.aaps`) và canonical IR (`autoappdev_ir` v1).
+- Quy trình parser/import deterministic:
   - Parse script AAPS đã định dạng.
-  - Import shell có chú thích qua comment `# AAPS:`.
-  - Parse dự phòng bằng Codex (tùy chọn) (`AUTOAPPDEV_ENABLE_LLM_PARSE=1`).
-- Registry action với action tích hợp sẵn + action có thể chỉnh sửa (clone/edit cho built-in readonly).
-- Scratch-like PWA blocks và action palette nạp động lúc runtime (`GET /api/actions`).
-- Kênh messaging runtime:
-  - Inbox (`/api/inbox`) cho định hướng từ operator -> pipeline.
-  - Outbox (`/api/outbox`) gồm ingest file từ `runtime/outbox`.
-- Stream log tăng dần từ backend và pipeline logs (`/api/logs`, `/api/logs/tail`).
-- Sinh code runner deterministic từ canonical IR (`scripts/pipeline_codegen/generate_runner_from_ir.py`).
-- Self-dev driver cho tiến hóa repo lặp lại (`scripts/auto-autoappdev-development.sh`).
-- Pipeline tự động hóa README với scaffold đa ngôn ngữ trong `i18n/`.
+  - Import shell có annotation qua comment `# AAPS:`.
+  - Parse dự phòng có hỗ trợ Codex (`AUTOAPPDEV_ENABLE_LLM_PARSE=1`) (tùy chọn).
+- Registry action có action tích hợp sẵn + action có thể chỉnh sửa/biên tập (clone/edit flow cho built-ins readonly).
+- PWA blocks kiểu Scratch và action palette tải động tại runtime (`GET /api/actions`).
+- Kênh nhắn tin runtime:
+  - Inbox (`/api/inbox`) cho hướng dẫn từ operator -> pipeline.
+  - Outbox (`/api/outbox`) gồm ingest file queue từ `runtime/outbox`.
+- Luồng log gia tăng từ backend và pipeline logs (`/api/logs`, `/api/logs/tail`).
+- Sinh runner code deterministic từ canonical IR (`scripts/pipeline_codegen/generate_runner_from_ir.py`).
+- Self-dev driver cho quá trình tiến hóa repo lặp đi lặp lại (`scripts/auto-autoappdev-development.sh`).
+- Tự động hóa README qua pipeline với scaffold đa ngôn ngữ trong `i18n/`.
 
-## 📌 Tóm tắt nhanh
+## 📌 Tổng quan nhanh
 
 | Khu vực | Chi tiết |
 | --- | --- |
-| Runtime lõi | Tornado backend + frontend PWA tĩnh |
-| Lưu trữ | PostgreSQL ưu tiên với hành vi tương thích trong `backend/storage.py` |
+| Runtime lõi | Backend Tornado + frontend PWA tĩnh |
+| Lưu trữ | PostgreSQL ưu tiên với hành vi fallback trong `backend/storage.py` |
 | Mô hình pipeline | Canonical IR (`autoappdev_ir` v1) và định dạng script AAPS |
-| Luồng điều khiển | Vòng đời Start / Pause / Resume / Stop |
+| Dòng chảy điều khiển | Vòng đời Start / Pause / Resume / Stop |
 | Chế độ phát triển | Vòng lặp self-dev có thể tiếp tục + workflow script/codegen deterministic |
 | README/i18n | Pipeline README tự động với scaffold `i18n/` |
 
@@ -175,35 +180,35 @@ Tornado backend (backend/app.py)
 ```
 
 ### Trách nhiệm backend
-- Expose controller APIs cho scripts, actions, plan, pipeline lifecycle, logs, inbox/outbox, workspace config.
-- Validate và lưu trữ pipeline script assets.
-- Điều phối trạng thái chạy và chuyển trạng thái pipeline.
-- Cung cấp hành vi fallback deterministic khi DB pool không khả dụng.
+- Mở các API controller cho scripts, actions, plan, vòng đời pipeline, logs, inbox/outbox, cấu hình workspace.
+- Kiểm tra và lưu trữ pipeline script assets.
+- Điều phối trạng thái chạy và chuyển đổi trạng thái pipeline.
+- Cung cấp hành vi fallback deterministic khi pool DB không sẵn sàng.
 
 ### Trách nhiệm frontend
-- Render giao diện Scratch-like block và flow chỉnh sửa pipeline.
-- Nạp action palette động từ backend registry.
+- Render UI block kiểu Scratch và luồng chỉnh sửa pipeline.
+- Tải action palette động từ registry backend.
 - Điều khiển lifecycle controls và theo dõi status/logs/messages.
 
 ## 📚 Nội dung
-Bản đồ tham chiếu cho các tài liệu, script và ví dụ được dùng nhiều nhất:
+Bản đồ tài liệu tham chiếu cho các tài liệu, script và ví dụ được dùng phổ biến:
 
 - `docs/auto-development-guide.md`: Triết lý và yêu cầu song ngữ (EN/ZH) cho agent tự phát triển chạy dài, có thể tiếp tục.
-- `docs/ORDERING_RATIONALE.md`: Ví dụ lập luận sắp thứ tự theo screenshot.
-- `docs/controller-mvp-scope.md`: Phạm vi MVP của controller (màn hình + APIs tối thiểu).
-- `docs/end-to-end-demo-checklist.md`: Checklist demo end-to-end thủ công deterministic (happy path backend + PWA).
+- `docs/ORDERING_RATIONALE.md`: Lý giải ví dụ cho thứ tự bước dẫn xuất từ screenshot.
+- `docs/controller-mvp-scope.md`: Phạm vi MVP controller (màn hình + các API tối thiểu).
+- `docs/end-to-end-demo-checklist.md`: Checklist demo end-to-end thủ công deterministic (đường đi backend + PWA).
 - `docs/env.md`: Quy ước biến môi trường (`.env`).
 - `docs/api-contracts.md`: Hợp đồng request/response API cho controller.
-- `docs/pipeline-formatted-script-spec.md`: Định dạng pipeline script chuẩn (AAPS) và canonical IR schema (TASK -> STEP -> ACTION).
-- `docs/pipeline-runner-codegen.md`: Generator deterministic cho runner bash có thể chạy được từ canonical IR.
-- `docs/common-actions.md`: Hợp đồng/spec của các action phổ biến (bao gồm `update_readme`).
+- `docs/pipeline-formatted-script-spec.md`: Định dạng script pipeline chuẩn (AAPS) và schema IR chuẩn (TASK -> STEP -> ACTION).
+- `docs/pipeline-runner-codegen.md`: Bộ sinh mã deterministic cho runner bash chạy được từ canonical IR.
+- `docs/common-actions.md`: Các hợp đồng/spec action phổ biến (bao gồm `update_readme`).
 - `docs/workspace-layout.md`: Cấu trúc thư mục workspace chuẩn + hợp đồng (`materials/interactions/outputs/docs/references/scripts/tools/logs/auto-apps`).
 - `scripts/run_autoappdev_tmux.sh`: Khởi động AutoAppDev (backend + PWA) trong tmux.
 - `scripts/run_autoappdev_selfdev_tmux.sh`: Khởi động self-dev driver AutoAppDev trong tmux.
-- `scripts/app-auto-development.sh`: Driver pipeline tuyến tính (`plan -> backend -> PWA -> Android -> iOS -> review -> summary`) với resume/state support.
-- `scripts/generate_screenshot_docs.sh`: Generator mô tả screenshot -> markdown (Codex-driven).
+- `scripts/app-auto-development.sh`: Driver pipeline tuyến tính (`plan -> backend -> PWA -> Android -> iOS -> review -> summary`) với hỗ trợ resume/state.
+- `scripts/generate_screenshot_docs.sh`: Trình sinh mô tả markdown từ screenshot (Codex-driven).
 - `scripts/setup_autoappdev_env.sh`: Script bootstrap môi trường conda chính cho chạy local.
-- `scripts/setup_backend_env.sh`: Script hỗ trợ môi trường backend.
+- `scripts/setup_backend_env.sh`: Script trợ giúp môi trường backend.
 - `examples/ralph-wiggum-example.sh`: Ví dụ helper tự động hóa Codex CLI.
 
 ## 🗂️ Cấu trúc dự án
@@ -247,12 +252,12 @@ AutoAppDev/
 └── .auto-readme-work/
 ```
 
-## ✅ Điều kiện tiên quyết
-- OS có `bash`.
+## ✅ Yêu cầu tiên quyết
+- Hệ điều hành có `bash`.
 - Python `3.11+`.
-- Conda (`conda`) cho các script setup có sẵn.
+- Conda (`conda`) cho các script setup đi kèm.
 - `tmux` để khởi động backend+PWA hoặc self-dev bằng một lệnh.
-- PostgreSQL truy cập được bởi `DATABASE_URL`.
+- PostgreSQL có thể truy cập thông qua `DATABASE_URL`.
 - Tùy chọn: `codex` CLI cho luồng Codex (self-dev, parse-llm fallback, auto-readme pipeline).
 
 Ma trận yêu cầu nhanh:
@@ -260,27 +265,27 @@ Ma trận yêu cầu nhanh:
 | Thành phần | Bắt buộc | Mục đích |
 | --- | --- | --- |
 | `bash` | Có | Thực thi script |
-| Python `3.11+` | Có | Backend + tooling codegen |
-| Conda | Có (luồng đề xuất) | Script bootstrap môi trường |
-| PostgreSQL | Có (chế độ ưu tiên) | Lưu trữ chính qua `DATABASE_URL` |
-| `tmux` | Khuyến nghị | Quản lý phiên backend/PWA và self-dev |
-| `codex` CLI | Tùy chọn | Parse hỗ trợ LLM và tự động hóa README/self-dev |
+| Python `3.11+` | Có | Backend + công cụ codegen |
+| Conda | Có (khuyến nghị) | Bootstrap môi trường |
+| PostgreSQL | Có (chế độ ưu tiên) | Persistence chính qua `DATABASE_URL` |
+| `tmux` | Khuyến nghị | Quản lý session backend/PWA và self-dev |
+| `codex` CLI | Tùy chọn | Parse LLM và tự động hóa README/self-dev |
 
 ## 🧩 Tương thích & giả định
 
-| Chủ đề | Kỳ vọng hiện tại |
+| Chủ đề | Mong đợi hiện tại |
 | --- | --- |
-| OS local | Shell Linux/macOS là mục tiêu chính (`bash` scripts) |
-| Python runtime | `3.11` (quản lý bởi `scripts/setup_autoappdev_env.sh`) |
-| Chế độ lưu trữ | PostgreSQL là mặc định và được xem là canonical |
-| Hành vi fallback | `backend/storage.py` có fallback JSON tương thích khi suy giảm |
+| Hệ điều hành local | Shell Linux/macOS là mục tiêu chính (`bash` scripts) |
+| Runtime Python | `3.11` (được quản lý bởi `scripts/setup_autoappdev_env.sh`) |
+| Chế độ persistence | PostgreSQL được ưu tiên và được xem là canonical |
+| Hành vi fallback | `backend/storage.py` có JSON compatibility fallback cho các kịch bản degraded |
 | Mô hình mạng | Phát triển localhost split-port (backend + PWA tĩnh) |
-| Công cụ agent | CLI `codex` là tùy chọn trừ khi dùng parse LLM hoặc tự động hóa self-dev |
+| Công cụ agent | `codex` CLI là tùy chọn trừ khi dùng parse LLM hoặc tự động hóa self-dev |
 
-Các giả định được dùng trong README này:
-- Bạn chạy lệnh từ root repository trừ khi phần mô tả ghi khác.
-- `.env` được cấu hình trước khi khởi động backend services.
-- `conda` và `tmux` sẵn có cho các workflow một lệnh được đề xuất.
+Giả định trong README này:
+- Bạn chạy lệnh từ root repo trừ khi section chỉ định khác.
+- `.env` được cấu hình trước khi khởi động dịch vụ backend.
+- `conda` và `tmux` khả dụng cho luồng gợi ý một lệnh.
 
 ## 🛠️ Cài đặt
 ### 1) Clone và vào repo
@@ -293,7 +298,8 @@ cd AutoAppDev
 ```bash
 cp .env.example .env
 ```
-Chỉnh sửa `.env` và đặt tối thiểu:
+
+Chỉnh sửa `.env` và thiết lập ít nhất:
 - `SECRET_KEY`
 - `DATABASE_URL`
 - `AUTOAPPDEV_HOST` và `AUTOAPPDEV_PORT` (hoặc `PORT`)
@@ -308,14 +314,14 @@ Chỉnh sửa `.env` và đặt tối thiểu:
 conda run -n autoappdev python -m backend.apply_schema
 ```
 
-### 5) Tuỳ chọn: smoke test cơ sở dữ liệu
+### 5) Kiểm thử cơ sở dữ liệu (tùy chọn)
 ```bash
 conda run -n autoappdev python -m backend.db_smoketest
 ```
 
 ## ⚡ Khởi động nhanh
 ```bash
-# từ repo root
+# từ root repo
 cp .env.example .env
 ./scripts/setup_autoappdev_env.sh
 conda run -n autoappdev python -m backend.apply_schema
@@ -327,36 +333,36 @@ Sau đó mở:
 - Backend API base: `http://127.0.0.1:8788`
 - Health check: `http://127.0.0.1:8788/api/health`
 
-Smoke-check bằng một lệnh:
+Kiểm tra nhanh bằng một lệnh:
 ```bash
 curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool
 ```
 
-Quick endpoint map:
+Bản đồ endpoint nhanh:
 
-| Surface | URL |
+| Mặt phẳng | URL |
 | --- | --- |
-| PWA UI | `http://127.0.0.1:5173/` |
+| UI PWA | `http://127.0.0.1:5173/` |
 | Backend API | `http://127.0.0.1:8788` |
 | Health endpoint | `http://127.0.0.1:8788/api/health` |
 
 ## ⚙️ Cấu hình
-Primary file: `.env` (xem `docs/env.md` và `.env.example`).
+Tệp chính: `.env` (xem `docs/env.md` và `.env.example`).
 
 ### Biến quan trọng
 
 | Biến | Mục đích |
 | --- | --- |
-| `SECRET_KEY` | Theo quy ước |
-| `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `PORT` | Thiết lập bind backend |
+| `SECRET_KEY` | Yêu cầu theo quy ước |
+| `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `PORT` | Cài đặt bind backend |
 | `DATABASE_URL` | PostgreSQL DSN (ưu tiên) |
 | `AUTOAPPDEV_RUNTIME_DIR` | Ghi đè runtime dir (mặc định `./runtime`) |
-| `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT` | Mục tiêu chạy pipeline mặc định |
+| `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT` | Pipeline chạy mặc định |
 | `AUTOAPPDEV_ENABLE_LLM_PARSE=1` | Bật `/api/scripts/parse-llm` |
-| `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK` | Mặc định Codex cho actions/endpoints |
+| `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK` | Giá trị mặc định Codex cho action/endpoint |
 | `AI_API_BASE_URL`, `AI_API_KEY` | Dành cho tích hợp tương lai |
 
-Kiểm tra nhanh `.env`:
+Xác thực nhanh `.env`:
 ```bash
 bash -lc 'set -euo pipefail; test -f .env; set -a; source .env; set +a; \
 python3 - <<"PY"\
@@ -372,14 +378,14 @@ print("OK: env looks set")\
 PY'
 ```
 
-## ▶️ Sử dụng
+## ▶️ Cách dùng
 
 | Chế độ | Lệnh | Ghi chú |
 | --- | --- | --- |
-| Khởi động backend + PWA (đề xuất) | `./scripts/run_autoappdev_tmux.sh --restart` | Backend `http://127.0.0.1:8788`, PWA `http://127.0.0.1:5173/` |
-| Chỉ chạy backend | `conda run -n autoappdev python -m backend.app` | Dùng `.env` bind + DB settings |
-| Chỉ chạy PWA static server | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | Hữu ích cho kiểm tra frontend riêng |
-| Chạy self-dev driver trong tmux | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | Vòng lặp self-development có thể tiếp tục |
+| Khởi động backend + PWA (khuyến nghị) | `./scripts/run_autoappdev_tmux.sh --restart` | Backend `http://127.0.0.1:8788`, PWA `http://127.0.0.1:5173/` |
+| Khởi động riêng backend | `conda run -n autoappdev python -m backend.app` | Dùng bind và DB settings từ `.env` |
+| Chỉ chạy máy chủ PWA tĩnh | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | Hữu ích cho kiểm tra frontend-only |
+| Chạy self-dev driver trong tmux | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | Vòng lặp tự phát triển có thể tiếp tục |
 
 ### Tùy chọn script thường dùng
 - `./scripts/run_autoappdev_tmux.sh --help`
@@ -388,9 +394,9 @@ PY'
 - `./scripts/run_autoappdev_selfdev_tmux.sh --help`
 - `./scripts/run_autoappdev_selfdev_tmux.sh --start-at 14 --reasoning xhigh`
 
-### Parse và lưu script
+### Parse và lưu trữ scripts
 - Parse AAPS qua API: `POST /api/scripts/parse`
-- Import annotated shell: `POST /api/scripts/import-shell`
+- Import shell có annotation: `POST /api/scripts/import-shell`
 - Parse LLM tùy chọn: `POST /api/scripts/parse-llm` (yêu cầu `AUTOAPPDEV_ENABLE_LLM_PARSE=1`)
 
 ### Pipeline control APIs
@@ -401,18 +407,18 @@ PY'
 - `POST /api/pipeline/resume`
 - `POST /api/pipeline/stop`
 
-### Các API hay dùng khác
+### Các API thường dùng khác
 - Health/version/config: `/api/health`, `/api/version`, `/api/config`
 - Plan/scripts: `/api/plan`, `/api/scripts`, `/api/scripts/<id>`
 - Actions: `/api/actions`, `/api/actions/<id>`, `/api/actions/<id>/clone`, `/api/actions/update-readme`
 - Messaging: `/api/chat`, `/api/inbox`, `/api/outbox`
 - Logs: `/api/logs`, `/api/logs/tail`
 
-Xem `docs/api-contracts.md` để xem cấu trúc request/response.
+Xem `docs/api-contracts.md` để xem shapes của request/response.
 
 ## 🧭 Runbook vận hành
 
-### Runbook: khởi chạy toàn bộ local stack
+### Runbook: bật full local stack
 ```bash
 cp .env.example .env
 ./scripts/setup_autoappdev_env.sh
@@ -420,12 +426,12 @@ conda run -n autoappdev python -m backend.apply_schema
 ./scripts/run_autoappdev_tmux.sh --restart
 ```
 
-Các mốc kiểm tra:
+Validation checkpoints:
 - `curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool`
-- Mở `http://127.0.0.1:5173/` và xác nhận UI nạp được `/api/config`.
-- Tùy chọn: mở `/api/version` và xác minh backend metadata mong đợi.
+- Mở `http://127.0.0.1:5173/` và xác nhận UI có tải được `/api/config`.
+- Tùy chọn: mở `/api/version` và xác minh metadata backend mong đợi được trả về.
 
-### Runbook: debug chỉ backend
+### Runbook: debug backend-only
 ```bash
 conda run -n autoappdev python -m backend.app
 curl -sS http://127.0.0.1:8788/api/version
@@ -447,12 +453,12 @@ scripts/pipeline_codegen/smoke_meta_round_v0.sh
 
 ## 📡 Ảnh chụp nhanh API
 
-Tổng quan nhóm API:
+Các nhóm API quan trọng:
 
-| Danh mục | Endpoints |
+| Nhóm | Endpoints |
 | --- | --- |
 | Health + runtime info | `GET /api/health`, `GET /api/version`, `GET /api/config`, `POST /api/config` |
-| Mô hình plan | `GET /api/plan`, `POST /api/plan` |
+| Plan model | `GET /api/plan`, `POST /api/plan` |
 | Scripts | `GET/POST /api/scripts`, `GET/PUT/DELETE /api/scripts/<id>`, `POST /api/scripts/parse`, `POST /api/scripts/import-shell`, `POST /api/scripts/parse-llm` |
 | Action registry | `GET/POST /api/actions`, `GET/PUT/DELETE /api/actions/<id>`, `POST /api/actions/<id>/clone`, `POST /api/actions/update-readme` |
 | Pipeline runtime | `GET /api/pipeline`, `GET /api/pipeline/status`, `POST /api/pipeline/start`, `POST /api/pipeline/pause`, `POST /api/pipeline/resume`, `POST /api/pipeline/stop` |
@@ -490,9 +496,9 @@ scripts/pipeline_codegen/smoke_codegen.sh
 export AUTOAPPDEV_PIPELINE_SCRIPT=scripts/pipeline_demo.sh
 conda run -n autoappdev python -m backend.app
 ```
-Sau đó dùng các nút Start/Pause/Resume/Stop trên PWA và kiểm tra `/api/logs`.
+Sau đó dùng điều khiển Start/Pause/Resume/Stop trên PWA và kiểm tra `/api/logs`.
 
-### Import từ annotated shell
+### Import từ shell có annotation
 ```bash
 curl -sS -X POST http://127.0.0.1:8788/api/scripts/import-shell \
   -H 'Content-Type: application/json' \
@@ -504,51 +510,51 @@ JSON
 ```
 
 ## 🧱 Ghi chú phát triển
-- Backend dùng Tornado và được thiết kế cho local dev ergonomics (kể cả CORS permissive cho localhost split port).
-- Storage theo hướng PostgreSQL-first với hành vi tương thích trong `backend/storage.py`.
-- Các khóa block của PWA và `STEP.block` trong script được cố tình đồng bộ (`plan`, `work`, `debug`, `fix`, `summary`, `commit_push`).
-- Built-in actions là readonly; clone trước khi chỉnh sửa.
-- `update_readme` action có ràng buộc path-safety cho các workspace README trong `auto-apps/<workspace>/README.md`.
-- Có một số reference/path lịch sử (`HeyCyan`, `LightMind`) trong docs/scripts do evolution, đường dẫn canonical hiện tại là repository root.
-- Thư mục gốc `i18n/` đã tồn tại. README theo ngôn ngữ được tạo dưới `i18n/` khi chạy đa ngôn ngữ.
+- Backend dựa trên Tornado và thiết kế cho ergonomics local dev (bao gồm CORS tương đối rộng cho split-port localhost).
+- Lưu trữ là PostgreSQL-first với hành vi fallback trong `backend/storage.py`.
+- Khóa block ở PWA và giá trị `STEP.block` của script được căn chỉnh có chủ đích (`plan`, `work`, `debug`, `fix`, `summary`, `commit_push`).
+- Action tích hợp sẵn là readonly; cần clone trước khi chỉnh sửa.
+- Action `update_readme` có ràng buộc path-safety cho các target README workspace dưới `auto-apps/<workspace>/README.md`.
+- Có một số tham chiếu tên/path lịch sử trong docs/scripts (`HeyCyan`, `LightMind`) do tiến hóa dự án. Đường dẫn canonical hiện tại là root repository này.
+- Thư mục `i18n/` ở root đã tồn tại. Tệp README theo từng ngôn ngữ dự kiến nằm trong `i18n/` trong các lần chạy đa ngôn ngữ.
 
-### Working model and state files
-- Runtime mặc định `./runtime` trừ khi `AUTOAPPDEV_RUNTIME_DIR` ghi đè.
-- State/historic của self-dev tự động lưu ở `references/selfdev/`.
-- Artifact của pipeline README lưu trong `.auto-readme-work/<timestamp>/`.
+### Mô hình hoạt động và state files
+- Runtime mặc định là `./runtime` trừ khi ghi đè bởi `AUTOAPPDEV_RUNTIME_DIR`.
+- State/historic của tự động hóa self-dev được theo dõi tại `references/selfdev/`.
+- README pipeline artifacts được ghi lại trong `.auto-readme-work/<timestamp>/`.
 
-### Posture kiểm thử (hiện tại)
+### Tư thế kiểm chứng hiện tại
 - Repository có smoke checks và deterministic demo scripts.
-- Top-level automated test suite/CI manifest chưa được định nghĩa trong root metadata.
-- Giả định: validation hiện tại chủ yếu script-driven (`scripts/pipeline_codegen/smoke_*.sh`, `backend.db_smoketest`, end-to-end checklist).
+- Chưa có test suite/CI manifest đầy đủ ở cấp root metadata.
+- Giả định: validation chủ yếu do script điều khiển hiện tại (`scripts/pipeline_codegen/smoke_*.sh`, `backend.db_smoketest`, end-to-end checklist).
 
 ## 🔐 Lưu ý an toàn
-- `update_readme` action được giới hạn có chủ đích cho workspace README target (`auto-apps/<workspace>/README.md`) với path traversal protections.
-- Action registry validation chuẩn hóa các trường spec và giới hạn giá trị cho các mức reasoning được hỗ trợ.
-- Scripts repo giả định chạy local tin cậy; kiểm tra nội dung script trước khi chạy trong môi trường chia sẻ hoặc gần production.
-- `.env` có thể chứa giá trị nhạy cảm (`DATABASE_URL`, API keys). Đừng commit `.env` và dùng quản lý secret theo môi trường.
+- Action `update_readme` có ràng buộc intentional đến các target README workspace (`auto-apps/<workspace>/README.md`) với bảo vệ chống path traversal.
+- Validation trong action registry áp đặt chuẩn hóa trường spec action và giá trị giới hạn cho các mức reasoning được hỗ trợ.
+- Script repository giả định chạy trên môi trường local tin cậy; hãy xem trước nội dung script trước khi chạy trong môi trường chia sẻ hoặc gần production.
+- `.env` có thể chứa giá trị nhạy cảm (`DATABASE_URL`, API keys). Giữ `.env` không commit và dùng quản lý secret phù hợp theo môi trường.
 
 ## 🔧 Xử lý sự cố
 
-| Triệu chứng | Cần kiểm tra |
+| Triệu chứng | Nên kiểm tra |
 | --- | --- |
 | `tmux not found` | Cài `tmux` hoặc chạy backend/PWA thủ công. |
-| Backend fail lúc khởi động do thiếu env | Kiểm tra lại `.env` với `.env.example` và `docs/env.md`. |
-| Lỗi database (kết nối/xác thực/schema) | Xác minh `DATABASE_URL`; chạy lại `conda run -n autoappdev python -m backend.apply_schema`; kiểm tra kết nối tùy chọn: `conda run -n autoappdev python -m backend.db_smoketest`. |
-| PWA load được nhưng không gọi API | Kiểm tra backend đang listen đúng host/port; tái tạo `pwa/config.local.js` bằng `./scripts/run_autoappdev_tmux.sh`. |
-| Pipeline Start trả về invalid transition | Kiểm tra trạng thái pipeline trước; bắt đầu từ `stopped`. |
-| Không có log updates trong UI | Xác nhận `runtime/logs/pipeline.log` đang ghi; gọi trực tiếp `/api/logs` và `/api/logs/tail` để tách UI và backend. |
-| LLM parse endpoint trả về disabled | Set `AUTOAPPDEV_ENABLE_LLM_PARSE=1` rồi restart backend. |
-| `conda run -n autoappdev ...` bị lỗi | Chạy lại `./scripts/setup_autoappdev_env.sh`; xác nhận env conda `autoappdev` tồn tại (`conda env list`). |
-| Sai API target ở frontend | Kiểm tra `pwa/config.local.js` có tồn tại và trỏ đúng backend host/port đang chạy. |
+| Backend khởi động thất bại do thiếu env | Kiểm tra lại `.env` theo `.env.example` và `docs/env.md`. |
+| Lỗi DB (kết nối/xác thực/schema) | Kiểm tra `DATABASE_URL`; chạy lại `conda run -n autoappdev python -m backend.apply_schema`; kiểm tra tùy chọn: `conda run -n autoappdev python -m backend.db_smoketest`. |
+| PWA tải được nhưng không gọi API | Đảm bảo backend đang nghe đúng host/port; tái tạo `pwa/config.local.js` bằng cách chạy lại `./scripts/run_autoappdev_tmux.sh`. |
+| Pipeline Start trả về chuyển trạng thái không hợp lệ | Kiểm tra trạng thái pipeline hiện tại; bắt đầu từ `stopped`. |
+| Không có cập nhật log trên UI | Xác nhận `runtime/logs/pipeline.log` đang được ghi; dùng trực tiếp `/api/logs` và `/api/logs/tail` để tách ranh giới UI vs backend. |
+| Endpoint parse LLM báo disabled | Đặt `AUTOAPPDEV_ENABLE_LLM_PARSE=1` rồi khởi động lại backend. |
+| `conda run -n autoappdev ...` lỗi | Chạy lại `./scripts/setup_autoappdev_env.sh`; xác nhận env conda `autoappdev` tồn tại (`conda env list`). |
+| Sai API target ở frontend | Xác nhận `pwa/config.local.js` tồn tại và trỏ đúng backend host/port đang hoạt động. |
 
-Để xác minh thủ công theo hướng deterministic, dùng `docs/end-to-end-demo-checklist.md`.
+Để có đường kiểm chứng thủ công deterministic, dùng `docs/end-to-end-demo-checklist.md`.
 
 ## 🌐 Quy trình README & i18n
-- Root README là nguồn canonical dùng bởi pipeline tự động hóa README.
-- Các biến thể đa ngôn ngữ nằm trong `i18n/`.
-- Trạng thái thư mục i18n: ✅ có trong repository này.
-- Bộ ngôn ngữ hiện tại:
+- README gốc là nguồn chuẩn dùng bởi pipeline tự động README.
+- Variants đa ngôn ngữ dự kiến nằm trong `i18n/`.
+- Trạng thái i18n: ✅ có trong repository này.
+- Bộ ngôn ngữ hiện tại trong repo này:
   - `i18n/README.ar.md`
   - `i18n/README.de.md`
   - `i18n/README.es.md`
@@ -559,17 +565,17 @@ JSON
   - `i18n/README.vi.md`
   - `i18n/README.zh-Hans.md`
   - `i18n/README.zh-Hant.md`
-- Thanh ngôn ngữ nên chỉ xuất hiện một dòng duy nhất ở đầu mỗi README variant (không trùng lặp).
-- README pipeline entrypoint: `prompt_tools/auto-readme-pipeline.sh`.
+- Thanh ngôn ngữ phải là một dòng duy nhất ở đầu mỗi bản README (không lặp lại).
+- Điểm vào pipeline README: `prompt_tools/auto-readme-pipeline.sh`.
 
-### Ràng buộc sinh i18n (nghiêm ngặt)
-- Luôn xử lý sinh đa ngôn ngữ khi cập nhật README canonical.
-- Sinh/cập nhật files ngôn ngữ theo từng file một (sequential), không gom batch mơ hồ.
-- Giữ đúng một dòng điều hướng ngôn ngữ ở đầu mỗi bản dịch.
-- Không duplicate language bars trong cùng file.
-- Giữ nguyên snippets lệnh, link, API paths, và ý định badge qua các bản dịch.
+### Ràng buộc tạo i18n (nghiêm ngặt)
+- Luôn chạy quy trình đa ngôn ngữ khi cập nhật nội dung README canonical.
+- Tạo/cập nhật từng ngôn ngữ tuần tự (một file một lần), không chạy hàng loạt mơ hồ.
+- Giữ đúng một dòng language-options duy nhất ở đầu mỗi bản dịch.
+- Không trùng lặp language bars trong cùng một file.
+- Bảo toàn snippets, links, API paths và ý nghĩa badge giữa các bản dịch.
 
-Thứ tự gợi ý sinh lần lượt:
+Thứ tự gợi ý sinh một-một:
 1. `i18n/README.ar.md`
 2. `i18n/README.de.md`
 3. `i18n/README.es.md`
@@ -583,65 +589,65 @@ Thứ tự gợi ý sinh lần lượt:
 
 Bảng ngôn ngữ:
 
-| Ngôn ngữ | File |
+| Language | File |
 | --- | --- |
 
-## 📘 Ngữ cảnh tạo README
+## 📘 Bối cảnh tạo README
 
 - Pipeline run timestamp: `20260301_064935`
 - Trigger: `./README.md` first complete draft generation
-- Input user prompt: `probe prompt`
-- Goal: generate a complete, beautiful README draft with required sections and support information
-- Source snapshot used:
+- Mục tiêu người dùng: `probe prompt`
+- Mục tiêu: tạo một bản README hoàn chỉnh, đẹp, có đủ section yêu cầu và thông tin support
+- Snapshot nguồn sử dụng:
   - `./.auto-readme-work/20260301_064935/pipeline-context.md`
   - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
-- File này được sinh từ nội dung repository và giữ vai trò canonical draft entry point.
+- File này được tạo từ nội dung repository và giữ lại như điểm vào bản draft canonical.
 
 ## ❓ FAQ
 
 ### PostgreSQL có bắt buộc không?
-Ưu tiên và kỳ vọng cho vận hành bình thường. Lớp storage có fallback compatibility behavior, nhưng môi trường dạng production-like nên giả định PostgreSQL có sẵn qua `DATABASE_URL`.
+Ưu tiên và mong đợi cho vận hành bình thường. Lớp lưu trữ có hành vi fallback compatibility, nhưng dùng production-like nên giả định PostgreSQL khả dụng qua `DATABASE_URL`.
 
-### Vì sao có cả `AUTOAPPDEV_PORT` và `PORT`?
-`AUTOAPPDEV_PORT` là biến riêng của dự án. `PORT` tồn tại như alias phù hợp deployment. Giữ hai biến này đồng bộ trừ khi bạn chủ động override hành vi cho luồng launch.
+### Tại sao có cả `AUTOAPPDEV_PORT` lẫn `PORT`?
+`AUTOAPPDEV_PORT` là project-specific. `PORT` tồn tại như alias thân thiện khi deploy. Giữ hai biến đồng nhất trừ khi bạn cố tình override behavior theo đường chạy launch.
 
-### Nếu chỉ muốn inspect APIs thì bắt đầu từ đâu?
-Chạy backend-only (`conda run -n autoappdev python -m backend.app`) rồi dùng `/api/health`, `/api/version`, `/api/config`, sau đó tới endpoints script/action trong `docs/api-contracts.md`.
+### Nên bắt đầu từ đâu nếu chỉ muốn kiểm tra APIs?
+Chạy backend-only (`conda run -n autoappdev python -m backend.app`) rồi dùng `/api/health`, `/api/version`, `/api/config`, sau đó tới các endpoint script/action trong `docs/api-contracts.md`.
 
-### README đa ngôn ngữ có tự động sinh không?
-Có. Repo có `prompt_tools/auto-readme-pipeline.sh`, và các bản ngôn ngữ được duy trì trong `i18n/` với một dòng điều hướng ngôn ngữ ở đầu mỗi variant.
+### READMEs đa ngôn ngữ có tạo tự động không?
+Có. Repo có `prompt_tools/auto-readme-pipeline.sh`, và các bản dịch ngôn ngữ được duy trì trong `i18n/` với đúng một dòng navigation ngôn ngữ ở đầu mỗi bản.
 
 ## 🗺️ Lộ trình
-- Hoàn tất các self-dev task còn lại ngoài mốc hiện tại `51 / 55`.
-- Mở rộng workspace/materials/context tooling và tăng cường safe-path contracts.
-- Tiếp tục cải thiện UX action palette và flow chỉnh sửa action.
-- Mở rộng hỗ trợ README/UI đa ngôn ngữ trong `i18n/` và switching ngôn ngữ runtime.
-- Nâng cấp smoke/integration checks và coverage CI (hiện có script-driven smoke checks; chưa có CI manifest đầy đủ ở root).
-- Củng cố deterministic parser/import/codegen quanh AAPS v1 và canonical IR.
+- Hoàn thành các self-dev task còn lại ngoài `51 / 55` hiện tại.
+- Mở rộng tooling workspace/materials/context và hợp đồng an toàn đường dẫn mạnh hơn.
+- Tiếp tục cải thiện action palette UX và quy trình chỉnh sửa action có thể biên tập.
+- Mở rộng hỗ trợ README/UI đa ngôn ngữ trên `i18n/` và runtime language switching.
+- Củng cố smoke/integration checks và CI coverage (hiện có smoke checks bằng script; chưa có CI manifest đầy đủ tại root).
+- Tiếp tục tăng cường tính xác định của parser/import/codegen quanh AAPS v1 và canonical IR.
 
 ## 🤝 Đóng góp
-Đóng góp được chào đón qua issues và pull requests.
+Đóng góp hoan nghênh qua issues và pull requests.
 
 Quy trình gợi ý:
 1. Fork và tạo feature branch.
 2. Giữ thay đổi tập trung và tái lập được.
 3. Ưu tiên scripts/tests deterministic khi có thể.
-4. Cập nhật docs khi thay đổi behavior/contracts (`docs/*`, API contracts, examples).
-5. Mở PR cùng context, bước xác minh và giả định runtime.
+4. Cập nhật docs khi hành vi/hợp đồng thay đổi (`docs/*`, API contracts, examples).
+5. Mở PR với context, bước xác thực, và giả định runtime.
 
-Repository remotes hiện có:
+Remote của repository hiện tại bao gồm:
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
-- Remote bổ sung có thể xuất hiện trong local clones cho repo liên quan (ví dụ trong workspace này: `novel`).
+- Có thể có remote bổ sung trong các clone local cho repo liên quan (ví dụ trong workspace: `novel`).
 
 ---
 
 ## 📄 Giấy phép
 ![License](https://img.shields.io/badge/License-Not%20Detected-C53030?logo=law&logoColor=white)
 
-No root `LICENSE` file was detected in this repository snapshot.
+Không có file `LICENSE` gốc được phát hiện trong snapshot repository này.
 
-Assumption note:
-- Until a license file is added, treat usage/redistribution terms as unspecified and confirm with the maintainer.
+Ghi chú giả định:
+- Cho đến khi file license được thêm vào, hãy xem điều khoản sử dụng/phân phối là chưa xác định và xác thực với maintainer.
 
 
 ## ❤️ Support
