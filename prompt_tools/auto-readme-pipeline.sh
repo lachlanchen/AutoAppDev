@@ -26,6 +26,14 @@ if [[ ! -d "$repo_path/.git" ]]; then
   exit 1
 fi
 
+# Safety guard: never run on repos with tracked-file changes already present.
+# This prevents accidental inclusion of unrelated staged/unstaged changes.
+if ! git -C "$repo_path" diff --quiet || ! git -C "$repo_path" diff --cached --quiet; then
+  echo "Refusing to run: repo has existing tracked-file changes: $repo_path"
+  echo "Please commit/stash/reset first, then rerun."
+  exit 2
+fi
+
 auto_dir="$script_dir/auto-readme"
 structure_tool="$auto_dir/auto-file-structure.sh"
 write_tool="$auto_dir/auto-write-readme.sh"
@@ -225,6 +233,9 @@ echo "[7/7] Optional commit and push"
 if [[ "$commit_and_push" == "--commit-and-push" ]]; then
   (
     cd "$repo_path"
+    # Ensure no pre-existing staged changes leak into this auto commit.
+    git reset >/dev/null
+
     if [[ "$i18n_mode" -eq 1 ]]; then
       git add README.md i18n/README.*.md
       # Stage removals of any root README.<lang>.md files after normalization.
@@ -234,6 +245,15 @@ if [[ "$commit_and_push" == "--commit-and-push" ]]; then
     else
       git add README.md
     fi
+
+    # Safety guard: only allow README targets in this auto commit.
+    bad_paths="$(git diff --cached --name-only | rg -v '^(README\.md|i18n/README\..*\.md)$' || true)"
+    if [[ -n "$bad_paths" ]]; then
+      echo "Refusing to commit unexpected staged paths:"
+      echo "$bad_paths"
+      exit 3
+    fi
+
     if git diff --cached --quiet; then
       echo "No README changes to commit."
     else
