@@ -3,6 +3,7 @@
 
 
 
+
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev 🚀
@@ -19,6 +20,9 @@
 ![API](https://img.shields.io/badge/API-JSON%20HTTP-0ea5e9)
 ![State Machine](https://img.shields.io/badge/Lifecycle-start%2Fpause%2Fresume%2Fstop-f59e0b)
 ![Control Flow](https://img.shields.io/badge/Control%20Flow-Plan%20%E2%86%92%20Work%20%E2%86%92%20Verify%20%E2%86%92%20Summary-0f766e)
+![GitHub stars](https://img.shields.io/github/stars/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%231DA1F2)
+![GitHub forks](https://img.shields.io/github/forks/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%2300A4A6)
+![GitHub issues](https://img.shields.io/github/issues/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%23ef4444)
 
 ---
 
@@ -65,6 +69,7 @@ Inhalte zwischen den Markern nicht manuell bearbeiten.
 <!-- AUTOAPPDEV:STATUS:END -->
 
 ## 🗂️ Inhaltsverzeichnis
+- [🧭 Repository-Überblick](#-repository-überblick)
 - [🚀 Überblick](#-overview)
 - [🧭 Philosophie](#-philosophy)
 - [✨ Features](#-features)
@@ -91,6 +96,16 @@ Inhalte zwischen den Markern nicht manuell bearbeiten.
 - [🤝 Mitwirken](#-contributing)
 - [❤️ Support](#-support)
 - [📄 Lizenz](#-license)
+
+## 🧭 Repository-Überblick
+
+| Fokus | Aktuelles Setup |
+| --- | --- |
+| Kernschleife | Plan → Work → Debug → Fix → Summary → Commit/Push |
+| Laufzeitmodell | Tornado-Backend + statischer PWA-Controller |
+| Zustandsmaschine | `start` / `pause` / `resume` / `stop` |
+| Persistenz | PostgreSQL-first mit JSON-Fallback-Kompatibilität |
+| Dokumentation | Kanonische `README.md` plus mehrsprachige Ausgaben unter `i18n/` |
 
 ## 🚀 Überblick
 AutoAppDev ist ein Controller-Projekt für langlebige, fortsetzbare App-Entwicklungs-Pipelines. Es kombiniert:
@@ -587,16 +602,20 @@ Sprachabdeckungstabelle:
 
 | Sprache | Datei |
 | --- | --- |
+| Arabic | `i18n/README.ar.md` |
+
+Beobachteter Workspace-Hinweis:
+- `i18n/README.zh-Hant.md.tmp` kann als temporäres Übersetzungsartefakt auftauchen; finale kanonische Dateien bleiben `README.<lang>.md`.
 
 ## 📘 Readme Generation Context
 
-- Pipeline-Durchlauf-Zeitstempel: `20260301_064935`
-- Auslöser: `./README.md`
-- Eingabe-User-Prompt: `probe prompt`
+- Pipeline-Durchlauf-Zeitstempel: `20260301_095119`
+- Auslöser: `./README.md` erste vollständige Entwurfsgenerierung (canonical-base incremental update)
+- Eingabe-User-Prompt: `Use current README as canonical base. No reduction: only increment and improve. Preserve existing content, links, badges, commands, and details. Always process multilingual generation (do not skip): ensure i18n exists and generate/update language files one-by-one with a single language-options line at the top and no duplicates.`
 - Ziel: vollständigen, schön formatierten README-Entwurf mit erforderlichen Abschnitten und Support-Informationen erzeugen
 - Eingabesnapshot verwendet:
-  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
-  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
+  - `./.auto-readme-work/20260301_095119/pipeline-context.md`
+  - `./.auto-readme-work/20260301_095119/repo-structure-analysis.md`
 - Diese Datei wurde aus Repository-Inhalten generiert und als kanonischer Eingangs-Entwurf gespeichert.
 
 ## ❓ FAQ

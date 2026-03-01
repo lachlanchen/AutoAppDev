@@ -1,8 +1,6 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-
-
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev 🚀
@@ -68,6 +66,7 @@ No edite el contenido entre los marcadores.
 <!-- AUTOAPPDEV:STATUS:END -->
 
 ## 🗂️ Tabla de contenidos
+- [🧭 Resumen del repositorio](#-resumen-del-repositorio)
 - [🚀 Visión general](#-visión-general)
 - [🧭 Filosofía](#-filosofía)
 - [✨ Características](#-características)
@@ -94,6 +93,16 @@ No edite el contenido entre los marcadores.
 - [🤝 Contribuciones](#-contribuciones)
 - [❤️ Support](#-support)
 - [📄 License](#-license)
+
+## 🧭 Resumen del repositorio
+
+| Enfoque | Configuración actual |
+| --- | --- |
+| Bucle principal | Plan → Work → Debug → Fix → Summary → Commit/Push |
+| Modelo de ejecución | Backend Tornado + controlador PWA estático |
+| Máquina de estados | `start` / `pause` / `resume` / `stop` |
+| Persistencia | PostgreSQL-first con compatibilidad de fallback JSON |
+| Documentación | `README.md` canónico + salidas multilingües en `i18n/` |
 
 ## 🚀 Visión general
 AutoAppDev es un proyecto controlador para pipelines de desarrollo de apps de larga duración y reanudables. Combina:

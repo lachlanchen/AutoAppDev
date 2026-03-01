@@ -1,8 +1,5 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
-
-
-
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev 🚀
@@ -58,7 +55,7 @@ Các script và hướng dẫn có thể tái sử dụng để xây dựng ứn
 
 - Cập nhật: 2026-02-16T00:27:20Z
 - Cam kết giai đoạn: `Selfdev: 52 pwa_action_palette_dynamic_and_editable_blocks summary`
-- Tiến độ: 51 / 55 tasks done
+- Tiến độ: 51 / 55 tác vụ đã hoàn thành
 - Phiên làm việc Codex: `019c6056-f33a-7f31-b08f-0ca40c365351`
 - Triết lý: Plan -> Work -> Verify -> Summary -> Commit/Push (linear, resumable)
 
@@ -69,6 +66,7 @@ Không chỉnh sửa nội dung giữa các marker.
 
 ## 🗂️ Mục lục
 - [🚀 Tổng quan](#-tổng-quan)
+- [🧭 Tổng quan repository](#-tổng-quan-repository)
 - [🧭 Triết lý](#-triết-lý)
 - [✨ Tính năng](#-tính-năng)
 - [📌 Tổng quan nhanh](#-tổng-quan-nhanh)
@@ -94,6 +92,16 @@ Không chỉnh sửa nội dung giữa các marker.
 - [🤝 Đóng góp](#-đóng-góp)
 - [❤️ Support](#-support)
 - [📄 Giấy phép](#-giấy-phép)
+
+## 🧭 Tổng quan repository
+
+| Trọng tâm | Thiết lập hiện tại |
+| --- | --- |
+| Vòng lặp cốt lõi | Plan → Work → Debug → Fix → Summary → Commit/Push |
+| Mô hình runtime | Backend Tornado + bộ điều khiển PWA tĩnh |
+| State machine | `start` / `pause` / `resume` / `stop` |
+| Lưu trữ | PostgreSQL-first với cơ chế tương thích fallback JSON |
+| Tài liệu | `README.md` canonical và các bản đa ngôn ngữ trong `i18n/` |
 
 ## 🚀 Tổng quan
 AutoAppDev là một dự án điều khiển pipeline phát triển ứng dụng chạy dài, có thể tiếp tục. Nó kết hợp:
@@ -591,17 +599,21 @@ Bảng ngôn ngữ:
 
 | Language | File |
 | --- | --- |
+| Arabic | `i18n/README.ar.md` |
+
+Ghi chú quan sát trong workspace:
+- `i18n/README.zh-Hant.md.tmp` có thể xuất hiện như artifact dịch tạm thời; file canonical cuối cùng nên giữ dạng `README.<lang>.md`.
 
 ## 📘 Bối cảnh tạo README
 
-- Pipeline run timestamp: `20260301_064935`
-- Trigger: `./README.md` first complete draft generation
-- Mục tiêu người dùng: `probe prompt`
-- Mục tiêu: tạo một bản README hoàn chỉnh, đẹp, có đủ section yêu cầu và thông tin support
+- Pipeline run timestamp: `20260301_095119`
+- Trigger: `./README.md` first complete draft generation (canonical-base incremental update)
+- Input user prompt: `Use current README as canonical base. No reduction: only increment and improve. Preserve existing content, links, badges, commands, and details. Always process multilingual generation (do not skip): ensure i18n exists and generate/update language files one-by-one with a single language-options line at the top and no duplicates.`
+- Mục tiêu: tạo bản README hoàn chỉnh, đẹp, có đủ section yêu cầu và thông tin support
 - Snapshot nguồn sử dụng:
-  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
-  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
-- File này được tạo từ nội dung repository và giữ lại như điểm vào bản draft canonical.
+  - `./.auto-readme-work/20260301_095119/pipeline-context.md`
+  - `./.auto-readme-work/20260301_095119/repo-structure-analysis.md`
+- File này được tạo từ nội dung repository và được giữ lại như điểm vào cho bản nháp canonical.
 
 ## ❓ FAQ
 

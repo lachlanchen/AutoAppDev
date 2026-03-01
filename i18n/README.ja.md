@@ -1,8 +1,5 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
-
-
-
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev 🚀
@@ -25,36 +22,36 @@
 
 ---
 
-スクリーンショットや markdown から、Codex を非対話型ツールとして使ってアプリを段階的に構築するための、再利用可能なスクリプトとガイド集です。
+スクリーンショット/Markdown からアプリを段階的に構築するための、再利用可能なスクリプトとガイド集です。Codex を非対話ツールとして利用します。
 
-> 🎯 **Mission:** アプリ開発パイプラインを決定論的、再開可能、成果物主導にする。
+> 🎯 **ミッション:** アプリ開発パイプラインを決定論的・再開可能・成果物駆動にする。
 >
-> 🧩 **Design principle:** Plan -> Work -> Verify -> Summary -> Commit/Push.
+> 🧩 **設計原則:** Plan -> Work -> Verify -> Summary -> Commit/Push。
 
 ---
 
-### 🎛️ Project Signals
+### 🎛️ プロジェクトシグナル
 
-| Signal | Current Direction |
+| Signal | 現在の方向性 |
 | --- | --- |
 | Runtime model | Tornado backend + static PWA controller |
-| Pipeline execution | 決定論的で再開可能（`start/pause/resume/stop`） |
-| Persistence strategy | PostgreSQL first + 互換フォールバック |
-| Documentation flow | canonical root README + 自動化された `i18n/` 派生 |
+| Pipeline execution | 決定論的かつ再開可能 (`start/pause/resume/stop`) |
+| Persistence strategy | PostgreSQL 優先 + 互換フォールバック動作 |
+| Documentation flow | Canonical なルート README + 自動 `i18n/` バリアント |
 
-### 🔗 Quick Navigation
+### 🔗 クイックナビゲーション
 
-| Need | Go to |
+| 必要なもの | 移動先 |
 | --- | --- |
-| 初回のローカル実行 | [⚡ Quick Start](#-quick-start) |
-| 環境設定と必須変数 | [⚙️ Configuration](#-configuration) |
+| 最初のローカル起動 | [⚡ Quick Start](#-quick-start) |
+| 環境と必須変数 | [⚙️ Configuration](#-configuration) |
 | API 全体像 | [📡 API Snapshot](#-api-snapshot) |
-| 実行・デバッグ手順 | [🧭 Operational Runbooks](#-operational-runbooks) |
+| 実行/デバッグ運用手順 | [🧭 Operational Runbooks](#-operational-runbooks) |
 | README/i18n 生成ルール | [🌐 README & i18n Workflow](#-readme--i18n-workflow) |
-| トラブルシューティング | [🔧 Troubleshooting](#-troubleshooting) |
+| トラブルシューティング一覧 | [🔧 Troubleshooting](#-troubleshooting) |
 
 <!-- AUTOAPPDEV:STATUS:BEGIN -->
-## Self-Dev Status (Auto-Updated)
+## Self-Dev ステータス（自動更新）
 
 - Updated: 2026-02-16T00:27:20Z
 - Phase commit: `Selfdev: 52 pwa_action_palette_dynamic_and_editable_blocks summary`
@@ -67,54 +64,65 @@
 
 <!-- AUTOAPPDEV:STATUS:END -->
 
-## 🗂️ Table of Contents
-- [🚀 Overview](#-overview)
-- [🧭 Philosophy](#-philosophy)
-- [✨ Features](#-features)
-- [📌 At A Glance](#-at-a-glance)
-- [🏗️ Architecture](#-architecture)
-- [📚 Contents](#-contents)
-- [🗂️ Project Structure](#-project-structure)
-- [✅ Prerequisites](#-prerequisites)
-- [🧩 Compatibility & Assumptions](#-compatibility--assumptions)
-- [🛠️ Installation](#-installation)
-- [⚡ Quick Start](#-quick-start)
-- [⚙️ Configuration](#-configuration)
-- [▶️ Usage](#-usage)
-- [🧭 Operational Runbooks](#-operational-runbooks)
-- [📡 API Snapshot](#-api-snapshot)
-- [🧪 Examples](#-examples)
-- [🧱 Development Notes](#-development-notes)
-- [🔐 Safety Notes](#-safety-notes)
-- [🔧 Troubleshooting](#-troubleshooting)
-- [🌐 README & i18n Workflow](#-readme--i18n-workflow)
-- [📘 Readme Generation Context](#-readme-generation-context)
+## 🗂️ 目次
+- [🚀 概要](#-概要)
+- [🧭 リポジトリスナップショット](#-リポジトリスナップショット)
+- [🧭 哲学](#-哲学)
+- [✨ 特徴](#-特徴)
+- [📌 ひと目でわかる要点](#-ひと目でわかる要点)
+- [🏗️ アーキテクチャ](#-アーキテクチャ)
+- [📚 内容](#-内容)
+- [🗂️ プロジェクト構成](#-プロジェクト構成)
+- [✅ 前提条件](#-前提条件)
+- [🧩 互換性と前提](#-互換性と前提)
+- [🛠️ インストール](#-インストール)
+- [⚡ クイックスタート](#-クイックスタート)
+- [⚙️ 設定](#-設定)
+- [▶️ 使い方](#-使い方)
+- [🧭 運用ランブック](#-運用ランブック)
+- [📡 API スナップショット](#-api-スナップショット)
+- [🧪 例](#-例)
+- [🧱 開発メモ](#-開発メモ)
+- [🔐 セーフティノート](#-セーフティノート)
+- [🔧 トラブルシューティング](#-トラブルシューティング)
+- [🌐 README と i18n ワークフロー](#-readme-と-i18n-ワークフロー)
+- [📘 README 生成コンテキスト](#-readme-生成コンテキスト)
 - [❓ FAQ](#-faq)
-- [🗺️ Roadmap](#-roadmap)
-- [🤝 Contributing](#-contributing)
+- [🗺️ ロードマップ](#-ロードマップ)
+- [🤝 コントリビュート](#-コントリビュート)
 - [❤️ Support](#-support)
-- [📄 License](#-license)
+- [📄 ライセンス](#-ライセンス)
 
-## 🚀 Overview
-AutoAppDev は、長時間実行で再開可能なアプリ開発パイプライン用のコントローラー・プロジェクトです。主な構成は以下の通りです。
+## 🧭 リポジトリスナップショット
 
-1. PostgreSQL 永続化（`storage` 側にはローカル JSON 互換フォールバックも含む）を備えた Tornado のバックエンド API。
-2. Scratch のような静的 PWA コントローラー UI。
-3. パイプライン作成、決定論的なコード生成、自己開発ループ、README 自動化のためのスクリプトとドキュメント。
-
-このプロジェクトは、厳格な順序制御と成果物ベースのワークフロー履歴により、予測可能なエージェント実行を実現するよう最適化されています。
-
-### 🎨 Why this repo exists
-
-| Theme | What it means in practice |
+| Focus | 現在の構成 |
 | --- | --- |
-| Determinism | canonical pipeline IR + parser/import/codegen ワークフローで再現性を担保 |
-| Resumability | 長時間実行を想定し `start/pause/resume/stop` の明示的状態遷移を採用 |
-| Operability | ランタイムログ、inbox/outbox、スクリプト主導の検証ループ |
-| Documentation-first | 契約・仕様・サンプルを `docs/` に集約し、多言語 README を自動生成 |
+| Core loop | Plan → Work → Debug → Fix → Summary → Commit/Push |
+| Runtime model | Tornado backend + static PWA controller |
+| State machine | `start` / `pause` / `resume` / `stop` |
+| Persistence | PostgreSQL 優先 + JSON フォールバック互換 |
+| Documentation | Canonical `README.md` + 多言語 `i18n/` 出力 |
 
-## 🧭 Philosophy
-AutoAppDev はエージェントを「道具」と見なし、厳格かつ再開可能なループで作業を安定化します。
+## 🚀 概要
+AutoAppDev は、長時間実行かつ再開可能なアプリ開発パイプライン向けのコントローラープロジェクトです。以下を組み合わせています。
+
+1. PostgreSQL 永続化対応の Tornado バックエンド API（ストレージコードにローカル JSON フォールバック互換あり）。
+2. Scratch 風の静的 PWA コントローラー UI。
+3. パイプライン記述、決定論的コード生成、自己開発ループ、README 自動化のためのスクリプトとドキュメント。
+
+本プロジェクトは、厳密な順序制御と成果物中心の履歴管理により、予測可能なエージェント実行に最適化されています。
+
+### 🎨 このリポジトリの存在理由
+
+| テーマ | 実運用での意味 |
+| --- | --- |
+| Determinism | Canonical pipeline IR + parser/import/codegen による再現性重視設計 |
+| Resumability | 長時間実行向けの明示的ライフサイクル状態機械 (`start/pause/resume/stop`) |
+| Operability | 実行ログ、inbox/outbox チャネル、スクリプト駆動検証ループ |
+| Documentation-first | `docs/` に契約/仕様/例を集約し、多言語 README フローを自動化 |
+
+## 🧭 哲学
+AutoAppDev はエージェントを「ツール」として扱い、厳密かつ再開可能なループで作業を安定化します。
 
 1. Plan
 2. Implement
@@ -123,46 +131,46 @@ AutoAppDev はエージェントを「道具」と見なし、厳格かつ再開
 5. Summarize + log
 6. Commit + push
 
-コントローラーアプリは Scratch 風のブロック/アクション（共通の `update_readme` アクションを含む）を通じて同様の考え方を実装し、各ワークスペースを常に最新かつ再現可能な状態に保ちます。
+コントローラーアプリは、Scratch 風ブロック/アクション（共通の `update_readme` アクションを含む）で同じ概念を表現し、各ワークスペースを最新かつ再現可能に保つことを目指します。
 
-### 🔁 Lifecycle state intent
+### 🔁 ライフサイクル状態の意図
 
-| State transition | Operational intent |
+| 状態遷移 | 運用上の意図 |
 | --- | --- |
-| `start` | 停止/待機状態からパイプラインを開始 |
-| `pause` | コンテキストを失わずに長時間実行を一時停止 |
-| `resume` | 保存されたランタイム状態や成果物から再開 |
-| `stop` | 実行を停止して非実行状態に復帰 |
+| `start` | stopped/ready 状態からパイプラインを開始 |
+| `pause` | コンテキストを失わずに長時間実行を安全停止 |
+| `resume` | 保存済みの実行状態/成果物から再開 |
+| `stop` | 実行を終了して非実行状態へ戻す |
 
-## ✨ Features
-- 再開可能なパイプライン状態制御: start, pause, resume, stop。
-- AAPS パイプラインスクリプト（`.aaps`）と canonical IR（`autoappdev_ir` v1）向けスクリプト API。
+## ✨ 特徴
+- 再開可能なパイプライン制御: start, pause, resume, stop。
+- AAPS パイプラインスクリプト（`.aaps`）と canonical IR（`autoappdev_ir` v1）向けスクリプトライブラリ API。
 - 決定論的 parser/import パイプライン:
-  - フォーマット済み AAPS スクリプトを解析。
-  - `# AAPS:` コメント経由で注釈付きシェルを取り込み。
-  - 任意の Codex 補助解析フォールバック (`AUTOAPPDEV_ENABLE_LLM_PARSE=1`)。
-- 組み込みアクション + 編集可能/カスタムアクションのアクションレジストリ（読み取り専用の組み込みを clone/edit して利用）。
-- Scratch 風 PWA ブロックと実行時ロードされるアクションパレット（`GET /api/actions`）。
-- ランタイム通信チャネル:
-  - オペレーターからパイプライン指示を送る Inbox（`/api/inbox`）。
-  - `runtime/outbox` のファイルキュー取り込みを含む Outbox（`/api/outbox`）。
-- バックエンドとパイプラインログの増分ストリーミング（`/api/logs`, `/api/logs/tail`）。
-- canonical IR からの決定論的ランナーコード生成（`scripts/pipeline_codegen/generate_runner_from_ir.py`）。
-- リポジトリの反復進化を担う self-dev ドライバー（`scripts/auto-autoappdev-development.sh`）。
-- `i18n/` 配下で多言語生成スケルトンを提供する README 自動化パイプライン。
+  - 整形済み AAPS スクリプトの解析。
+  - `# AAPS:` コメントによる注釈付き shell の取り込み。
+  - 任意の Codex 補助パースフォールバック（`AUTOAPPDEV_ENABLE_LLM_PARSE=1`）。
+- 組み込み + 編集可能/カスタムアクション対応のアクションレジストリ（読み取り専用組み込みは clone/edit フロー）。
+- Scratch 風 PWA ブロックと実行時ロード型アクションパレット（`GET /api/actions`）。
+- 実行時メッセージチャネル:
+  - Inbox（`/api/inbox`）: オペレーター -> パイプライン指示。
+  - Outbox（`/api/outbox`）: `runtime/outbox` からのファイルキュー取り込みを含む。
+- バックエンドおよびパイプラインログの増分ストリーミング（`/api/logs`, `/api/logs/tail`）。
+- Canonical IR からの決定論的 runner codegen（`scripts/pipeline_codegen/generate_runner_from_ir.py`）。
+- 反復的なリポジトリ進化のための self-dev ドライバー（`scripts/auto-autoappdev-development.sh`）。
+- `i18n/` 配下の多言語 README 生成スキャフォールディング。
 
-## 📌 At A Glance
+## 📌 ひと目でわかる要点
 
-| Area | Details |
+| 領域 | 詳細 |
 | --- | --- |
 | Core runtime | Tornado backend + static PWA frontend |
-| Persistence | PostgreSQL-first と `backend/storage.py` の互換動作 |
-| Pipeline model | canonical IR（`autoappdev_ir` v1）と AAPS スクリプト形式 |
-| Control flow | Start / Pause / Resume / Stop の状態機構 |
-| Dev mode | 再開可能な self-dev ループ + 決定論的 script/codegen ワークフロー |
-| README/i18n | `i18n/` で自動化された README パイプライン |
+| Persistence | PostgreSQL 優先、`backend/storage.py` に互換動作 |
+| Pipeline model | Canonical IR (`autoappdev_ir` v1) と AAPS スクリプト形式 |
+| Control flow | Start / Pause / Resume / Stop ライフサイクル |
+| Dev mode | 再開可能 self-dev ループ + 決定論的 script/codegen ワークフロー |
+| README/i18n | `i18n/` スキャフォールディング付き自動 README パイプライン |
 
-## 🏗️ Architecture
+## 🏗️ アーキテクチャ
 
 ```text
 Operator / Developer
@@ -179,39 +187,39 @@ Tornado backend (backend/app.py)
         +--> scripts/ (pipeline runner + codegen helpers)
 ```
 
-### Backend responsibilities
-- scripts, actions, plan, pipeline lifecycle, logs, inbox/outbox, workspace config 用のコントローラー API を公開。
-- パイプラインスクリプト資産の検証と永続化。
-- パイプライン実行状態とステータス遷移を調整。
-- DB プールが利用不可のときに決定論的フォールバック動作を提供。
+### バックエンドの責務
+- スクリプト、アクション、計画、パイプラインライフサイクル、ログ、inbox/outbox、ワークスペース設定の controller API を提供。
+- パイプラインスクリプト資産を検証して永続化。
+- パイプライン実行状態と状態遷移を調整。
+- DB プールが利用不可の場合に決定論的フォールバック動作を提供。
 
-### Frontend responsibilities
-- Scratch 風のブロック UI とパイプライン編集フローを描画。
-- バックエンドレジストリからアクションパレットを動的にロード。
-- ライフサイクル制御を操作し、ステータス/ログ/メッセージを監視。
+### フロントエンドの責務
+- Scratch 風ブロック UI とパイプライン編集フローを描画。
+- バックエンドレジストリからアクションパレットを動的ロード。
+- ライフサイクル操作を実行し、状態/ログ/メッセージを監視。
 
-## 📚 Contents
-最頻出のドキュメント、スクリプト、サンプルへの参照マップ:
+## 📚 内容
+最もよく使うドキュメント、スクリプト、サンプルの参照マップ:
 
-- `docs/auto-development-guide.md`: EN/ZH の二言語で、長時間実行・再開可能な自己開発エージェントの思想と要件。
-- `docs/ORDERING_RATIONALE.md`: スクリーンショット主導のステップ順序に関する事例。
-- `docs/controller-mvp-scope.md`: コントローラー MVP の範囲（画面 + 最小 API）。
-- `docs/end-to-end-demo-checklist.md`: 決定論的な手動 E2E デモチェックリスト（backend + PWA happy path）。
-- `docs/env.md`: 環境変数（`.env`）の取り決め。
-- `docs/api-contracts.md`: コントローラー API のリクエスト/レスポンス契約。
+- `docs/auto-development-guide.md`: 長時間実行・再開可能な自動開発エージェント向けの思想と要件（英中バイリンガル）。
+- `docs/ORDERING_RATIONALE.md`: スクリーンショット駆動ステップの順序付け根拠サンプル。
+- `docs/controller-mvp-scope.md`: Controller MVP 範囲（画面 + 最小 API）。
+- `docs/end-to-end-demo-checklist.md`: 決定論的な手動 E2E デモチェックリスト（backend + PWA ハッピーパス）。
+- `docs/env.md`: 環境変数（`.env`）規約。
+- `docs/api-contracts.md`: controller の API リクエスト/レスポンス契約。
 - `docs/pipeline-formatted-script-spec.md`: 標準パイプラインスクリプト形式（AAPS）と canonical IR スキーマ（TASK -> STEP -> ACTION）。
-- `docs/pipeline-runner-codegen.md`: canonical IR から実行可能な Bash ランナーを生成する決定論的コードジェネレーター。
+- `docs/pipeline-runner-codegen.md`: canonical IR から実行可能 bash runner を生成する決定論的ジェネレーター。
 - `docs/common-actions.md`: 共通アクション契約/仕様（`update_readme` を含む）。
-- `docs/workspace-layout.md`: 標準ワークスペース構成 + 契約（`materials/interactions/outputs/docs/references/scripts/tools/logs/auto-apps`）。
-- `scripts/run_autoappdev_tmux.sh`: tmux で AutoAppDev（backend + PWA）を起動。
-- `scripts/run_autoappdev_selfdev_tmux.sh`: tmux で AutoAppDev self-dev driver を起動。
-- `scripts/app-auto-development.sh`: 線形パイプラインドライバー（`plan -> backend -> PWA -> Android -> iOS -> review -> summary`）で resume/state 対応。
-- `scripts/generate_screenshot_docs.sh`: スクリーンショット -> markdown 説明生成（Codex 駆動）。
-- `scripts/setup_autoappdev_env.sh`: ローカル実行向けメイン conda 環境のセットアップ。
-- `scripts/setup_backend_env.sh`: backend 環境ヘルパースクリプト。
-- `examples/ralph-wiggum-example.sh`: Codex CLI 自動化ヘルパー例。
+- `docs/workspace-layout.md`: 標準ワークスペースフォルダ + 契約（`materials/interactions/outputs/docs/references/scripts/tools/logs/auto-apps`）。
+- `scripts/run_autoappdev_tmux.sh`: tmux で AutoAppDev アプリ（backend + PWA）を起動。
+- `scripts/run_autoappdev_selfdev_tmux.sh`: tmux で AutoAppDev self-dev ドライバーを起動。
+- `scripts/app-auto-development.sh`: 線形パイプラインドライバー（`plan -> backend -> PWA -> Android -> iOS -> review -> summary`、resume/state 対応）。
+- `scripts/generate_screenshot_docs.sh`: スクリーンショット -> Markdown 説明生成（Codex 駆動）。
+- `scripts/setup_autoappdev_env.sh`: ローカル実行向けメイン conda 環境ブートストラップ。
+- `scripts/setup_backend_env.sh`: backend 環境ヘルパー。
+- `examples/ralph-wiggum-example.sh`: Codex CLI 自動化ヘルパーの例。
 
-## 🗂️ Project Structure
+## 🗂️ プロジェクト構成
 ```text
 AutoAppDev/
 ├── README.md
@@ -252,73 +260,73 @@ AutoAppDev/
 └── .auto-readme-work/
 ```
 
-## ✅ Prerequisites
+## ✅ 前提条件
 - `bash` が使える OS。
 - Python `3.11+`。
-- conda (`conda`)（提供されているセットアップに必要）。
-- backend+PWA または self-dev セッションを管理するための `tmux`。
+- 提供セットアップスクリプト用に Conda（`conda`）。
+- backend+PWA または self-dev セッションをワンコマンドで動かすための `tmux`。
 - `DATABASE_URL` で到達可能な PostgreSQL。
-- 任意: Codex CLI（self-dev、parse-llm フォールバック、auto-readme パイプライン）。
+- 任意: Codex 駆動フロー用の `codex` CLI（self-dev、parse-llm フォールバック、auto-readme pipeline）。
 
-Quick requirement matrix:
+クイック要件マトリクス:
 
-| Component | Required | Purpose |
+| コンポーネント | 必須 | 目的 |
 | --- | --- | --- |
-| `bash` | Yes | Script execution |
-| Python `3.11+` | Yes | Backend + codegen tooling |
-| Conda | Yes (recommended flow) | Environment bootstrap scripts |
-| PostgreSQL | Yes (preferred mode) | Primary persistence via `DATABASE_URL` |
-| `tmux` | Recommended | Managed backend/PWA and self-dev sessions |
-| `codex` CLI | Optional | LLM-assisted parse and README/self-dev automation |
+| `bash` | はい | スクリプト実行 |
+| Python `3.11+` | はい | backend + codegen ツール |
+| Conda | はい（推奨フロー） | 環境ブートストラップスクリプト |
+| PostgreSQL | はい（推奨モード） | `DATABASE_URL` 経由の主永続化 |
+| `tmux` | 推奨 | 管理された backend/PWA と self-dev セッション |
+| `codex` CLI | 任意 | LLM 補助パースと README/self-dev 自動化 |
 
-## 🧩 Compatibility & Assumptions
+## 🧩 互換性と前提
 
-| Topic | Current expectation |
+| トピック | 現在の想定 |
 | --- | --- |
-| Local OS | Linux/macOS の `bash` スクリプトを主対象 |
-| Python runtime | `3.11`（`scripts/setup_autoappdev_env.sh` で管理） |
-| Persistence mode | PostgreSQL を優先し canonical として扱う |
-| Fallback behavior | `backend/storage.py` は劣化シナリオ向け JSON 互換フォールバックを含む |
-| Network model | localhost 分離ポート構成（backend + static PWA） |
-| Agent tooling | LLM 補助解析または self-dev 自動化を使う場合を除き `codex` CLI は任意 |
+| ローカル OS | Linux/macOS シェルが主対象（`bash` スクリプト） |
+| Python ランタイム | `3.11`（`scripts/setup_autoappdev_env.sh` で管理） |
+| 永続化モード | PostgreSQL を優先・正規系として扱う |
+| フォールバック動作 | `backend/storage.py` には劣化シナリオ向け JSON 互換フォールバックを実装 |
+| ネットワークモデル | localhost 分離ポート開発（backend + static PWA） |
+| エージェントツール | LLM 補助パースや self-dev 自動化を使う場合のみ `codex` CLI が必要 |
 
-この README の前提:
-- セクションに明示がない場合は、コマンドはリポジトリのルートで実行。
-- backend 起動前に `.env` を設定済みにしておく。
-- 推奨ワークフローでは `conda` と `tmux` が利用可能。
+この README での前提:
+- 特記がない限り、リポジトリルートからコマンドを実行します。
+- backend 起動前に `.env` を設定します。
+- 推奨のワンコマンドワークフローでは `conda` と `tmux` が利用可能です。
 
-## 🛠️ Installation
-### 1) Clone and enter repo
+## 🛠️ インストール
+### 1) リポジトリをクローンして移動
 ```bash
- git clone git@github.com:lachlanchen/AutoAppDev.git
+git clone git@github.com:lachlanchen/AutoAppDev.git
 cd AutoAppDev
 ```
 
-### 2) Configure environment
+### 2) 環境を設定
 ```bash
 cp .env.example .env
 ```
-`.env` を編集して最低限次を設定:
+`.env` を編集して、少なくとも以下を設定:
 - `SECRET_KEY`
 - `DATABASE_URL`
 - `AUTOAPPDEV_HOST` と `AUTOAPPDEV_PORT`（または `PORT`）
 
-### 3) Create/update backend environment
+### 3) backend 環境を作成/更新
 ```bash
 ./scripts/setup_autoappdev_env.sh
 ```
 
-### 4) Apply database schema
+### 4) データベーススキーマを適用
 ```bash
 conda run -n autoappdev python -m backend.apply_schema
 ```
 
-### 5) Optional: database smoke test
+### 5) 任意: DB スモークテスト
 ```bash
 conda run -n autoappdev python -m backend.db_smoketest
 ```
 
-## ⚡ Quick Start
+## ⚡ クイックスタート
 ```bash
 # from repo root
 cp .env.example .env
@@ -327,17 +335,17 @@ conda run -n autoappdev python -m backend.apply_schema
 ./scripts/run_autoappdev_tmux.sh --restart
 ```
 
-次を開きます:
+その後に開く URL:
 - PWA: `http://127.0.0.1:5173/`
 - Backend API base: `http://127.0.0.1:8788`
 - Health check: `http://127.0.0.1:8788/api/health`
 
-1 コマンド検証:
+ワンコマンドのスモークチェック:
 ```bash
 curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool
 ```
 
-Quick endpoint map:
+クイックエンドポイントマップ:
 
 | Surface | URL |
 | --- | --- |
@@ -345,23 +353,23 @@ Quick endpoint map:
 | Backend API | `http://127.0.0.1:8788` |
 | Health endpoint | `http://127.0.0.1:8788/api/health` |
 
-## ⚙️ Configuration
-主要ファイル: `.env`（`docs/env.md` と `.env.example` を参照）。
+## ⚙️ 設定
+主設定ファイル: `.env`（`docs/env.md` と `.env.example` を参照）。
 
-### Important variables
+### 重要な変数
 
-| Variable | Purpose |
+| 変数 | 目的 |
 | --- | --- |
 | `SECRET_KEY` | 規約上必須 |
-| `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `PORT` | バックエンドのバインド設定 |
+| `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `PORT` | backend バインド設定 |
 | `DATABASE_URL` | PostgreSQL DSN（推奨） |
-| `AUTOAPPDEV_RUNTIME_DIR` | runtime ディレクトリの上書き（既定 `./runtime`） |
-| `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT` | 既定のパイプライン実行対象 |
+| `AUTOAPPDEV_RUNTIME_DIR` | runtime ディレクトリ上書き（既定 `./runtime`） |
+| `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT` | デフォルトパイプライン実行対象 |
 | `AUTOAPPDEV_ENABLE_LLM_PARSE=1` | `/api/scripts/parse-llm` を有効化 |
-| `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK` | actions/endpoints 用の Codex デフォルト |
-| `AI_API_BASE_URL`, `AI_API_KEY` | 将来の連携用に予約 |
+| `AUTOAPPDEV_CODEX_MODEL`, `AUTOAPPDEV_CODEX_REASONING`, `AUTOAPPDEV_CODEX_SKIP_GIT_CHECK` | action/endpoint 用 Codex 既定値 |
+| `AI_API_BASE_URL`, `AI_API_KEY` | 将来統合用に予約 |
 
-`.env` を簡単に検証:
+`.env` の簡易検証:
 ```bash
 bash -lc 'set -euo pipefail; test -f .env; set -a; source .env; set +a; \
 python3 - <<"PY"\
@@ -377,28 +385,28 @@ print("OK: env looks set")\
 PY'
 ```
 
-## ▶️ Usage
+## ▶️ 使い方
 
-| Mode | Command | Notes |
+| モード | コマンド | メモ |
 | --- | --- | --- |
-| Start backend + PWA (recommended) | `./scripts/run_autoappdev_tmux.sh --restart` | Backend `http://127.0.0.1:8788`, PWA `http://127.0.0.1:5173/` |
-| Start backend only | `conda run -n autoappdev python -m backend.app` | `.env` の bind + DB 設定を使用 |
-| Start PWA static server only | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | フロントエンドのみの確認に有用 |
-| Run self-dev driver in tmux | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | 再開可能な self-development ループ |
+| backend + PWA を起動（推奨） | `./scripts/run_autoappdev_tmux.sh --restart` | Backend `http://127.0.0.1:8788`, PWA `http://127.0.0.1:5173/` |
+| backend のみ起動 | `conda run -n autoappdev python -m backend.app` | `.env` のバインド + DB 設定を使用 |
+| PWA 静的サーバーのみ起動 | `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1` | フロントエンド単体確認に便利 |
+| tmux で self-dev ドライバー実行 | `./scripts/run_autoappdev_selfdev_tmux.sh --restart` | 再開可能 self-development ループ |
 
-### Common script options
+### よく使うスクリプトオプション
 - `./scripts/run_autoappdev_tmux.sh --help`
 - `./scripts/run_autoappdev_tmux.sh --backend-port 8790 --pwa-port 5174`
 - `./scripts/run_autoappdev_tmux.sh --detached`
 - `./scripts/run_autoappdev_selfdev_tmux.sh --help`
 - `./scripts/run_autoappdev_selfdev_tmux.sh --start-at 14 --reasoning xhigh`
 
-### Parse and store scripts
+### スクリプトの解析と保存
 - API で AAPS を解析: `POST /api/scripts/parse`
-- 注釈付きシェルを取り込み: `POST /api/scripts/import-shell`
-- 任意で LLM 解析: `POST /api/scripts/parse-llm`（`AUTOAPPDEV_ENABLE_LLM_PARSE=1` が必要）
+- 注釈付き shell を取り込み: `POST /api/scripts/import-shell`
+- 任意の LLM 解析: `POST /api/scripts/parse-llm`（`AUTOAPPDEV_ENABLE_LLM_PARSE=1` が必要）
 
-### Pipeline control APIs
+### パイプライン制御 API
 - `GET /api/pipeline`
 - `GET /api/pipeline/status`
 - `POST /api/pipeline/start`
@@ -406,18 +414,18 @@ PY'
 - `POST /api/pipeline/resume`
 - `POST /api/pipeline/stop`
 
-### Other frequently used APIs
+### その他よく使う API
 - Health/version/config: `/api/health`, `/api/version`, `/api/config`
 - Plan/scripts: `/api/plan`, `/api/scripts`, `/api/scripts/<id>`
 - Actions: `/api/actions`, `/api/actions/<id>`, `/api/actions/<id>/clone`, `/api/actions/update-readme`
 - Messaging: `/api/chat`, `/api/inbox`, `/api/outbox`
 - Logs: `/api/logs`, `/api/logs/tail`
 
-リクエスト/レスポンスの形式は `docs/api-contracts.md` を参照。
+リクエスト/レスポンス形状は `docs/api-contracts.md` を参照してください。
 
-## 🧭 Operational Runbooks
+## 🧭 運用ランブック
 
-### Runbook: bring up the full local stack
+### ランブック: ローカルフルスタックを起動
 ```bash
 cp .env.example .env
 ./scripts/setup_autoappdev_env.sh
@@ -427,17 +435,17 @@ conda run -n autoappdev python -m backend.apply_schema
 
 検証チェックポイント:
 - `curl -sS http://127.0.0.1:8788/api/health | python3 -m json.tool`
-- `http://127.0.0.1:5173/` を開き、UI が `/api/config` を読めることを確認。
-- 任意: `/api/version` を開き、期待される backend metadata が返ることを確認。
+- `http://127.0.0.1:5173/` を開き、UI が `/api/config` を読み込めることを確認。
+- 任意: `/api/version` を開き、想定どおりの backend メタデータが返ることを確認。
 
-### Runbook: backend-only debugging
+### ランブック: backend 単体デバッグ
 ```bash
 conda run -n autoappdev python -m backend.app
 curl -sS http://127.0.0.1:8788/api/version
 curl -sS http://127.0.0.1:8788/api/pipeline/status | python3 -m json.tool
 ```
 
-### Runbook: deterministic codegen smoke
+### ランブック: 決定論的 codegen スモーク
 ```bash
 python3 scripts/pipeline_codegen/generate_runner_from_ir.py \
   --in examples/pipeline_ir_codegen_demo_v0.json \
@@ -450,22 +458,22 @@ scripts/pipeline_codegen/smoke_conditional_steps.sh
 scripts/pipeline_codegen/smoke_meta_round_v0.sh
 ```
 
-## 📡 API Snapshot
+## 📡 API スナップショット
 
-主要 API の概要:
+主要 API グループの一覧:
 
-| Category | Endpoints |
+| カテゴリ | エンドポイント |
 | --- | --- |
 | Health + runtime info | `GET /api/health`, `GET /api/version`, `GET /api/config`, `POST /api/config` |
 | Plan model | `GET /api/plan`, `POST /api/plan` |
 | Scripts | `GET/POST /api/scripts`, `GET/PUT/DELETE /api/scripts/<id>`, `POST /api/scripts/parse`, `POST /api/scripts/import-shell`, `POST /api/scripts/parse-llm` |
 | Action registry | `GET/POST /api/actions`, `GET/PUT/DELETE /api/actions/<id>`, `POST /api/actions/<id>/clone`, `POST /api/actions/update-readme` |
 | Pipeline runtime | `GET /api/pipeline`, `GET /api/pipeline/status`, `POST /api/pipeline/start`, `POST /api/pipeline/pause`, `POST /api/pipeline/resume`, `POST /api/pipeline/stop` |
-| Messaging + logs | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET/POST /api/outbox`, `GET/POST /api/logs`, `GET/POST /api/logs/tail` |
+| Messaging + logs | `GET/POST /api/chat`, `GET/POST /api/inbox`, `GET/POST /api/outbox`, `GET/POST /api/logs`, `GET /api/logs/tail` |
 | Workspace settings | `GET/POST /api/workspaces/<name>/config` |
 
-## 🧪 Examples
-### AAPS example
+## 🧪 例
+### AAPS 例
 ```text
 AUTOAPPDEV_PIPELINE 1
 
@@ -474,13 +482,13 @@ STEP  {"id":"s1","title":"Plan","block":"plan"}
 ACTION {"id":"a1","kind":"note","params":{"text":"Read context and outline steps."}}
 ```
 
-Full examples:
+完全なサンプル:
 - `examples/pipeline_formatted_script_v1.aaps`
 - `examples/pipeline_ir_v1.json`
 - `examples/pipeline_shell_annotated_v0.sh`
 - `examples/pipeline_ir_codegen_demo_v0.json`
 
-### Deterministic runner generation
+### 決定論的 runner 生成
 ```bash
 python3 scripts/pipeline_codegen/generate_runner_from_ir.py \
   --in examples/pipeline_ir_codegen_demo_v0.json \
@@ -490,14 +498,14 @@ bash -n /tmp/autoappdev_runner.sh
 scripts/pipeline_codegen/smoke_codegen.sh
 ```
 
-### Deterministic demo pipeline
+### 決定論的デモパイプライン
 ```bash
 export AUTOAPPDEV_PIPELINE_SCRIPT=scripts/pipeline_demo.sh
 conda run -n autoappdev python -m backend.app
 ```
-その後、PWA の Start/Pause/Resume/Stop 操作を行い、`/api/logs` を確認します。
+その後、PWA の Start/Pause/Resume/Stop を操作し、`/api/logs` を確認してください。
 
-### Import from annotated shell
+### 注釈付き shell から取り込み
 ```bash
 curl -sS -X POST http://127.0.0.1:8788/api/scripts/import-shell \
   -H 'Content-Type: application/json' \
@@ -508,52 +516,52 @@ curl -sS -X POST http://127.0.0.1:8788/api/scripts/import-shell \
 JSON
 ```
 
-## 🧱 Development Notes
-- backend は Tornado ベースで、ローカル開発向けに扱いやすく設計されています（localhost 分割ポート向けの許容的 CORS を含む）。
-- ストレージは PostgreSQL-first で、`backend/storage.py` に互換動作が組み込まれています。
-- PWA のブロックキーと `STEP.block` の値は意図的に合わせています（`plan`, `work`, `debug`, `fix`, `summary`, `commit_push`）。
-- 組み込みアクションは読み取り専用で、編集前に clone が必要です。
-- `update_readme` アクションは path-safety 制約により対象は `auto-apps/<workspace>/README.md` 配下の workspace README に限定。
-- 一部の docs/scripts には旧プロジェクト経緯由来の歴史的な path/name 記述（`HeyCyan`, `LightMind`）が残ります。現在の canonical path はこのリポジトリのルートです。
-- ルートの `i18n/` ディレクトリが存在し、多言語 README はここに配置されます。
+## 🧱 開発メモ
+- backend は Tornado ベースで、ローカル開発の扱いやすさを重視した設計です（localhost 分離ポート向けの緩い CORS を含む）。
+- 永続化は PostgreSQL 優先で、`backend/storage.py` に互換動作があります。
+- PWA ブロックキーとスクリプト `STEP.block` 値は意図的に揃えています（`plan`, `work`, `debug`, `fix`, `summary`, `commit_push`）。
+- 組み込みアクションは読み取り専用です。編集前に clone してください。
+- `update_readme` アクションは `auto-apps/<workspace>/README.md` 配下のワークスペース README のみに対して安全パス制約があります。
+- 一部 docs/scripts には、プロジェクト進化過程で残った過去のパス/名称参照（`HeyCyan`, `LightMind`）が含まれます。現在の canonical パスはこのリポジトリルートです。
+- ルート `i18n/` ディレクトリは存在し、多言語実行ではそこに各言語 README を配置します。
 
-### Working model and state files
-- runtime ディレクトリは既定で `AUTOAPPDEV_RUNTIME_DIR` が未設定なら `./runtime`。
-- self-dev 自動化の状態履歴は `references/selfdev/` で追跡。
-- README パイプラインの成果物は `.auto-readme-work/<timestamp>/` に記録。
+### 作業モデルと状態ファイル
+- `AUTOAPPDEV_RUNTIME_DIR` で上書きしない限り、runtime は `./runtime` を使用。
+- self-dev 自動化の state/history は `references/selfdev/` に記録。
+- README パイプライン成果物は `.auto-readme-work/<timestamp>/` に記録。
 
-### Testing posture (current)
+### 現在のテスト体制
 - リポジトリにはスモークチェックと決定論的デモスクリプトが含まれます。
-- リポジトリ上の top-level 自動テスト/CI マニフェストは現時点では未定義です。
-- 前提: 検証は主にスクリプト駆動（`scripts/pipeline_codegen/smoke_*.sh`, `backend.db_smoketest`, E2E チェックリスト）。
+- ルートメタデータとして、完全なトップレベル自動テストスイート/CI マニフェストは現時点で未定義です。
+- 想定: 現在は主にスクリプト駆動で検証（`scripts/pipeline_codegen/smoke_*.sh`, `backend.db_smoketest`, E2E チェックリスト）。
 
-## 🔐 Safety Notes
-- `update_readme` アクションは、ワークスペース README ターゲット（`auto-apps/<workspace>/README.md`）への path traversal 保護付き制限を持ちます。
-- action registry の検証では、action spec の正規化とサポート reasoning レベルの範囲制御が行われます。
-- リポジトリのスクリプトは信頼できるローカル実行を前提としています。共有環境や本番近接環境で実行する際は事前にスクリプト内容を確認してください。
-- `.env` は機密情報（`DATABASE_URL`、API キー）を含む可能性があります。`.env` はコミットせず、環境ごとの秘密管理を採用してください。
+## 🔐 セーフティノート
+- `update_readme` アクションは、ワークスペース README ターゲット（`auto-apps/<workspace>/README.md`）のみに意図的に制約され、パストラバーサル保護があります。
+- Action registry の検証では、action spec フィールドの正規化と、対応 reasoning レベルの境界値チェックを実施します。
+- リポジトリスクリプトは信頼済みローカル実行を前提としています。共有環境や本番隣接環境で実行する前にスクリプト本文を確認してください。
+- `.env` には機密値（`DATABASE_URL`、API キー等）が入る可能性があります。`.env` はコミットせず、ローカル以外では環境別シークレット管理を使用してください。
 
-## 🔧 Troubleshooting
+## 🔧 トラブルシューティング
 
-| Symptom | What to check |
+| 症状 | 確認ポイント |
 | --- | --- |
-| `tmux not found` | `tmux` をインストールするか、backend/PWA を手動で起動してください。 |
-| Backend fails on startup due to missing env | `.env.example` と `docs/env.md` を基準に `.env` を再確認してください。 |
-| Database errors (connection/auth/schema) | `DATABASE_URL` を確認し、`conda run -n autoappdev python -m backend.apply_schema` を再実行。任意の疎通確認として `conda run -n autoappdev python -m backend.db_smoketest`。
-| PWA loads but cannot call API | backend が想定 host/port で待機しているか確認。`./scripts/run_autoappdev_tmux.sh` を再実行して `pwa/config.local.js` を再生成。 |
-| Pipeline Start returns invalid transition | まず現在の pipeline status を確認し、`stopped` 状態から開始。 |
-| No log updates in UI | `runtime/logs/pipeline.log` が書き込まれているか確認。UI 側か backend 側か切り分けるため `/api/logs` と `/api/logs/tail` を直接確認。 |
-| LLM parse endpoint returns disabled | `AUTOAPPDEV_ENABLE_LLM_PARSE=1` を設定して backend を再起動。 |
-| `conda run -n autoappdev ...` fails | `./scripts/setup_autoappdev_env.sh` を再実行し、conda env `autoappdev` が存在するか（`conda env list`）確認。 |
-| Wrong API target in frontend | `pwa/config.local.js` が存在し、起動中の backend host/port を指しているか確認。 |
+| `tmux not found` | `tmux` をインストールするか、backend/PWA を手動起動。 |
+| 環境変数不足で backend 起動失敗 | `.env.example` と `docs/env.md` を基準に `.env` を再確認。 |
+| データベースエラー（接続/認証/スキーマ） | `DATABASE_URL` を確認し、`conda run -n autoappdev python -m backend.apply_schema` を再実行。任意で接続確認: `conda run -n autoappdev python -m backend.db_smoketest`。 |
+| PWA は表示されるが API 呼び出し不可 | backend が想定 host/port で待受中か確認し、`./scripts/run_autoappdev_tmux.sh` 再実行で `pwa/config.local.js` を再生成。 |
+| Pipeline Start が invalid transition を返す | 先に現在の pipeline status を確認し、`stopped` から開始。 |
+| UI にログ更新が出ない | `runtime/logs/pipeline.log` が書き込まれているか確認し、`/api/logs` と `/api/logs/tail` を直接呼んで UI 側か backend 側か切り分け。 |
+| LLM parse endpoint が disabled を返す | `AUTOAPPDEV_ENABLE_LLM_PARSE=1` を設定して backend を再起動。 |
+| `conda run -n autoappdev ...` が失敗 | `./scripts/setup_autoappdev_env.sh` を再実行し、conda 環境 `autoappdev` の存在を確認（`conda env list`）。 |
+| フロントエンドの API 接続先が誤り | `pwa/config.local.js` が存在し、稼働中 backend の host/port を指しているか確認。 |
 
-決定論的な手動検証手順は `docs/end-to-end-demo-checklist.md` を参照してください。
+決定論的な手動検証パスは `docs/end-to-end-demo-checklist.md` を参照してください。
 
-## 🌐 README & i18n Workflow
-- ルートの README は README 自動化パイプラインの canonical source です。
-- 多言語版は `i18n/` に配置されます。
-- i18n ディレクトリの状態: ✅ 本リポジトリに存在。
-- 現在このリポジトリで対応している言語:
+## 🌐 README と i18n ワークフロー
+- ルート README は README 自動化パイプラインが参照する canonical ソースです。
+- 多言語バリアントは `i18n/` 配下に配置します。
+- i18n ディレクトリ状態: ✅ このリポジトリに存在。
+- このリポジトリの現在の言語セット:
   - `i18n/README.ar.md`
   - `i18n/README.de.md`
   - `i18n/README.es.md`
@@ -564,17 +572,17 @@ JSON
   - `i18n/README.vi.md`
   - `i18n/README.zh-Hans.md`
   - `i18n/README.zh-Hant.md`
-- 各 README 先頭には言語ナビゲーション行を 1 行だけ置く（重複禁止）。
-- README パイプラインのエントリーポイント: `prompt_tools/auto-readme-pipeline.sh`。
+- 言語ナビゲーションは各 README バリアントの先頭に 1 行のみ維持してください（重複禁止）。
+- README パイプラインのエントリポイント: `prompt_tools/auto-readme-pipeline.sh`。
 
-### i18n generation constraints (strict)
-- canonical README の更新時は、必ず多言語生成処理を行う。
-- 言語ファイルは一括ではなく 1 つずつ順次更新。
-- 各変種の先頭に単一の言語ナビゲーション行を置く。
-- 同一ファイル内で言語バーを重複させない。
-- canonical コマンドスニペット、リンク、API パス、バッジ意図は維持する。
+### i18n 生成制約（厳格）
+- Canonical README 更新時は、常に多言語生成も処理すること。
+- 言語ファイルは一括曖昧処理ではなく、1 言語ずつ順番に生成/更新すること。
+- 各バリアント先頭には言語オプションナビ行をちょうど 1 行だけ置くこと。
+- 同一ファイル内で言語バーを重複させないこと。
+- 翻訳後も canonical のコマンドスニペット、リンク、API パス、バッジ意図を維持すること。
 
-Suggested one-by-one generation order:
+推奨の 1 言語ずつ生成順序:
 1. `i18n/README.ar.md`
 2. `i18n/README.de.md`
 3. `i18n/README.es.md`
@@ -586,70 +594,75 @@ Suggested one-by-one generation order:
 9. `i18n/README.zh-Hans.md`
 10. `i18n/README.zh-Hant.md`
 
-Language coverage table:
+言語カバレッジ表:
 
 | Language | File |
 | --- | --- |
+| Arabic | `i18n/README.ar.md` |
 
-## 📘 Readme Generation Context
+観測済みワークスペースメモ:
+- `i18n/README.zh-Hant.md.tmp` は一時翻訳成果物として現れる場合があります。最終 canonical ファイルは `README.<lang>.md` を維持してください。
 
-- Pipeline run timestamp: `20260301_064935`
-- Trigger: `./README.md` first complete draft generation
-- Input user prompt: `probe prompt`
+## 📘 README 生成コンテキスト
+
+- Pipeline run timestamp: `20260301_095119`
+- Trigger: `./README.md` first complete draft generation (canonical-base incremental update)
+- Input user prompt: `Use current README as canonical base. No reduction: only increment and improve. Preserve existing content, links, badges, commands, and details. Always process multilingual generation (do not skip): ensure i18n exists and generate/update language files one-by-one with a single language-options line at the top and no duplicates.`
 - Goal: generate a complete, beautiful README draft with required sections and support information
-- Source snapshot used:
-  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
-  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
-- This file was generated from repository contents and preserved as a canonical draft entry point.
+- 使用したソーススナップショット:
+  - `./.auto-readme-work/20260301_095119/pipeline-context.md`
+  - `./.auto-readme-work/20260301_095119/repo-structure-analysis.md`
+- このファイルはリポジトリ内容から生成され、canonical ドラフトの出発点として保持されます。
 
 ## ❓ FAQ
 
-### Is PostgreSQL mandatory?
-通常運用では推奨かつ想定される前提です。ストレージ層にフォールバック互換動作はあるものの、本番相当の利用では `DATABASE_URL` を通じて PostgreSQL が利用可能な前提で扱います。
+### PostgreSQL は必須ですか？
+通常運用では推奨かつ想定されています。ストレージ層にはフォールバック互換動作がありますが、本番相当の利用では `DATABASE_URL` 経由で PostgreSQL が利用可能である前提を推奨します。
 
-### Why both `AUTOAPPDEV_PORT` and `PORT`?
-`AUTOAPPDEV_PORT` はプロジェクト固有、`PORT` はデプロイ互換エイリアスです。意図的に起動経路を変更しない限り、同じ値を合わせてください。
+### なぜ `AUTOAPPDEV_PORT` と `PORT` の両方があるのですか？
+`AUTOAPPDEV_PORT` はプロジェクト固有、`PORT` はデプロイ互換向けのエイリアスです。起動経路で意図的に上書きしない限り、同じ値に揃えてください。
 
-### Where should I start if I only want to inspect APIs?
-まず backend のみ起動します（`conda run -n autoappdev python -m backend.app`）、続けて `/api/health`, `/api/version`, `/api/config` を確認し、`docs/api-contracts.md` に記載の script/action エンドポイントに進みます。
+### API だけ確認したい場合はどこから始めればよいですか？
+backend 単体で起動（`conda run -n autoappdev python -m backend.app`）し、`/api/health`、`/api/version`、`/api/config` の順に確認後、`docs/api-contracts.md` に記載の script/action エンドポイントへ進んでください。
 
-### Are multilingual READMEs generated automatically?
-はい。リポジトリには `prompt_tools/auto-readme-pipeline.sh` が含まれており、多言語版は `i18n/` 配下で、各 README の先頭には単一の言語ナビゲーション行ルールを守って管理されます。
+### 多言語 README は自動生成ですか？
+はい。リポジトリには `prompt_tools/auto-readme-pipeline.sh` が含まれ、言語バリアントは `i18n/` 配下で管理されます。各ファイル先頭の言語ナビ行は 1 行のみです。
 
-## 🗺️ Roadmap
-- `51 / 55` ステータスを超える残タスクの解消。
-- ワークスペース/素材/コンテキスト工具の拡張、より強い safe-path 契約。
-- action palette の UX 改善と編集可能アクションワークフローの向上。
-- `i18n/` と実行時言語切替を含む多言語 README/UI サポートを強化。
-- スモーク/統合チェックと CI カバレッジ強化（現状はスクリプト駆動スモークが中心、ルートには完全な CI マニフェストなし）。
-- AAPS v1 と canonical IR 周辺で parser/import/codegen の決定論をさらに強化。
+## 🗺️ ロードマップ
+- 現在の `51 / 55` ステータス以降の残タスクを完了。
+- workspace/materials/context ツールを拡張し、より強固な safe-path 契約を整備。
+- アクションパレット UX と編集可能アクションワークフローを継続改善。
+- `i18n/` とランタイム言語切り替えを含む多言語 README/UI 対応を強化。
+- スモーク/統合チェックと CI カバレッジを強化（現状はスクリプト駆動スモークが中心で、ルートに完全 CI マニフェストは未記載）。
+- AAPS v1 と canonical IR 周辺の parser/import/codegen 決定論を継続的に強化。
 
-## 🤝 Contributing
-Issue / PR でのコントリビューションを歓迎します。
+## 🤝 コントリビュート
+Issue や Pull Request による貢献を歓迎します。
 
 推奨ワークフロー:
-1. Fork して feature branch を作成。
-2. 変更を絞り、再現性を保つ。
-3. 可能であれば決定論的な scripts/tests を優先。
-4. 挙動や契約が変わったらドキュメントを更新（`docs/*`、API 契約、examples）。
-5. PR には背景・検証手順・実行前提を記載。
+1. Fork して feature ブランチを作成。
+2. 変更は焦点を絞り、再現可能性を維持。
+3. 可能な限り決定論的なスクリプト/テストを優先。
+4. 挙動/契約が変わる場合は関連ドキュメントを更新（`docs/*`、API 契約、サンプル）。
+5. 背景、検証手順、実行時前提を添えて PR を作成。
 
-このリポジトリの remotes:
+このリポジトリに現在設定されている remote:
 - `origin`: `git@github.com:lachlanchen/AutoAppDev.git`
-- ローカル環境では関連リポジトリ向けに追加 remote が存在する場合があります（この workspace の例: `novel`）。
+- ローカルクローンによっては関連リポジトリ向け追加 remote が存在する場合があります（この workspace での例: `novel`）。
 
 ---
+
+## 📄 ライセンス
+![License](https://img.shields.io/badge/License-Not%20Detected-C53030?logo=law&logoColor=white)
+
+このリポジトリスナップショットのルートに `LICENSE` ファイルは検出されませんでした。
+
+前提メモ:
+- ライセンスファイルが追加されるまで、利用/再配布条件は未定義として扱い、メンテナーに確認してください。
+
 
 ## ❤️ Support
 
 | Donate | PayPal | Stripe |
 | --- | --- | --- |
 | [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
-
-## 📄 License
-![License](https://img.shields.io/badge/License-Not%20Detected-C53030?logo=law&logoColor=white)
-
-このリポジトリスナップショットでは、ルートに `LICENSE` ファイルは検出されませんでした。
-
-Assumption note:
-- ライセンスが追加されるまでは、利用/再配布条件は未定義として扱い、メンテナーに確認してください。

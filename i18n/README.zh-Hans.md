@@ -1,9 +1,6 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-
-
-
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev 🚀
@@ -19,12 +16,20 @@
 ![Automation](https://img.shields.io/badge/Automation-README%20Pipeline-f97316)
 ![API](https://img.shields.io/badge/API-JSON%20HTTP-0ea5e9)
 ![State Machine](https://img.shields.io/badge/Lifecycle-start%2Fpause%2Fresume%2Fstop-f59e0b)
+![Control Flow](https://img.shields.io/badge/Control%20Flow-Plan%20%E2%86%92%20Work%20%E2%86%92%20Verify%20%E2%86%92%20Summary-0f766e)
+![GitHub stars](https://img.shields.io/github/stars/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%231DA1F2)
+![GitHub forks](https://img.shields.io/github/forks/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%2300A4A6)
+![GitHub issues](https://img.shields.io/github/issues/lachlanchen/AutoAppDev?style=flat&logo=github&logoColor=white&color=%23ef4444)
+
+---
 
 可复用脚本和指南，使用 Codex 作为非交互式工具，从截图/Markdown 逐步构建应用。
 
 > 🎯 **使命：** 让应用开发流水线具备确定性、可恢复、且以工件为驱动。
 >
 > 🧩 **设计原则：** Plan -> Work -> Verify -> Summary -> Commit/Push.
+
+---
 
 ### 🎛️ 项目信号
 
@@ -62,6 +67,7 @@
 
 ## 🗂️ 目录
 - [🚀 概览](#-概览)
+- [🧭 仓库快照](#-仓库快照)
 - [🧭 方法论](#-方法论)
 - [✨ 特性](#-特性)
 - [📌 一览](#-一览)
@@ -87,6 +93,16 @@
 - [🤝 贡献](#-贡献)
 - [❤️ Support](#-support)
 - [📄 许可证](#-许可证)
+
+## 🧭 仓库快照
+
+| 关注点 | 当前配置 |
+| --- | --- |
+| 核心循环 | Plan → Work → Debug → Fix → Summary → Commit/Push |
+| 运行时模型 | Tornado backend + static PWA controller |
+| 状态机 | `start` / `pause` / `resume` / `stop` |
+| 持久化 | PostgreSQL 优先，带 JSON 兼容回退 |
+| 文档 | 规范 `README.md` + 多语言 `i18n/` 输出 |
 
 ## 🚀 概览
 AutoAppDev 是一个面向长时间运行、可恢复的应用开发流水线控制器项目，结合了：
@@ -568,32 +584,35 @@ JSON
 - 翻译时保持规范命令片段、链接、API 路径和徽章语义不变。
 
 建议顺序：
-1. `README.md`
-2. `i18n/README.ar.md`
-3. `i18n/README.de.md`
-4. `i18n/README.es.md`
-5. `i18n/README.fr.md`
-6. `i18n/README.ja.md`
-7. `i18n/README.ko.md`
-8. `i18n/README.ru.md`
-9. `i18n/README.vi.md`
-10. `i18n/README.zh-Hans.md`
-11. `i18n/README.zh-Hant.md`
+1. `i18n/README.ar.md`
+2. `i18n/README.de.md`
+3. `i18n/README.es.md`
+4. `i18n/README.fr.md`
+5. `i18n/README.ja.md`
+6. `i18n/README.ko.md`
+7. `i18n/README.ru.md`
+8. `i18n/README.vi.md`
+9. `i18n/README.zh-Hans.md`
+10. `i18n/README.zh-Hant.md`
 
 语言覆盖表：
 
 | 语言 | 文件 |
 | --- | --- |
+| Arabic | `i18n/README.ar.md` |
+
+观察到的工作区说明：
+- `i18n/README.zh-Hant.md.tmp` 可能作为临时翻译产物出现；最终规范文件应保持为 `README.<lang>.md`。
 
 ## 📘 Readme 生成上下文
 
-- 流水线运行时间戳：`20260301_064935`
-- 触发条件：`./README.md` 首次完整草稿生成
-- 输入用户提示：`probe prompt`
-- 目标：生成完整、可读的 README 草稿，包含 required sections 与支持信息
+- 流水线运行时间戳：`20260301_095119`
+- 触发条件：`./README.md` 首次完整草稿生成（基于规范源增量更新）
+- 输入用户提示：`Use current README as canonical base. No reduction: only increment and improve. Preserve existing content, links, badges, commands, and details. Always process multilingual generation (do not skip): ensure i18n exists and generate/update language files one-by-one with a single language-options line at the top and no duplicates.`
+- 目标：生成完整、美观的 README 草稿，包含必需章节与支持信息
 - 使用的源码快照：
-  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
-  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
+  - `./.auto-readme-work/20260301_095119/pipeline-context.md`
+  - `./.auto-readme-work/20260301_095119/repo-structure-analysis.md`
 - 本文件基于仓库内容生成并作为规范起点。
 
 ## ❓ FAQ

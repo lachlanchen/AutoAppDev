@@ -2,6 +2,7 @@
 
 
 
+
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev 🚀
@@ -68,6 +69,7 @@ Do not edit content between the markers.
 
 ## 🗂️ Оглавление
 - [🚀 Overview](#-overview)
+- [🧭 Repository Snapshot](#-repository-snapshot)
 - [🧭 Philosophy](#-philosophy)
 - [✨ Features](#-features)
 - [📌 At A Glance](#-at-a-glance)
@@ -93,6 +95,16 @@ Do not edit content between the markers.
 - [🤝 Contributing](#-contributing)
 - [❤️ Support](#-support)
 - [📄 License](#-license)
+
+## 🧭 Repository Snapshot
+
+| Фокус | Текущая конфигурация |
+| --- | --- |
+| Core loop | Plan → Work → Debug → Fix → Summary → Commit/Push |
+| Runtime model | Tornado backend + статический PWA controller |
+| State machine | `start` / `pause` / `resume` / `stop` |
+| Persistence | PostgreSQL-first с JSON fallback-совместимостью |
+| Documentation | Канонический `README.md` + многоязычные файлы в `i18n/` |
 
 ## 🚀 Overview
 AutoAppDev — это контроллер для долгоживущих и возобновляемых пайплайнов разработки приложений. Он сочетает:

@@ -1,9 +1,5 @@
 [English](README.md) · [العربية](i18n/README.ar.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Tiếng Việt](i18n/README.vi.md) · [中文 (简体)](i18n/README.zh-Hans.md) · [中文（繁體）](i18n/README.zh-Hant.md) · [Deutsch](i18n/README.de.md) · [Русский](i18n/README.ru.md)
 
-
-
-
-
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 # AutoAppDev 🚀
@@ -70,6 +66,7 @@ Do not edit content between the markers.
 
 ## 🗂️ Table of Contents
 - [🚀 Overview](#-overview)
+- [🧭 Repository Snapshot](#-repository-snapshot)
 - [🧭 Philosophy](#-philosophy)
 - [✨ Features](#-features)
 - [📌 At A Glance](#-at-a-glance)
@@ -601,16 +598,20 @@ Language coverage table:
 
 | Language | File |
 | --- | --- |
+| Arabic | `i18n/README.ar.md` |
+
+Observed workspace note:
+- `i18n/README.zh-Hant.md.tmp` may appear as a temporary translation artifact; keep final canonical files as `README.<lang>.md`.
 
 ## 📘 Readme Generation Context
 
-- Pipeline run timestamp: `20260301_064935`
-- Trigger: `./README.md` first complete draft generation
-- Input user prompt: `probe prompt`
+- Pipeline run timestamp: `20260301_095119`
+- Trigger: `./README.md` first complete draft generation (canonical-base incremental update)
+- Input user prompt: `Use current README as canonical base. No reduction: only increment and improve. Preserve existing content, links, badges, commands, and details. Always process multilingual generation (do not skip): ensure i18n exists and generate/update language files one-by-one with a single language-options line at the top and no duplicates.`
 - Goal: generate a complete, beautiful README draft with required sections and support information
 - Source snapshot used:
-  - `./.auto-readme-work/20260301_064935/pipeline-context.md`
-  - `./.auto-readme-work/20260301_064935/repo-structure-analysis.md`
+  - `./.auto-readme-work/20260301_095119/pipeline-context.md`
+  - `./.auto-readme-work/20260301_095119/repo-structure-analysis.md`
 - This file was generated from repository contents and preserved as a canonical draft entry point.
 
 ## ❓ FAQ
