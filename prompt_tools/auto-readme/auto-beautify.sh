@@ -44,6 +44,11 @@ Beautification requirements:
 - Keep content repository-accurate.
 - Make layout more attractive with tasteful emojis, tables, and visual sectioning.
 - Add color cues using Markdown-compatible badge styles (e.g., shields.io) where useful.
+- Badge safety:
+  - Only use full Shields URLs (e.g., `https://img.shields.io/badge/...`).
+  - Ensure each badge uses valid Markdown image-link syntax:
+    `[![Label](https://img.shields.io/badge/...)](<target-link>)`
+  - Never emit incomplete badge fragments such as `[Principle-...` or `[![...?...)]` without a full URL.
 - Encourage diagrams using GitHub-compatible Mermaid blocks (` ```mermaid `), especially for architecture/runtime ownership/flow sections.
 - Do not use raw HTML iframe/embed code for diagrams; prefer Mermaid fenced code blocks.
 - Keep readability high; avoid decorative noise.
