@@ -10,6 +10,8 @@ repo_path="$1"
 user_prompt="$2"
 pipeline_context_file="$3"
 readme_path="$4"
+model="${AUTO_README_MODEL:-gpt-5.3-codex}"
+reasoning_effort="${AUTO_README_REASONING_EFFORT:-medium}"
 
 if [[ ! -d "$repo_path" ]]; then
   echo "Repo path does not exist: $repo_path"
@@ -42,6 +44,8 @@ Beautification requirements:
 - Keep content repository-accurate.
 - Make layout more attractive with tasteful emojis, tables, and visual sectioning.
 - Add color cues using Markdown-compatible badge styles (e.g., shields.io) where useful.
+- Encourage diagrams using GitHub-compatible Mermaid blocks (` ```mermaid `), especially for architecture/runtime ownership/flow sections.
+- Do not use raw HTML iframe/embed code for diagrams; prefer Mermaid fenced code blocks.
 - Keep readability high; avoid decorative noise.
 - Preserve meaningful technical detail; do not collapse rich README content into a short summary.
 - Preserve donation/sponsor/support sections and important links if they already exist.
@@ -51,6 +55,8 @@ Important:
 PROMPT
 
 cat "$prompt_file" | codex exec \
+  --model "$model" \
+  -c "reasoning_effort=\"$reasoning_effort\"" \
   --dangerously-bypass-approvals-and-sandbox \
   -C "$repo_path" \
   --skip-git-repo-check \

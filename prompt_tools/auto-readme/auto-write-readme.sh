@@ -11,6 +11,8 @@ user_prompt="$2"
 pipeline_context_file="$3"
 structure_output_file="$4"
 readme_path="$5"
+model="${AUTO_README_MODEL:-gpt-5.3-codex}"
+reasoning_effort="${AUTO_README_REASONING_EFFORT:-medium}"
 
 if [[ ! -d "$repo_path" ]]; then
   echo "Repo path does not exist: $repo_path"
@@ -44,6 +46,8 @@ README requirements:
 - Read the existing README first (if present) and use it as the primary source of truth before restructuring.
 - Only increment from existing README content: do not remove existing substantive sections/content unless they are exact duplicates or clearly invalid.
 - Include: title, badges/placeholders if relevant, overview, features, project structure, prerequisites, installation, usage, configuration, examples, development notes, troubleshooting, roadmap, contribution, license.
+- When architecture/ownership/workflow is important, include at least one GitHub-compatible Mermaid diagram (` ```mermaid `) such as `flowchart LR` or `graph TD`.
+- Prefer Mermaid over raw HTML embeds/iframes for diagrams.
 - Prefer repository-accurate commands and paths.
 - If information is unknown, state assumptions clearly.
 - Do not over-simplify: preserve substantive technical details, links, commands, and important sections from the existing README.
@@ -55,6 +59,8 @@ Important:
 PROMPT
 
 cat "$prompt_file" | codex exec \
+  --model "$model" \
+  -c "reasoning_effort=\"$reasoning_effort\"" \
   --dangerously-bypass-approvals-and-sandbox \
   -C "$repo_path" \
   --skip-git-repo-check \

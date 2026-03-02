@@ -15,6 +15,8 @@ language_code="$6"
 output_path="$7"
 language_nav_line="$8"
 step_note="$9"
+model="${AUTO_README_MODEL:-gpt-5.3-codex}"
+reasoning_effort="${AUTO_README_REASONING_EFFORT:-medium}"
 
 if [[ ! -d "$repo_path" ]]; then
   echo "Repo path does not exist: $repo_path"
@@ -54,15 +56,18 @@ Required action:
 Strict requirements:
 1. Translate/adapt the README into the target language with fluent, native-style phrasing.
 2. Keep commands, paths, filenames, code blocks, and technical identifiers unchanged unless translation is required for prose only.
-3. At the very top, place exactly this language navigation line:
+3. Preserve Mermaid diagram blocks as valid Mermaid syntax; prefer keeping Mermaid blocks semantically equivalent and avoid introducing syntax-breaking edits.
+4. At the very top, place exactly this language navigation line:
 $language_nav_line
-4. Keep Markdown structure consistent and readable.
+5. Keep Markdown structure consistent and readable.
 
 Important:
 - Write only the target output file for this step.
 PROMPT
 
 cat "$prompt_file" | codex exec \
+  --model "$model" \
+  -c "reasoning_effort=\"$reasoning_effort\"" \
   --dangerously-bypass-approvals-and-sandbox \
   -C "$repo_path" \
   --skip-git-repo-check \
