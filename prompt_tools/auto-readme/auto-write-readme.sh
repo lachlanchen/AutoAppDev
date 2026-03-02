@@ -47,9 +47,9 @@ README requirements:
 - Only increment from existing README content: do not remove existing substantive sections/content unless they are exact duplicates or clearly invalid.
 - Include: title, badges/placeholders if relevant, overview, features, project structure, prerequisites, installation, usage, configuration, examples, development notes, troubleshooting, roadmap, contribution, license.
 - If you add badges, use fully valid Markdown badge links only in this form:
-  `[![Label](https://img.shields.io/badge/...)](<target-link>)`
+  [![Label](https://img.shields.io/badge/...)](<target-link>)
 - Never output partial badge fragments, shorthand badge text, or broken badge syntax.
-- When architecture/ownership/workflow is important, include at least one GitHub-compatible Mermaid diagram (` ```mermaid `) such as `flowchart LR` or `graph TD`.
+- When architecture/ownership/workflow is important, include at least one GitHub-compatible Mermaid diagram (fenced block starting with three backticks + mermaid) such as flowchart LR or graph TD.
 - Prefer Mermaid over raw HTML embeds/iframes for diagrams.
 - Prefer repository-accurate commands and paths.
 - If information is unknown, state assumptions clearly.
