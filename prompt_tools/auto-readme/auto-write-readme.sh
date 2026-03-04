@@ -59,7 +59,7 @@ README requirements:
 - Add a separate `Submodules` table/list summarizing purpose and mount path for each submodule.
 - At the top of README body, include exactly this banner markdown line:
   [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
-- Include a support section using this exact structure and links:
+- Include a support section using this exact block verbatim (do not change heading text, table separator style, badge/button markdown, links, punctuation, or bullet wording):
   ## ❤️ Support
 
   If this project is useful to you, these links directly support ongoing maintenance and hardware iteration.

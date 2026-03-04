@@ -66,6 +66,7 @@ $language_nav_line
    - https://chat.lazying.art/donate
    - https://paypal.me/RongzhouChen
    - https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
+8. Preserve the support section table/buttons in exact canonical format if present; do not rewrite or re-style its table separator row, badge markdown, or links.
 
 Important:
 - Write only the target output file for this step.

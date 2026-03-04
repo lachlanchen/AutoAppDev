@@ -55,11 +55,7 @@ Beautification requirements:
 - If present in repo, keep explicit coverage of 'skills', 'orchestral/prompt_tools', and git submodules in both narrative and diagram labels.
 - Normalize README banner to exactly:
   [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
-- Ensure a support section exists using heading `## ❤️ Support`, preserving these exact donation links:
-  - https://chat.lazying.art/donate
-  - https://paypal.me/RongzhouChen
-  - https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
-- Keep or add the subsection heading `### What your support makes possible` with practical impact bullets.
+- Ensure a support section exists and is preserved in exact canonical format (table and buttons must be verbatim: same heading text, separator row style, badge markdown, links, punctuation, and bullet wording).
 - Keep readability high; avoid decorative noise.
 - Preserve meaningful technical detail; do not collapse rich README content into a short summary.
 - Preserve donation/sponsor/support sections and important links if they already exist.
