@@ -21,7 +21,7 @@ if [[ ! -d "$repo_path" ]]; then
   exit 1
 fi
 
-if [[ ! -d "$repo_path/.git" ]]; then
+if [[ ! -e "$repo_path/.git" ]]; then
   echo "Repo is not a git repository: $repo_path"
   exit 1
 fi

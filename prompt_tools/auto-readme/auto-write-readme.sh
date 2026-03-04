@@ -51,6 +51,12 @@ README requirements:
 - Never output partial badge fragments, shorthand badge text, or broken badge syntax.
 - When architecture/ownership/workflow is important, include at least one GitHub-compatible Mermaid diagram (fenced block starting with three backticks + mermaid) such as flowchart LR or graph TD.
 - Prefer Mermaid over raw HTML embeds/iframes for diagrams.
+- Include a dedicated `Repository Topology` section with at least one Mermaid diagram that maps major folders and relationships.
+- If present, the topology must explicitly show:
+  - '.agents/skills/' (or equivalent skills directory),
+  - 'orchestral/' and 'orchestral/prompt_tools/',
+  - git submodules from '.gitmodules' (including nested submodules when discoverable).
+- Add a separate `Submodules` table/list summarizing purpose and mount path for each submodule.
 - Prefer repository-accurate commands and paths.
 - If information is unknown, state assumptions clearly.
 - Do not over-simplify: preserve substantive technical details, links, commands, and important sections from the existing README.

@@ -51,6 +51,8 @@ Beautification requirements:
   - Never emit incomplete badge fragments such as [Principle-...] or [![...?...)] without a full URL.
 - Encourage diagrams using GitHub-compatible Mermaid blocks (fenced block starting with three backticks + mermaid), especially for architecture/runtime ownership/flow sections.
 - Do not use raw HTML iframe/embed code for diagrams; prefer Mermaid fenced code blocks.
+- Ensure there is a dedicated Mermaid-based 'Repository Topology' (or equivalent title) section that is easy to scan.
+- If present in repo, keep explicit coverage of 'skills', 'orchestral/prompt_tools', and git submodules in both narrative and diagram labels.
 - Keep readability high; avoid decorative noise.
 - Preserve meaningful technical detail; do not collapse rich README content into a short summary.
 - Preserve donation/sponsor/support sections and important links if they already exist.

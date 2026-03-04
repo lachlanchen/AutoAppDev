@@ -41,6 +41,8 @@ Output format requirements for $structure_output_file:
 - Markdown only.
 - Sections: Project Summary, Repository Map, Key Components, Setup Signals, Usage Signals, Gaps/Unknowns.
 - Include a compact tree-like list of major directories/files.
+- Explicitly detect and document git submodules from '.gitmodules' (if present), including parent-child relationships.
+- Add focused bullets for workflow-critical areas when present, especially 'orchestral/', 'orchestral/prompt_tools/', and local skills paths (such as '.agents/skills/').
 - Keep it factual and based on repository contents.
 
 Important:
