@@ -59,7 +59,13 @@ Strict requirements:
 3. Preserve Mermaid diagram blocks as valid Mermaid syntax; prefer keeping Mermaid blocks semantically equivalent and avoid introducing syntax-breaking edits.
 4. At the very top, place exactly this language navigation line:
 $language_nav_line
-5. Keep Markdown structure consistent and readable.
+5. Keep the canonical banner markdown unchanged if present:
+   [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
+6. Keep Markdown structure consistent and readable.
+7. Keep support/donation links unchanged if present:
+   - https://chat.lazying.art/donate
+   - https://paypal.me/RongzhouChen
+   - https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400
 
 Important:
 - Write only the target output file for this step.

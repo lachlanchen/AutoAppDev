@@ -57,6 +57,23 @@ README requirements:
   - 'orchestral/' and 'orchestral/prompt_tools/',
   - git submodules from '.gitmodules' (including nested submodules when discoverable).
 - Add a separate `Submodules` table/list summarizing purpose and mount path for each submodule.
+- At the top of README body, include exactly this banner markdown line:
+  [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
+- Include a support section using this exact structure and links:
+  ## ❤️ Support
+
+  If this project is useful to you, these links directly support ongoing maintenance and hardware iteration.
+
+  | Donate | PayPal | Stripe |
+  | --- | --- | --- |
+  | [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
+
+  ### What your support makes possible
+
+  - **Keep tools open**: hosting, inference, data storage, and community ops.
+  - **Ship faster**: focused open-source time on WordsCardEink and related learning tools.
+  - **Prototype devices**: e-ink hardware iterations and display layout research.
+  - **Access for all**: subsidized deployments for students, creators, and community groups.
 - Prefer repository-accurate commands and paths.
 - If information is unknown, state assumptions clearly.
 - Do not over-simplify: preserve substantive technical details, links, commands, and important sections from the existing README.
