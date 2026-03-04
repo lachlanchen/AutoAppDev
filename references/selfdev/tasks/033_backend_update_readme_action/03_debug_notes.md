@@ -1,11 +1,13 @@
 # Debug Notes: 033 backend_update_readme_action
 
 ## Verification (Smallest Smoke)
+
 - Static compile of backend modules changed in this task.
 - Pure-function smoke test for workspace slug validation, block markdown validation, safe path resolution, marker upsert behavior (create/insert/replace), mismatch handling, and artifact writing (no server, no DB).
 - Grep check confirming the endpoint route is wired and documented.
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -87,5 +89,5 @@ timeout 10s rg -n "/api/actions/update-readme" backend/app.py docs/api-contracts
 ```
 
 ## Issues Found
-- None in these smoke checks.
 
+- None in these smoke checks.

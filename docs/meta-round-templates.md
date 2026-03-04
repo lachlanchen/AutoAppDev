@@ -1,20 +1,24 @@
 # Meta-round Pipeline Templates (v0)
 
 This document defines a **standard, engine-agnostic** convention for expressing a multi-round pipeline template:
+
 - For `N_ROUND`: generate/refine a task list from a `goal` + shared context.
 - For each resulting task: execute a configurable per-task template:
   `plan -> work -> debug -> fix -> translate -> summary -> log -> commit`.
 
 Important:
+
 - AAPS/IR (`TASK -> STEP -> ACTION`) remain **data-only** and deterministic to parse.
 - Meta-round loops and templates are expressed via `meta` fields (engine conventions), not by adding templating to the parser.
 
 Related docs:
+
 - `docs/pipeline-formatted-script-spec.md` (AAPS + IR schema)
 - `docs/workspace-layout.md` (workspace + runtime dir conventions)
 - `docs/api-contracts.md` (includes `/api/outbox` and `runtime/outbox/` queue)
 
 ## Terms
+
 - **Round**: one pass of "synthesize/refine tasks" using the current task list as input.
 - **Task list artifact**: a durable representation of tasks produced by the round loop (JSON recommended; see below).
 - **Per-task template**: the standard phase sequence applied to each task.
@@ -24,7 +28,9 @@ Related docs:
 ## Standard Meta-round Workflow (v0)
 
 ### Inputs (Recommended)
+
 The meta-round controller needs:
+
 - `goal` (string): what we are trying to achieve.
 - `shared_context_paths` (string[]): repo/workspace files to treat as context (read-only).
 - `materials_paths` (string[], optional): workspace materials (read-only).
@@ -37,27 +43,30 @@ The meta-round controller needs:
   - Recommended: `references/meta_round/tasks_v0.json` under a workspace root.
 
 ### Task List Artifact Format (Recommended)
+
 To keep loops explicit and resumable, store a durable task list artifact.
 
 Recommended v0 JSON shape:
+
 ```json
 {
   "kind": "autoappdev_task_list",
   "version": 0,
   "round": 2,
   "goal": "...",
-  "tasks": [
-    { "id": "t1", "title": "Short title", "acceptance": "Testable acceptance criteria" }
-  ]
+  "tasks": [{ "id": "t1", "title": "Short title", "acceptance": "Testable acceptance criteria" }]
 }
 ```
 
 Notes:
+
 - `id` should be stable within the artifact (string).
 - Engines may add additional fields (priority, tags, estimated_cost), but should preserve the core shape.
 
 ### Per-round Behavior
+
 For each round `r`:
+
 1. Read inputs:
    - `goal`
    - shared context files
@@ -67,12 +76,15 @@ For each round `r`:
 3. Persist the updated artifact and record a lightweight progress log entry (see "Log slot").
 
 After the final round:
+
 - Execute the per-task template for each task in the final artifact, in-order.
 
 ### Runner Support (Optional)
+
 Some engines/runners may implement the controller + template loop directly, without expanding the final task list into static `TASK` entries in the script/IR.
 
 Convention (v0):
+
 - Controller: `TASK.meta.meta_round_v0.task_list_path` points to the `autoappdev_task_list` v0 JSON file.
 - Template: a single task marked with `TASK.meta.task_template_v0` is applied once per produced task list item.
 - Resume: runners may persist a runtime-scoped resume file so reruns can skip already completed task ids (default under `AUTOAPPDEV_RUNTIME_DIR`).
@@ -80,7 +92,9 @@ Convention (v0):
 ## Per-task Template (v0)
 
 ### Phase Ordering (Standard)
+
 The standard per-task phases are:
+
 1. `plan`: outline changes + exact verification commands (with timeouts).
 2. `work`: implement the smallest change set to meet acceptance.
 3. `debug`: run the smallest verification; record results.
@@ -91,15 +105,18 @@ The standard per-task phases are:
 8. `commit`: optional and policy-driven.
 
 ### Mapping To AAPS/IR (No New `STEP.block` Keys)
+
 The AAPS v1 spec constrains `STEP.block` to the existing palette keys:
 `plan`, `work`, `debug`, `fix`, `summary`, `commit_push`.
 
 To keep the contract stable:
+
 - `translate` is represented as an **action slot** within the `summary` step (runs before summary actions).
 - `log` is represented as an **action slot** within the `commit_push` step (or as the last action in `summary` if no commit phase exists).
 - `commit` is represented as an optional action in `commit_push` (or omitted entirely if handled externally).
 
 In other words, the per-task template is expressed as:
+
 - `STEP.block=plan` (plan)
 - `STEP.block=work` (work)
 - `STEP.block=debug` (debug)
@@ -108,19 +125,24 @@ In other words, the per-task template is expressed as:
 - `STEP.block=commit_push` (log + commit actions)
 
 ### Log Slot (Outbox)
+
 Preferred log channel: the outbox API/queue defined in:
+
 - `docs/api-contracts.md` (`POST /api/outbox` and `runtime/outbox/<ts>_<role>.md|.txt`)
 
 Recommended patterns for a pipeline script:
+
 - HTTP:
   - `curl -sS -X POST http://127.0.0.1:8788/api/outbox -H 'content-type: application/json' -d '{"role":"pipeline","content":"..."}'`
 - File queue (atomic rename recommended):
   - `printf '...\n' > runtime/outbox/.tmp && mv runtime/outbox/.tmp runtime/outbox/$(date +%s%3N)_pipeline.md`
 
 ## Convention: Where `meta_round_v0` Lives
+
 Meta-round configuration is stored under `TASK.meta.meta_round_v0` (engine convention).
 
 Recommended keys:
+
 ```json
 {
   "n_round": 2,
@@ -135,6 +157,7 @@ Recommended keys:
 ```
 
 ## Concrete AAPS Example (v0)
+
 This example is valid AAPS v1 (deterministic to parse). The meta-round behavior is expressed via `meta`.
 
 ```text
@@ -174,5 +197,6 @@ ACTION {"id":"g1","kind":"note","meta":{"slot":"commit"},"params":{"text":"Commi
 ```
 
 Notes:
+
 - `translate`/`log`/`commit` are modeled as **action slots**, not as new `STEP.block` values.
 - Engines can bind these slots to an action registry using `ACTION.meta.action_ref` (see `docs/pipeline-formatted-script-spec.md`).

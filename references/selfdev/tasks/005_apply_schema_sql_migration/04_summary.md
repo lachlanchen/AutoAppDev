@@ -1,13 +1,16 @@
 # Summary: 005 apply_schema_sql_migration
 
 ## What Changed
+
 - Added `backend/apply_schema.py`: a CLI command to apply `backend/schema.sql` to the configured Postgres DB (`DATABASE_URL`).
 - Updated `backend/README.md` to document the command.
 
 ## Why
+
 This makes schema setup an explicit operator action (not only an implicit server startup side effect) and keeps schema application repeatable and idempotent.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

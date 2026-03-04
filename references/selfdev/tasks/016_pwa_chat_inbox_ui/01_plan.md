@@ -1,17 +1,21 @@
 # Plan: 016 pwa_chat_inbox_ui
 
 ## Goal
+
 Add an “Inbox” UI in the PWA that:
+
 - Shows a list of recent inbox messages.
 - Provides a compose box to send a new message.
 - Posts the message to the backend and updates the list without a full page reload.
 
 Acceptance:
+
 - PWA shows inbox list and compose box.
 - Sending a message posts to backend and appears in list without full page reload.
 - Default PWA theme remains light.
 
 ## Current State (References)
+
 - Backend supports inbox persistence:
   - `GET /api/inbox?limit=N` and `POST /api/inbox { "content": "..." }` in `backend/app.py` (`InboxHandler`).
   - Contract documented in `docs/api-contracts.md` (“Inbox Messages” section).
@@ -23,9 +27,11 @@ Acceptance:
   - `pwa/app.js` uses `api()` which delegates to `window.AutoAppDevApi.requestJson()`.
 
 ## Approach (Minimal / Incremental)
+
 Repurpose the existing “Chat” tab as the “Inbox” tab by switching it from `/api/chat` to `/api/inbox` and updating the UI copy. Keep the existing DOM IDs and tab switching logic to minimize changes (no redesign, no new panel).
 
 ## Implementation Steps (Next Phase)
+
 1. Update `pwa/index.html` (UI copy only).
    - Change the visible tab label text from `Chat` to `Inbox` (keep `data-tab="chat"` to avoid JS churn).
    - Update the compose placeholder to be explicitly “Inbox” oriented (ex: “Send a message to the pipeline inbox…”).
@@ -49,7 +55,9 @@ Repurpose the existing “Chat” tab as the “Inbox” tab by switching it fro
    - Do not modify `<body data-theme="light">` or theme tokens.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -70,6 +78,7 @@ node --check pwa/app.js
 ```
 
 Manual browser verification (required to prove “posts + appears without reload”):
+
 1. Start backend and PWA normally (outside this sandbox which cannot bind ports):
    - Backend: `python3 -m backend.app`
    - PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
@@ -80,7 +89,7 @@ Manual browser verification (required to prove “posts + appears without reload
 4. Refresh the page and confirm the message persists (loaded from `GET /api/inbox?limit=50`).
 
 ## Acceptance Checklist
+
 - [ ] Inbox list + compose box are visible in the PWA.
 - [ ] Sending uses `POST /api/inbox` and the message appears in the list without a full page reload.
 - [ ] Default theme remains light.
-

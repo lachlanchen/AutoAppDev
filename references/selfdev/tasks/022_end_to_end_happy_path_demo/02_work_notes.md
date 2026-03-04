@@ -1,11 +1,13 @@
 # Work Notes: 022 end_to_end_happy_path_demo
 
 ## Summary
+
 - Added a deterministic end-to-end “happy path” manual demo checklist doc.
 - Added a safe demo pipeline script that produces predictable logs and supports pause/resume via the runtime `PAUSE` flag.
 - Linked the checklist from the repo `README.md` so it’s discoverable.
 
 ## Changes Made
+
 - `scripts/pipeline_demo.sh`
   - New deterministic pipeline demo script:
     - Prints one log line per second for a fixed number of ticks (`DEMO_TICKS`, default 120).
@@ -27,6 +29,7 @@
   - Added a link entry for `docs/end-to-end-demo-checklist.md` in the Contents list.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -35,4 +38,3 @@ rg -n \"end-to-end-demo-checklist\" README.md docs/controller-mvp-scope.md || tr
 rg -n \"apply_schema|backend\\.apply_schema|/api/inbox|/api/pipeline|/api/logs|AUTOAPPDEV_PIPELINE_SCRIPT\" docs/end-to-end-demo-checklist.md
 timeout 5s bash -n scripts/pipeline_demo.sh
 ```
-

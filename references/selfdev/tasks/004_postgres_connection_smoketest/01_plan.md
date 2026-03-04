@@ -1,16 +1,20 @@
 # Plan: 004 postgres_connection_smoketest
 
 ## Goal
+
 Add a deterministic Postgres smoke test that:
+
 - Uses env configuration (at minimum `DATABASE_URL`).
 - Connects to Postgres and runs `SELECT 1`.
 - Fails fast with an actionable error message.
 
 Acceptance:
+
 - A CLI or startup check can connect to Postgres using env config and run `SELECT 1`.
 - On failure, it exits non-zero quickly and prints a clear, actionable error.
 
 ## Current State (References)
+
 - Backend requires `DATABASE_URL` to start (fast-fail) in `backend/app.py` via `_require_env()`.
 - Postgres connectivity is currently implicit:
   - `backend/storage.py` calls `asyncpg.create_pool(dsn=DATABASE_URL)` inside `Storage.start()`.
@@ -18,6 +22,7 @@ Acceptance:
 - No explicit “connectivity check” exists that runs `SELECT 1` and reports why it failed.
 
 ## Approach (Minimal)
+
 Add a dedicated CLI smoke test module so we can verify DB wiring without starting the Tornado server.
 
 - Add: `backend/db_smoketest.py` (new)
@@ -36,10 +41,12 @@ Add a dedicated CLI smoke test module so we can verify DB wiring without startin
 This keeps changes isolated and testable, and avoids changing the Storage fallback behavior yet.
 
 ## Files To Change (Implementation Phase)
+
 - Add: `backend/db_smoketest.py`
 - Optional docs touch (keep minimal): add one short line to `backend/README.md` showing the smoke test command.
 
 ## Implementation Steps (Next Phase)
+
 1. Create `backend/db_smoketest.py`:
    - Compute `REPO_ROOT = Path(__file__).resolve().parents[1]`.
    - `load_dotenv(REPO_ROOT / ".env", override=False)`.
@@ -53,9 +60,11 @@ This keeps changes isolated and testable, and avoids changing the Storage fallba
    - `conda run -n autoappdev python -m backend.db_smoketest`
 
 ## Commands To Run (Verification)
+
 Use timeouts for anything that could hang.
 
-1) Missing env should fail fast with actionable output:
+1. Missing env should fail fast with actionable output:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -64,14 +73,16 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 # Expect: non-zero exit, message mentions missing DATABASE_URL and points at docs/env.md
 ```
 
-2) Invalid DSN should fail fast and include exception info:
+2. Invalid DSN should fail fast and include exception info:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 (timeout 3s env DATABASE_URL='postgresql://invalid' python -m backend.db_smoketest) ; echo EXIT_CODE:$?
 # Expect: non-zero exit, message mentions connection failure
 ```
 
-3) Real DB should succeed:
+3. Real DB should succeed:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 # With a real DATABASE_URL in .env:
@@ -80,6 +91,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 ```
 
 ## Acceptance Criteria Checks
+
 - `python -m backend.db_smoketest` runs `SELECT 1` against the Postgres target from env.
 - On missing/invalid config it exits non-zero within a few seconds and prints a clear error + hint.
 - No servers or background processes remain running after verification (all tests use `timeout`).

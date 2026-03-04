@@ -1,6 +1,7 @@
 # Work Notes: 039 pwa_workspace_context_settings
 
 ## What Changed
+
 - Added a **Workspace** settings section to the PWA **Status** tab:
   - Select workspace slug
   - Edit materials paths (one per line)
@@ -16,10 +17,12 @@
 - Small QoL: `Update README` block prompt defaults to the selected workspace slug (if set).
 
 ## Files Touched
+
 - `pwa/index.html`
 - `pwa/app.js`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -29,6 +32,6 @@ timeout 10s rg -n 'ws-slug|ws-load|ws-save|ws-materials|ws-language|ws-context-t
 ```
 
 Results:
+
 - `node --check` exited `0` (syntax OK).
 - `rg` confirms new UI ids and `/api/workspaces/.../config` usage.
-

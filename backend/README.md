@@ -15,14 +15,17 @@ conda run -n autoappdev python -m backend.app
 Default: `http://127.0.0.1:8788`
 
 ## Env
+
 Create `.env` from `.env.example` and follow `docs/env.md`.
 
 ## Postgres Smoke Test
+
 ```bash
 conda run -n autoappdev python -m backend.db_smoketest
 ```
 
 ## Apply schema.sql
+
 ```bash
 conda run -n autoappdev python -m backend.apply_schema
 ```

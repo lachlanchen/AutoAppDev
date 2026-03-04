@@ -1,17 +1,21 @@
 # Plan: 029 pipeline_codegen_templates
 
 ## Goal
+
 Add a deterministic, repo-local code generator that converts canonical IR (`autoappdev_ir` v1) into a runnable shell driver that:
+
 - Interprets IR `TASK -> STEP -> ACTION` in-order.
 - Uses **Codex non-interactively** for prompt-based actions.
 - Provides **reusable action helpers** (note/run/codex) inside the generated script (or sourced from a shared template library).
 
 Acceptance:
+
 - Repo includes a script/template that generates a runnable shell driver from IR.
 - Generated driver includes Codex non-interactive calls + reusable actions.
 - Generation is deterministic (same IR -> identical output bytes).
 
 ## Current State (References)
+
 - Canonical IR shape is defined in `docs/pipeline-formatted-script-spec.md` (top-level `kind:"autoappdev_ir", version:1, tasks:[...]`).
 - Example IR exists: `examples/pipeline_ir_v1.json` (uses `ACTION.kind: note|run`).
 - Existing Codex non-interactive shell patterns exist:
@@ -22,7 +26,9 @@ Acceptance:
   - `scripts/pipeline_demo.sh` respects `$AUTOAPPDEV_RUNTIME_DIR/PAUSE`
 
 ## Output Contract (Runner v0)
+
 Generated shell runner should:
+
 - Start with `#!/usr/bin/env bash` and `set -euo pipefail`.
 - Respect pause:
   - `RUNTIME_DIR="${AUTOAPPDEV_RUNTIME_DIR:-<repo>/runtime}"`
@@ -34,6 +40,7 @@ Generated shell runner should:
   - `action_codex_exec <prompt>`: run codex non-interactively with stable defaults and optional session reuse.
 
 Supported `ACTION.kind` (minimal set for v0):
+
 - `note`: `params.text` (string)
 - `run`: `params.cmd` (string)
 - `codex_exec`: `params.prompt` (string), optional `params.model`, `params.reasoning`, etc.
@@ -41,6 +48,7 @@ Supported `ACTION.kind` (minimal set for v0):
 Unknown action kinds should fail fast with a clear message (so generation/execution is predictable).
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Create a dedicated codegen folder
    - Add directory: `scripts/pipeline_codegen/`
    - Add template file: `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
@@ -84,7 +92,9 @@ Unknown action kinds should fail fast with a clear message (so generation/execut
    - Link doc from `README.md` Contents if there is an existing docs index pattern.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -106,14 +116,15 @@ bash -n /tmp/runner_a.sh
 ```
 
 Manual (outside sandbox): run the generated driver via backend pipeline controls
+
 1. Generate runner to `scripts/generated_demo_runner.sh`.
 2. Start backend with `AUTOAPPDEV_PIPELINE_SCRIPT=scripts/generated_demo_runner.sh`.
 3. Use PWA Start/Pause/Resume/Stop; confirm logs show steps and pause/resume messages.
 
 ## Acceptance Checklist
+
 - [ ] `scripts/pipeline_codegen/generate_runner_from_ir.py` generates a runnable `.sh` from an `autoappdev_ir` JSON file.
 - [ ] Generated runner includes non-interactive `codex exec` wrapper function(s) for `ACTION.kind="codex_exec"`.
 - [ ] Runner contains reusable action helpers (`action_note`, `action_run`, `action_codex_exec`).
 - [ ] Generation is deterministic (byte-identical outputs for the same input).
 - [ ] At least one example IR (`examples/pipeline_ir_codegen_demo_v0.json`) generates successfully.
-

@@ -1,10 +1,12 @@
 # Work Notes: 032 common_action_update_readme_spec
 
 ## Summary
+
 - Added a doc spec for the common `update_readme` action (markers, safe target path under `auto-apps/`, and a canonical Philosophy section).
 - Linked the new doc from `README.md` Contents.
 
 ## Changes Made
+
 - `docs/common-actions.md`
   - Defined `ACTION.kind="update_readme"` contract.
   - Defined workspace-safe targeting rule: `auto-apps/<workspace>/README.md` (no arbitrary path params).
@@ -14,6 +16,7 @@
   - Added `docs/common-actions.md` to Contents.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

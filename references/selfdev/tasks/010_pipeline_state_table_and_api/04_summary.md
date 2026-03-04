@@ -1,6 +1,7 @@
 # Summary: 010 pipeline_state_table_and_api
 
 ## What Changed
+
 - Added `pipeline_state` table to `backend/schema.sql` (singleton row `id=1`) to track current pipeline state and timestamps.
 - Added storage methods in `backend/storage.py` to read/update pipeline state.
 - Added `GET /api/pipeline` in `backend/app.py` returning `{ pipeline: { state, pid, run_id, started_at, paused_at, resumed_at, stopped_at, updated_at } }`.
@@ -8,9 +9,11 @@
 - Updated `docs/api-contracts.md` to document `GET /api/pipeline`.
 
 ## Why
+
 This makes the current pipeline state explicit and timestamped (stopped/running/paused), independent from the historical `pipeline_runs` log.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

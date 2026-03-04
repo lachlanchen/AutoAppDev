@@ -1,17 +1,21 @@
 # Plan: 051 builtin_readonly_default_actions_clone_on_edit
 
 ## Goal
+
 Expose a small set of **built-in default actions** from the backend, marked **readonly**, and implement **clone-on-edit**:
+
 - Built-ins show up in `GET /api/actions` (metadata list) and `GET /api/actions/<id>` (full spec).
 - `PUT`/`DELETE` against built-ins are rejected.
 - A clone endpoint creates an editable copy in the DB so the UI can edit/save it.
 
 Acceptance:
+
 - Backend exposes built-in default actions (include multilingual-aware prompts) marked `readonly: true`.
 - Update/delete built-ins are rejected.
 - Backend provides clone endpoint (and PWA uses it when user tries to edit a built-in).
 
 ## Current State (Relevant Files)
+
 - Backend action registry API:
   - `backend/app.py`: `ActionsHandler` (`GET/POST /api/actions`), `ActionHandler` (`GET/PUT/DELETE /api/actions/<id>`), routes in `make_app()`.
   - `backend/storage.py`: CRUD for `action_definitions` table (no readonly/builtin column).
@@ -23,13 +27,17 @@ Acceptance:
   - `docs/api-contracts.md`: documents current Actions API (no readonly, no clone endpoint).
 
 ## Design (Minimal + No DB Migration)
+
 Keep built-ins **virtual** (not persisted in Postgres) to avoid schema migrations and seeding logic:
+
 - Built-ins live in a new module (ex: `backend/builtin_actions.py`) with a reserved high ID range (safe JS integer).
 - API handlers merge built-ins with DB actions.
 - Clone endpoint copies a builtin into `action_definitions` via existing `Storage.create_action_definition()`.
 
 ### Built-in Action Set (v0)
+
 Provide a small default set (6) aligned with the pipeline phases, with prompts that are **language-aware** (multilingual support) without needing new schema:
+
 - `Plan (multilingual)`
 - `Work (multilingual)`
 - `Debug/Verify (multilingual)`
@@ -38,6 +46,7 @@ Provide a small default set (6) aligned with the pipeline phases, with prompts t
 - `Commit/Release note (multilingual; remind that git is handled externally)`
 
 All built-ins:
+
 - `kind: "prompt"`
 - `spec.prompt`: includes a “Language” section instructing to write in the user/workspace language if known, else English.
 - `readonly: true`
@@ -46,7 +55,9 @@ All built-ins:
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Add Built-in Actions Module
+
 Create `backend/builtin_actions.py`:
+
 - Define a reserved ID base (ex: `9_000_000_000`) and a list of builtin action dicts:
   - Full shape for single action: `{id, title, kind, spec, enabled, readonly, created_at, updated_at}`
 - Provide helpers:
@@ -55,7 +66,9 @@ Create `backend/builtin_actions.py`:
   - `list_builtin_action_summaries() -> list[dict]` (omit `spec`, used by `GET /api/actions`)
 
 ### 2) Backend: Merge Built-ins Into List/Get
+
 Edit `backend/app.py`:
+
 - `ActionsHandler.get`:
   - Fetch DB actions via `storage.list_action_definitions(limit=...)`
   - Prepend (or append) `builtin_actions.list_builtin_action_summaries()`
@@ -68,12 +81,16 @@ Edit `backend/app.py`:
   - Else fallback to storage.
 
 ### 3) Backend: Reject Update/Delete For Built-ins
+
 Edit `backend/app.py` `ActionHandler.put` and `ActionHandler.delete`:
+
 - If `aid` is builtin: return `403` with a stable error:
   - body: `{ "error": "readonly", "detail": "built-in actions are read-only; clone to edit" }`
 
 ### 4) Backend: Add Clone Endpoint
+
 Edit `backend/app.py`:
+
 - Add a new handler, e.g. `ActionCloneHandler`:
   - Route: `POST /api/actions/<id>/clone`
   - Behavior:
@@ -88,7 +105,9 @@ Edit `backend/app.py`:
   - `(r"/api/actions/([0-9]+)/clone", ActionCloneHandler, {"storage": storage})`
 
 ### 5) PWA: Clone-On-Edit UX (Minimal)
+
 Edit `pwa/app.js`:
+
 - When loading an action, retain `action.readonly` in `selectedAction`.
 - Update `updateActionsButtons()`:
   - Disable `Delete` when selected action is readonly.
@@ -103,7 +122,9 @@ Edit `pwa/app.js`:
 No new UI widgets required (keeps changes small); the existing Save flow becomes “clone-on-edit”.
 
 ### 6) Docs Update
+
 Edit `docs/api-contracts.md` (Actions section):
+
 - Mention built-in actions appear in lists and may include:
   - `readonly: true`
 - Document update/delete rejection for readonly actions:
@@ -112,7 +133,9 @@ Edit `docs/api-contracts.md` (Actions section):
   - `POST /api/actions/<id>/clone` response shape.
 
 ## Verification (DEBUG/VERIFY Phase)
+
 Static checks:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python3 -m py_compile backend/app.py backend/storage.py backend/action_registry.py backend/builtin_actions.py
@@ -120,6 +143,7 @@ timeout 10s node --check pwa/app.js
 ```
 
 Logic smoke (no server needed):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python3 - <<'PY'
@@ -133,9 +157,9 @@ PY
 ```
 
 Manual acceptance checks (when backend is running):
+
 1. `GET /api/actions?limit=200` includes builtin actions with `readonly:true`.
 2. `GET /api/actions/<builtin_id>` returns full spec + `readonly:true`.
 3. `PUT /api/actions/<builtin_id>` and `DELETE /api/actions/<builtin_id>` return `403 readonly`.
 4. `POST /api/actions/<builtin_id>/clone` returns a new DB action id; that new id is editable.
 5. In the PWA Actions tab: editing a builtin and pressing Save results in a cloned editable action being saved (no manual copy/paste).
-

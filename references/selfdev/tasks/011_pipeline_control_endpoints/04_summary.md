@@ -1,14 +1,17 @@
 # Summary: 011 pipeline_control_endpoints
 
 ## What Changed
+
 - Enforced a simple pipeline state machine for control endpoints in `backend/app.py`.
   - Invalid transitions now return HTTP 400 with `{ ok:false, error:"invalid_transition", from, action, detail }`.
 - Updated `docs/api-contracts.md` with an example `invalid_transition` response.
 
 ## Why
+
 This prevents nonsensical control actions (e.g. pausing when stopped) and makes client behavior deterministic.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

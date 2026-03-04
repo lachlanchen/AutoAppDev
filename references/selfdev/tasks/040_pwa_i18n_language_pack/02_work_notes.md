@@ -1,6 +1,7 @@
 # Work Notes: 040 pwa_i18n_language_pack
 
 ## Implementation Notes
+
 - Added a built-in language pack and normalizer in `pwa/i18n.js` (exposes `window.AutoAppDevI18n`) covering:
   - `zh-Hans`, `zh-Hant`, `en`, `ja`, `ko`, `vi`, `ar` (RTL), `fr`, `es`
 - Updated `pwa/index.html`:
@@ -29,6 +30,7 @@
 - Updated `docs/auto-development-guide.md` with a short note about persisting UI language choice.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -69,4 +71,3 @@ nl -ba docs/auto-development-guide.md | sed -n '35,90p'
 timeout 10s node --check pwa/app.js
 timeout 10s node --check pwa/i18n.js
 ```
-

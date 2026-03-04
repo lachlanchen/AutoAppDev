@@ -3,6 +3,7 @@
 ## Verification Commands + Results
 
 ### Static Checks
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -14,7 +15,9 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 ```
 
 ### Built-in Actions + Validator Smoke
+
 Confirms:
+
 - built-ins list is non-empty
 - `readonly` built-in IDs are detectable
 - built-in spec validates via `validate_action_create()` (same path used by clone endpoint)
@@ -54,17 +57,20 @@ PY
 ```
 
 Result:
+
 ```text
 ok builtin_id= 9000000001 validated_kind= prompt
 ```
 
 ## Issues Found
+
 - None in static checks.
 
 ## Manual Verification (Outside Sandbox)
+
 When backend + PWA are running:
+
 1. In Actions tab, confirm built-in actions show as `readonly`.
 2. Select a builtin, edit title/prompt, click Save:
    - UI should clone it via `POST /api/actions/<id>/clone` and then save edits to the cloned id.
 3. Confirm Delete is disabled for readonly actions and enabled for cloned actions.
-

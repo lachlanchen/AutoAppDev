@@ -1,6 +1,7 @@
 # Debug Notes: 043 aaps_numbering_placeholders_spec
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -9,6 +10,7 @@ timeout 10s rg -n "AAPS Numbering|Numbered \\+ indented|\\{\\{task\\.title\\}\\}
 ```
 
 Result (excerpt):
+
 ```text
 docs/aaps-numbering-placeholders.md:1:# AAPS Numbering + Placeholders (Convention v0)
 docs/aaps-numbering-placeholders.md:76:- `{{task.title}}`
@@ -32,10 +34,11 @@ PY
 ```
 
 Result:
+
 ```text
 OK: example parses as AAPS v1
 ```
 
 ## Issues Found
-- None.
 
+- None.

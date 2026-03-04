@@ -1,11 +1,13 @@
 # Summary: 048 pwa_numbered_aaps_export
 
 ## What Changed (And Why)
+
 - Updated the PWA AAPS generator to export **numbered + indented** AAPS v1 for readability (Scratch-like), without changing semantics:
   - `pwa/app.js` `programToAapsScript()` now emits numbering as comment lines (`# 1`, `# 1.N`, `# 1.N.1`) and indents `STEP`/`ACTION` statements.
 - Import tolerance for numeric prefixes (e.g. `1.2 STEP {...}`) is already supported by the deterministic backend parser (`backend/pipeline_parser.py`), so no additional code changes were required for imports.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -24,4 +26,3 @@ for p in [
 print("OK")
 PY
 ```
-

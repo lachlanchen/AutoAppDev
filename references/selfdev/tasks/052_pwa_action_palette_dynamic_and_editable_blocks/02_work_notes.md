@@ -1,6 +1,7 @@
 # Work Notes: 052 pwa_action_palette_dynamic_and_editable_blocks
 
 ## Summary of Changes
+
 - Added a dynamic **Actions palette** to the PWA toolbox, sourced from `GET /api/actions` (built-ins + user actions).
 - Enabled drag/drop of action palette items to create a normal step block pre-bound via `action_ref`.
 - Added a minimal in-canvas `Edit` flow for parameterized blocks:
@@ -13,6 +14,7 @@
 - Documented the dynamic Actions palette behavior in `pwa/README.md`.
 
 ## Implementation Details
+
 - Kept the existing “program = step blocks” model:
   - Action palette items are shortcuts that drop a leaf step block `{ type: <phase>, action_ref: { id } }`.
   - Built-in action IDs are mapped to sensible default step types (plan/work/debug/fix/summary/commit_push); other actions default to `work`.
@@ -22,11 +24,13 @@
 - Edit UI is prompt-based to stay consistent with existing `Bind` and `update_readme` flows and keep the change small.
 
 ## Files Changed
+
 - Updated: `pwa/app.js`
 - Updated: `pwa/i18n.js`
 - Updated: `pwa/README.md`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -72,4 +76,3 @@ sed -n '1,180p' references/selfdev/tasks/050_scratch_like_control_flow_blocks_v0
 rg -n '\"ui\\.btn\\.bind\"' -n pwa/i18n.js
 sed -n '108,150p' pwa/i18n.js
 ```
-

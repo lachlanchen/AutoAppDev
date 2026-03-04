@@ -1,12 +1,14 @@
 # Debug/Verify Notes: 011 pipeline_control_endpoints
 
 ## What I Verified
+
 - Static verification:
   - Backend compiles with transition enforcement changes.
   - API contracts doc includes an `invalid_transition` example.
 - Live endpoint verification was skipped because no `.env` exists in this workspace (backend requires `DATABASE_URL` to start).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -40,4 +42,5 @@ fi
 ```
 
 ## Issues Found
+
 - None requiring code changes.

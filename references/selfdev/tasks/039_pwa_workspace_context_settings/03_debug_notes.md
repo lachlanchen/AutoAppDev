@@ -1,6 +1,7 @@
 # Debug Notes: 039 pwa_workspace_context_settings
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -71,10 +72,11 @@ timeout 10s rg -n 'ws-slug|ws-load|ws-save|/api/workspaces' pwa/index.html pwa/a
 ```
 
 ## Results
+
 - `node --check` exit code: `0`
 - Evaluation smoke output: `ok: evaluated` (exit code `0`)
 - `rg` confirms workspace UI ids and API usage are present.
 
 ## Issues Found
-- None in these minimal checks.
 
+- None in these minimal checks.

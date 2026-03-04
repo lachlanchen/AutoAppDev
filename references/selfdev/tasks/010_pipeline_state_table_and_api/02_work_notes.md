@@ -1,6 +1,7 @@
 # Work Notes: 010 pipeline_state_table_and_api
 
 ## Summary of Changes
+
 - Added `pipeline_state` table (singleton row `id=1`) to `backend/schema.sql` with state + timestamps.
 - Added storage helpers in `backend/storage.py`:
   - `get_pipeline_state()` returns state + timestamp fields.
@@ -10,12 +11,14 @@
 - Updated `docs/api-contracts.md` to document `GET /api/pipeline`.
 
 ## Files Changed
+
 - Updated: `backend/schema.sql`
 - Updated: `backend/storage.py`
 - Updated: `backend/app.py`
 - Updated: `docs/api-contracts.md`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -28,5 +31,6 @@ rg -n "GET /api/pipeline" docs/api-contracts.md
 ```
 
 ## Notes
+
 - Existing `/api/pipeline/status` remains unchanged for current PWA compatibility.
 - Live verification (schema apply + endpoint calls) is deferred to DEBUG/VERIFY because it requires a real `.env` / Postgres.

@@ -1,6 +1,7 @@
 # Debug Notes: 038 workspace_materials_and_context_api
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -41,6 +42,7 @@ timeout 10s rg -n \"GET /api/workspaces/<workspace>/config|POST /api/workspaces/
 ```
 
 ## Results
+
 - `py_compile` exit code: `0`
 - Validation smoke output: `ok` (exit code `0`)
 - `rg` confirms:
@@ -48,5 +50,5 @@ timeout 10s rg -n \"GET /api/workspaces/<workspace>/config|POST /api/workspaces/
   - docs include both endpoints
 
 ## Issues Found
-- None in these minimal checks.
 
+- None in these minimal checks.

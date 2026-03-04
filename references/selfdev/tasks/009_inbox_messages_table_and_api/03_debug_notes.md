@@ -1,12 +1,14 @@
 # Debug/Verify Notes: 009 inbox_messages_table_and_api
 
 ## What I Verified
+
 - Static verification:
   - Backend compiles with the new inbox table/storage methods/handler.
   - Docs include `/api/inbox` contract.
 - Live endpoint verification was skipped because no `.env` exists in this workspace (backend requires `DATABASE_URL` to start).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -43,4 +45,5 @@ fi
 ```
 
 ## Issues Found
+
 - None requiring code changes.

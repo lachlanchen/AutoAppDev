@@ -9,6 +9,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && rg -n "script-download-aaps|s
 ```
 
 Output:
+
 ```text
 pwa/index.html:175:              id="script-download-aaps"
 pwa/index.html:178:              Download AAPS
@@ -31,6 +32,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && timeout 10s node --check pwa/
 Result: exit 0, no output.
 
 Attempted (non-browser) runner generation smoke via `vm` (fails because `pwa/app.js` calls `boot()` and expects real DOM nodes):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && timeout 10s node - <<'NODE'
 // Minimal smoke: ensure runner generation function exists and returns a bash script header.
@@ -71,21 +73,24 @@ NODE
 ```
 
 Output (abbrev):
+
 ```text
 TypeError: Cannot read properties of null (reading 'querySelectorAll')
 ...
 ```
 
 Follow-up static smoke (no DOM execution):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && timeout 10s node -e "const fs=require('fs'); const code=fs.readFileSync('pwa/app.js','utf8'); if(!code.includes('function generateRunnerScript')) throw new Error('missing generateRunnerScript'); if(!code.includes('#!/usr/bin/env bash')) throw new Error('missing shebang'); console.log('OK');"
 ```
 
 Output:
+
 ```text
 OK
 ```
 
 ## Notes / Limitations
-- Full functional verification (downloads in browser) requires running a static server for `pwa/` and opening the PWA in a browser. This sandbox environment cannot bind/listen on ports, so verification here is limited to static checks.
 
+- Full functional verification (downloads in browser) requires running a static server for `pwa/` and opening the PWA in a browser. This sandbox environment cannot bind/listen on ports, so verification here is limited to static checks.

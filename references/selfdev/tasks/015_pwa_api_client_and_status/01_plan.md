@@ -1,18 +1,22 @@
 # Plan: 015 pwa_api_client_and_status
 
 ## Goal
+
 Add a small, centralized PWA API client module and upgrade the Status UI to show:
+
 - Backend health
 - DB status (from `GET /api/health` -> `db` field)
 - Pipeline state badge
 
 Acceptance:
+
 - PWA has a small API client module.
 - Status area shows health, DB status, and a pipeline state badge.
 - Status updates at least every 2 seconds (polling is fine; push is optional).
 - Default PWA theme remains light.
 
 ## Current State (References)
+
 - PWA shell + layout already exist:
   - `pwa/index.html` has the Status rows: `#backend-health`, `#pipeline-status`, `#pipeline-pid`.
   - `pwa/styles.css` defines light theme tokens and Status row layout (`.kv`, `.k`, `.v`).
@@ -24,6 +28,7 @@ Acceptance:
   - `GET /api/pipeline/status` returns `{ status: { state, running, pid, run_id } }` (`backend/app.py` `PipelineStatusHandler`).
 
 ## Approach (Minimal / Incremental)
+
 1. Extract the existing fetch wrapper into a small standalone file (a “module” in the sense of a dedicated file):
    - Add `pwa/api-client.js` that exposes a single global (no bundler / no ES modules required).
 2. Update Status UI to use badge styling and add a DB row.
@@ -32,6 +37,7 @@ Acceptance:
 5. Preserve offline-shell behavior by updating the service worker precache list to include the new JS asset.
 
 ## Implementation Steps (Next Phase)
+
 1. Add `pwa/api-client.js` (new file).
    - Read config from `window.__AUTOAPPDEV_CONFIG__` (already set in `pwa/index.html`).
    - Compute `API_BASE_URL` with the existing default (`http://127.0.0.1:8788`).
@@ -90,7 +96,9 @@ Acceptance:
    - Add `./api-client.js` to `PRECACHE_URLS` so offline reloads still have the full shell JS available.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -109,6 +117,7 @@ node --check pwa/app.js
 ```
 
 Manual browser verification (required to validate real badge behavior):
+
 1. Serve the PWA (`cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`).
 2. Open `http://127.0.0.1:5173/`.
 3. Confirm Status shows three badges: Backend, DB, Pipeline.
@@ -116,6 +125,7 @@ Manual browser verification (required to validate real badge behavior):
 5. Optional: DevTools -> Application -> Service Workers -> ensure SW still installs after adding `api-client.js`.
 
 ## Acceptance Checklist
+
 - [ ] `pwa/api-client.js` exists and `pwa/app.js` uses it (no duplicated fetch wrapper logic).
 - [ ] Status UI shows:
   - [ ] Backend badge (ok/down)

@@ -1,14 +1,17 @@
 # Plan: 030 workspace_layout_standardization
 
 ## Goal
+
 Document a standard AutoAppDev workspace layout (folders + contracts) so pipelines are portable/resumable and file writes stay safe/predictable.
 
 Acceptance:
+
 - Docs define standard folders: `materials/`, `interactions/`, `outputs/`, `docs/`, `references/`, `scripts/`, `tools/`, `logs/`, `auto-apps/`
 - Docs explain how AutoAppDev uses each folder.
 - Docs include a simple initialization checklist (commands ok).
 
 ## Current State (References)
+
 - Repo root currently contains: `docs/`, `scripts/`, `references/`, `runtime/`, `backend/`, `pwa/`, `examples/`.
 - Runtime conventions are already implemented:
   - Backend computes runtime/log paths from `AUTOAPPDEV_RUNTIME_DIR` (default `./runtime`): `backend/app.py` (`_compute_paths`, `PipelineControl.pause_flag`, log tailers).
@@ -19,6 +22,7 @@ Acceptance:
   - `scripts/setup_backend_env.sh` expects `auto-apps/backend/requirements.txt`.
 
 ## Deliverable (Docs Only)
+
 1. Add a dedicated workspace contract doc
    - Create: `docs/workspace-layout.md`
    - Include sections:
@@ -46,7 +50,9 @@ Acceptance:
    - Do not change backend/PWA behavior; only document the established conventions and the intended contract.
 
 ## Commands To Run (Verification)
+
 Doc-only verification:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -68,8 +74,8 @@ rg -n \"docs/workspace-layout\\.md\" README.md
 ```
 
 ## Acceptance Checklist
+
 - [ ] `docs/workspace-layout.md` exists and clearly defines the standard folders and their roles.
 - [ ] The doc explicitly explains runtime vs workspace storage and references current implementations (`backend/app.py`, `docs/env.md`, `docs/api-contracts.md`, `scripts/app-auto-development.sh`).
 - [ ] The doc includes a simple init checklist with concrete commands.
 - [ ] `README.md` links to the new doc.
-

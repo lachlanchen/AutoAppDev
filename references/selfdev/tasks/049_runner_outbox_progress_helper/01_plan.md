@@ -1,15 +1,19 @@
 # Plan: 049 runner_outbox_progress_helper
 
 ## Goal
+
 Add a small, runner-native helper to publish **progress updates** to the file-based outbox queue:
+
 - Write progress messages to `"$AUTOAPPDEV_RUNTIME_DIR/outbox/"` using the atomic rename pattern (no HTTP/curl required).
 - Update the generated runner’s `meta_round_v0` loop to use this helper so the PWA (via backend `/api/outbox` ingestion) can observe meta-task progress.
 
 Acceptance:
+
 - Runner template adds a helper to write progress updates to `runtime/outbox/`.
 - Meta-round loop uses the helper so the PWA can observe progress (via file queue ingestion).
 
 ## Current State (Relevant Files)
+
 - Outbox queue contract + ingestion:
   - `docs/api-contracts.md` (runtime outbox file queue format and atomic write pattern)
   - `docs/workspace-layout.md` (runtime/outbox in runtime contract)
@@ -21,6 +25,7 @@ Acceptance:
   - `scripts/pipeline_codegen/smoke_meta_round_v0.sh` (current smoke for loop + resume)
 
 ## Proposed Minimal Design
+
 1. Add a bash helper to the runner template:
    - `outbox_write <content> [role]`
    - Writes a single message file into `"$RUNTIME_DIR/outbox/"` as:
@@ -50,7 +55,9 @@ Acceptance:
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Runner Template: Add Outbox Helper
+
 Edit `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
+
 - Add an `OUTBOX_DIR="$RUNTIME_DIR/outbox"` variable near other runtime paths.
 - Add function:
   - `outbox_write()`:
@@ -60,13 +67,17 @@ Edit `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
     - on failure: print a warning via `log` and return 0.
 
 ### 2) Meta-round Loop: Emit Progress Updates
+
 Edit `scripts/pipeline_codegen/templates/runner_v0.sh.tpl` in `meta_round_run_template_tasks()`:
+
 - On skip: call `outbox_write "SKIP META_TASK $task_id: already completed" pipeline`
 - Before running the template: call `outbox_write "META_TASK $task_id: start\\n$task_title" pipeline` (or single-line)
 - After successful completion: call `outbox_write "META_TASK $task_id: done" pipeline`
 
 ### 3) Smoke: Validate Outbox Messages Are Written
+
 Edit `scripts/pipeline_codegen/smoke_meta_round_v0.sh`:
+
 - After run #1:
   - `test -d "$runtime_dir/outbox"`
   - `ls "$runtime_dir/outbox" | rg -n '^[0-9]+_pipeline\\.(md|txt)$'`
@@ -76,10 +87,13 @@ Edit `scripts/pipeline_codegen/smoke_meta_round_v0.sh`:
   - Keep existing stdout-based skip assertions unchanged (they’re still useful).
 
 ### 4) Docs
+
 Edit `docs/pipeline-runner-codegen.md`:
+
 - Add a short section under Runtime Conventions describing `runtime/outbox/` helper and that meta-round uses it for progress.
 
 ## Verification Commands (DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -95,7 +109,7 @@ timeout 20s bash scripts/pipeline_codegen/smoke_codegen.sh
 ```
 
 ## Acceptance Checklist
+
 - [ ] Generated runner template includes an outbox helper that writes `runtime/outbox/<ts>_pipeline.md` using atomic rename.
 - [ ] In meta-round mode, the runner emits outbox progress messages for template task start/done (and optionally skip).
 - [ ] `smoke_meta_round_v0.sh` demonstrates outbox files being created alongside existing loop+resume behavior.
-

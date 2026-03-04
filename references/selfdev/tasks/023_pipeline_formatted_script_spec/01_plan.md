@@ -1,18 +1,22 @@
 # Plan: 023 pipeline_formatted_script_spec
 
 ## Goal
+
 Define (in docs) a standardized, versioned “formatted pipeline script” and its canonical IR schema:
+
 - Script format: human-editable text that is deterministic to parse into IR.
 - IR schema: `TASK -> STEP -> ACTION` JSON structure.
 - Include at least one complete example (script + equivalent IR).
 - Explicitly map `STEP.block` values to the PWA Scratch-like blocks.
 
 Acceptance:
+
 - Docs define the formatted script + IR schema (TASK->STEP->ACTION).
 - At least one complete example is included.
 - Mapping to Scratch-like blocks is explicit.
 
 ## Current State (References)
+
 - PWA block palette keys (these must be the canonical `STEP.block` values):
   - `pwa/index.html`: `.toolbox .block[data-block="plan|work|debug|fix|summary|commit_push"]`
   - `pwa/app.js`: `BLOCK_META` includes these block types/labels.
@@ -21,6 +25,7 @@ Acceptance:
 - No existing doc describes a parseable pipeline script format or IR schema beyond the flat plan payload.
 
 ## Approach (Minimal / Deterministic)
+
 1. Add one new doc that defines:
    - A versioned, line-oriented script format that is easy to parse (no YAML).
    - A canonical IR JSON shape (TASK->STEP->ACTION).
@@ -31,6 +36,7 @@ Acceptance:
 3. Link the new doc from `README.md` for discoverability.
 
 ## Implementation Steps (Next Phase)
+
 1. Add the spec doc.
    - Create `docs/pipeline-formatted-script-spec.md` with:
      - **Overview / design goals**: deterministic parsing, versioning, safety (data only, not executable).
@@ -79,7 +85,9 @@ Acceptance:
    - No PWA or backend behavior changes in this task.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -100,8 +108,8 @@ rg -n 'pipeline-formatted-script-spec\\.md' README.md
 ```
 
 ## Acceptance Checklist
+
 - [ ] `docs/pipeline-formatted-script-spec.md` defines a versioned formatted script and the IR schema (TASK->STEP->ACTION).
 - [ ] Spec includes at least one complete example (script + equivalent IR).
 - [ ] Spec explicitly maps `STEP.block` values to the current PWA blocks (`plan/work/debug/fix/summary/commit_push`).
 - [ ] Example IR JSON validates via `python3 -m json.tool`.
-

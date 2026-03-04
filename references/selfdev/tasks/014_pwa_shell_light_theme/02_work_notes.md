@@ -1,6 +1,7 @@
 # Work Notes: 014 pwa_shell_light_theme
 
 ## Summary of Changes
+
 - Added PWA offline shell primitives:
   - `pwa/manifest.json`
   - `pwa/service-worker.js` (precache shell assets)
@@ -9,6 +10,7 @@
 - Fixed `pwa/README.md` rendering (removed literal `\\n+` artifacts).
 
 ## Files Changed
+
 - Added: `pwa/manifest.json`
 - Added: `pwa/service-worker.js`
 - Updated: `pwa/index.html`
@@ -16,6 +18,7 @@
 - Updated: `pwa/README.md`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -28,4 +31,5 @@ rg -n "<body[^>]*data-theme=\\\"light\\\"" pwa/index.html
 ```
 
 ## Notes
+
 - The controller layout (top bar + 3-panel grid) already existed; this task focused on making the shell installable/offline-friendly.

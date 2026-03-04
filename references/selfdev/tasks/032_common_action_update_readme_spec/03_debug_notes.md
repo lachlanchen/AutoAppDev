@@ -1,10 +1,12 @@
 # Debug Notes: 032 common_action_update_readme_spec
 
 ## Verification (Smallest Smoke)
+
 - Verified the new action spec doc exists and contains the expected contract elements (action kind, markers, Philosophy section, safe `auto-apps/<workspace>/README.md` targeting).
 - Verified repo `README.md` links the new spec doc.
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -56,5 +58,5 @@ PY
 ```
 
 ## Issues Found
-- Initial spec had `block_markdown` marked optional and examples omitted it; updated `docs/common-actions.md` to match the plan (required `block_markdown` + added README snippet with markers).
 
+- Initial spec had `block_markdown` marked optional and examples omitted it; updated `docs/common-actions.md` to match the plan (required `block_markdown` + added README snippet with markers).

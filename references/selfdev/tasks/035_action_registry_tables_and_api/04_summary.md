@@ -1,6 +1,7 @@
 # Summary: 035 action_registry_tables_and_api
 
 ## What Changed
+
 - Added an action registry table:
   - `backend/schema.sql`: new `action_definitions` table + `action_definitions_updated_at_idx`.
 - Implemented storage + validation for action definitions:
@@ -13,9 +14,11 @@
   - `docs/api-contracts.md`: new “Actions” subsections for the registry endpoints and a note distinguishing registry vs executor endpoints.
 
 ## Why
+
 To make actions first-class, reusable, and editable via a stable backend contract, while enforcing safe defaults and preventing unsafe path settings for command-based actions.
 
 ## How To Verify (Smallest Smoke)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -46,4 +49,3 @@ PY
 
 timeout 10s rg -n "/api/actions\\b" backend/app.py docs/api-contracts.md
 ```
-

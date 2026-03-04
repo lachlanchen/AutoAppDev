@@ -1,15 +1,19 @@
 # Plan: 041 pipeline_chat_outbox_channel
 
 ## Goal
+
 Add a pipeline outbox/messages channel so pipelines can safely report messages/status back to the UI:
+
 - Backend supports persistence and safe ingestion for pipeline -> UI messages.
 - PWA displays pipeline outbox messages alongside user “Inbox” guidance.
 
 Acceptance:
+
 - Backend provides a safe way for pipelines to write messages/status back to the UI (DB and/or `runtime/outbox` files).
 - PWA can display those messages.
 
 ## Current State (Relevant Files)
+
 - Inbox (UI -> pipeline guidance) exists:
   - API: `backend/app.py` (`InboxHandler` at `/api/inbox`)
   - DB: `backend/schema.sql` (`inbox_messages`)
@@ -24,9 +28,11 @@ Acceptance:
   - `docs/api-contracts.md` “Inbox Messages”
 
 ## Proposed Minimal Design
+
 Implement a first-class **Outbox Messages** API backed by Postgres, and optionally support a file-based queue under `runtime/outbox/` that the backend can ingest.
 
 Why this design:
+
 - “Safe” means pipelines can only append messages (DB row insert and/or constrained runtime dir files), not arbitrary file writes.
 - Keeps architecture consistent with existing inbox: DB persistence + runtime file queue patterns.
 - PWA changes are minimal: fetch `/api/outbox` in addition to `/api/inbox` and render.
@@ -34,7 +40,9 @@ Why this design:
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) DB Schema: Add `outbox_messages`
+
 Edit `backend/schema.sql`:
+
 - Add:
   - `create table if not exists outbox_messages (...)`
     - `id bigserial primary key`
@@ -47,7 +55,9 @@ Edit `backend/schema.sql`:
 Acceptance impact: enables persistence for pipeline messages.
 
 ### 2) Storage Methods
+
 Edit `backend/storage.py`:
+
 - Add:
   - `add_outbox_message(role: str, content: str) -> None`
   - `list_outbox_messages(limit: int = 50) -> list[dict[str, Any]]`
@@ -57,7 +67,9 @@ Edit `backend/storage.py`:
   - fallback to `runtime/state.json` if needed (mirror `inbox` storage pattern)
 
 ### 3) Backend API: `/api/outbox`
+
 Edit `backend/app.py`:
+
 - Add helper(s):
   - `def _write_outbox_message(runtime_dir: Path, role: str, content: str) -> None`
     - writes to `runtime/outbox/<ts>_<role>.md` (same naming style as inbox, constrained to runtime dir)
@@ -77,7 +89,9 @@ Edit `backend/app.py`:
 Acceptance impact: provides a safe HTTP-based outbox for pipelines (curl from runner scripts).
 
 ### 4) Optional: File-Based `runtime/outbox/` Ingestion (If Needed For Acceptance)
+
 If we want to explicitly satisfy “DB and/or runtime/outbox files” via files (not just via POST side-effect):
+
 - Add a periodic poller in `backend/app.py` (similar to log polling):
   - Scan `runtime/outbox/` for files matching `^[0-9]+_.*\\.(md|txt)$`
   - For each file:
@@ -88,10 +102,13 @@ If we want to explicitly satisfy “DB and/or runtime/outbox files” via files 
   - Run via `tornado.ioloop.PeriodicCallback(..., 500 or 1000).start()`
 
 This step is optional; if implemented, document a recommended atomic write pattern for pipelines:
+
 - write to temp + rename into `runtime/outbox/` so backend never ingests partial writes.
 
 ### 5) PWA: Display Outbox Messages
+
 Edit `pwa/app.js`:
+
 - Update `loadChat()` to also fetch outbox messages:
   - `GET /api/inbox?limit=50`
   - `GET /api/outbox?limit=50` (or 200)
@@ -103,21 +120,27 @@ Edit `pwa/app.js`:
 - Keep message send path unchanged (`POST /api/inbox`).
 
 Keep changes minimal:
+
 - Prefer no `pwa/index.html` edits.
 - If a new label is added (e.g. “Outbox”), use `data-i18n` and add keys to `pwa/i18n.js` (task 040 i18n system).
 
 ### 6) Docs
+
 Edit `docs/api-contracts.md`:
+
 - Add a new “Outbox Messages” section next to “Inbox Messages”:
   - `GET /api/outbox?limit=N`
   - `POST /api/outbox`
   - Mention optional file queue under `runtime/outbox/` if implemented.
 
 Edit `docs/workspace-layout.md`:
+
 - Add a short paragraph under “Runtime Dir” describing `runtime/outbox/` message queue semantics and how pipelines can write to it (if ingestion is implemented).
 
 ## Verification Commands (DEBUG/VERIFY Phase)
+
 Smallest reasonable checks:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -128,6 +151,7 @@ timeout 10s rg -n \"/api/outbox|outbox_messages|runtime/outbox\" backend/app.py 
 ```
 
 Manual smoke (with backend running):
+
 1. Send an outbox message via HTTP:
    - `curl -sS -X POST -H 'Content-Type: application/json' http://127.0.0.1:8788/api/outbox -d '{\"role\":\"pipeline\",\"content\":\"hello from pipeline\"}'`
 2. Open PWA, go to `Inbox`, confirm the pipeline message appears styled as system.
@@ -135,9 +159,9 @@ Manual smoke (with backend running):
    - `mkdir -p runtime/outbox && printf 'file outbox hello\\n' > runtime/outbox/$(date +%s%3N)_pipeline.md`
 
 ## Acceptance Checklist
+
 - [ ] `backend/schema.sql` has `outbox_messages` table.
 - [ ] Backend exposes `GET/POST /api/outbox` with validation + size limits.
 - [ ] Pipeline can write a message via the outbox mechanism (HTTP and/or runtime/outbox file).
 - [ ] PWA `Inbox` view shows pipeline outbox messages.
 - [ ] Default PWA theme remains light (no theme behavior changes).
-

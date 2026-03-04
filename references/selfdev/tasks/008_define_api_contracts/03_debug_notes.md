@@ -1,13 +1,16 @@
 # Debug/Verify Notes: 008 define_api_contracts
 
 ## What I Verified
+
 Doc-only smoke verification (no services started) to confirm:
+
 - The API contracts doc exists and is non-empty.
 - It covers the required areas: inbox messages, pipeline controls, logs, settings.
 - It includes example JSON payloads.
 - `README.md` links to the doc.
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -25,4 +28,5 @@ rg -n "docs/api-contracts\\.md" README.md
 ```
 
 ## Issues Found
+
 - None.

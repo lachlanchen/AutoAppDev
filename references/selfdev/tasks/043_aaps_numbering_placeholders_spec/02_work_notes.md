@@ -1,6 +1,7 @@
 # Work Notes: 043 aaps_numbering_placeholders_spec
 
 ## Implementation Notes
+
 - Added docs for a Scratch-like readability + templating convention while keeping AAPS v1 grammar unchanged:
   - `docs/aaps-numbering-placeholders.md` defines:
     - display-only numbering via `# 1.2.3` comment lines + indentation levels (TASK/STEP/ACTION), remaining AAPS v1-compatible
@@ -13,6 +14,7 @@
   - Includes `meta_round_v0`, conditional fix step (`STEP.meta.conditional="on_debug_failure"`), numbering comments, indentation, and placeholder usage in prompt/cmd strings.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -33,4 +35,3 @@ assert ir["tasks"]
 print("OK: example parses as AAPS v1")
 PY
 ```
-

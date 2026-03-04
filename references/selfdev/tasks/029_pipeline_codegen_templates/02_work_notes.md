@@ -1,11 +1,13 @@
 # Work Notes: 029 pipeline_codegen_templates
 
 ## Summary
+
 - Added a repo-local, deterministic code generator that converts `autoappdev_ir` v1 JSON into a runnable bash pipeline runner.
 - Added a runner template with reusable helpers (`note`, `run`, `codex_exec`) and pause/resume support (`runtime/PAUSE`).
 - Documented usage + provided a minimal smoke harness and example IR that includes a `codex_exec` action.
 
 ## Changes Made
+
 - `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
   - Runner skeleton (`set -euo pipefail`, runtime dirs, pause loop).
   - Action helpers: `action_note`, `action_run`, `action_codex_exec`.
@@ -25,6 +27,7 @@
   - Linked `docs/pipeline-runner-codegen.md` in Contents.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -46,4 +49,3 @@ mkdir -p scripts/pipeline_codegen/templates
 chmod +x scripts/pipeline_codegen/generate_runner_from_ir.py scripts/pipeline_codegen/smoke_codegen.sh
 find scripts/pipeline_codegen -maxdepth 3 -type f -print
 ```
-

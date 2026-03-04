@@ -1,6 +1,7 @@
 # Work Notes: 041 pipeline_chat_outbox_channel
 
 ## Implementation Notes
+
 - Added persistent outbox message storage:
   - `backend/schema.sql`: new `outbox_messages` table + `outbox_messages_created_at_idx`.
   - `backend/storage.py`: `add_outbox_message()` + `list_outbox_messages()`.
@@ -17,6 +18,7 @@
   - `docs/workspace-layout.md`: documented `runtime/outbox/` queue usage.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -31,4 +33,3 @@ sed -n '1,120p' docs/workspace-layout.md
 timeout 10s python -m py_compile backend/app.py backend/storage.py
 timeout 10s node --check pwa/app.js
 ```
-

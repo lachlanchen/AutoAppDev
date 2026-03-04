@@ -1,14 +1,17 @@
 # Plan: 018 blocks_to_plan_payload
 
 ## Goal
+
 Convert the current PWA workspace (`program` blocks) into a backend-recognized “plan payload”, and add a UI button that posts the plan to the backend and receives an ack.
 
 Acceptance:
+
 - Workspace JSON can be transformed into a backend-recognized plan payload.
 - PWA has a UI button to post the plan to backend and get an ack.
 - Default PWA theme remains light.
 
 ## Current State (References)
+
 - Workspace JSON (blocks program) already exists in the PWA:
   - `pwa/app.js`: `program` array + `persistProgram()` / `loadProgram()`; “Export JSON” renders `JSON.stringify({ program }, ...)`.
   - `pwa/index.html`: “Program” panel includes `#btn-export` and `#export`.
@@ -18,6 +21,7 @@ Acceptance:
 - There is no dedicated “plan” endpoint yet.
 
 ## Approach (Minimal / Incremental)
+
 1. Define a minimal plan payload shape (versioned) derived from the workspace JSON.
 2. Add a dedicated backend endpoint `POST /api/plan` (and optional `GET /api/plan`) that validates the payload shape and stores it under a single config key (ex: `pipeline_plan`).
 3. Add a “Send Plan” button in the PWA Program panel that:
@@ -27,7 +31,9 @@ Acceptance:
 4. Keep the UI/layout and default light theme unchanged.
 
 ## Proposed Plan Payload (Backend-Recognized)
+
 Store a single JSON object under key `pipeline_plan`:
+
 ```json
 {
   "kind": "autoappdev_plan",
@@ -40,12 +46,14 @@ Store a single JSON object under key `pipeline_plan`:
 ```
 
 Rules (minimal validation):
+
 - Body must be a JSON object.
 - `kind` must equal `autoappdev_plan`.
 - `version` must equal `1`.
 - `steps` must be a list of objects with `id` (int) and `block` (string).
 
 ## Implementation Steps (Next Phase)
+
 1. Backend: add a plan endpoint in `backend/app.py`.
    - Add `PlanHandler` near `ConfigHandler`.
    - `POST /api/plan`:
@@ -86,7 +94,9 @@ Rules (minimal validation):
    - Bump `CACHE_NAME` (ex: `autoappdev-shell-v2`) so manual verification reliably sees new UI without requiring cache clearing.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -104,6 +114,7 @@ timeout 5s python3 -m py_compile backend/app.py
 ```
 
 Manual end-to-end check (outside this sandbox, which cannot bind ports):
+
 1. Start backend + PWA:
    - Backend: `python3 -m backend.app`
    - PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
@@ -115,7 +126,7 @@ Manual end-to-end check (outside this sandbox, which cannot bind ports):
 5. (If GET is implemented) `GET /api/plan` returns the stored payload.
 
 ## Acceptance Checklist
+
 - [ ] `program` blocks can be transformed into the defined plan payload.
 - [ ] PWA “Send Plan” posts to backend and receives `{ok:true}` (ack) without page reload.
 - [ ] Default theme remains light.
-

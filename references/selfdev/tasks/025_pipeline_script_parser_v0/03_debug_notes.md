@@ -9,6 +9,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && test -f backend/pipeline_pars
 ```
 
 Output:
+
 ```text
 pipeline_parser.py exists
 ```
@@ -18,6 +19,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && rg -n "class ParseError|def p
 ```
 
 Output:
+
 ```text
 10:class ParseError(Exception):
 44:def parse_aaps_v1(text: str) -> dict[str, Any]:
@@ -28,6 +30,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && rg -n "/api/scripts/parse" ba
 ```
 
 Output:
+
 ```text
 backend/app.py:787:            (r"/api/scripts/parse", ScriptsParseHandler),
 docs/api-contracts.md:169:### POST /api/scripts/parse
@@ -52,6 +55,7 @@ PY
 ```
 
 Output:
+
 ```text
 OK 1 tasks
 ```
@@ -71,6 +75,7 @@ PY
 ```
 
 Output:
+
 ```text
 ERR invalid_header 1
 {'ok': False, 'error': 'invalid_header', 'line': 1, 'detail': 'expected header: AUTOAPPDEV_PIPELINE 1'}
@@ -79,4 +84,3 @@ ERR invalid_header 1
 ## Notes
 
 - Full HTTP verification of `POST /api/scripts/parse` requires running the backend server; this sandbox environment cannot bind/listen on ports, so verification here is limited to static checks and direct function smoke tests.
-

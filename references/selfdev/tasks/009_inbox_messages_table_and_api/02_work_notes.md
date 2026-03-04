@@ -1,6 +1,7 @@
 # Work Notes: 009 inbox_messages_table_and_api
 
 ## Summary of Changes
+
 - Added `inbox_messages` table to `backend/schema.sql`.
 - Added inbox persistence methods to `backend/storage.py`:
   - `add_inbox_message(...)`
@@ -12,12 +13,14 @@
 - Updated `docs/api-contracts.md` to include `/api/inbox` contract.
 
 ## Files Changed
+
 - Updated: `backend/schema.sql`
 - Updated: `backend/storage.py`
 - Updated: `backend/app.py`
 - Updated: `docs/api-contracts.md`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -29,5 +32,6 @@ rg -n "class InboxHandler|/api/inbox" backend/app.py
 ```
 
 ## Notes
+
 - This task adds new endpoints without changing the existing `/api/chat` behavior used by the current PWA.
 - Full runtime verification (schema apply + live endpoint calls) is deferred to DEBUG/VERIFY because it requires a real `.env` / Postgres.

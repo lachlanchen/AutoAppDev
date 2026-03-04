@@ -1,18 +1,22 @@
 # Plan: 039 pwa_workspace_context_settings
 
 ## Goal
+
 Add a minimal PWA UI to manage **workspace-scoped settings** backed by the new backend workspace config API:
+
 - Select a workspace (slug)
 - Set materials path(s)
 - Edit shared context
 - Choose default language
 
 Acceptance:
+
 - Settings persist via backend (`/api/workspaces/<workspace>/config`)
 - Selected workspace persists across reload (localStorage)
 - Generated IR/AAPS scripts include workspace + config metadata so later prompt/script generation can use it
 
 ## Current State (References)
+
 - Backend workspace config API (task 038):
   - Route: `GET /api/workspaces/<workspace>/config`
   - Route: `POST /api/workspaces/<workspace>/config`
@@ -26,7 +30,9 @@ Acceptance:
   - `pwa/app.js:parseWorkspaceSlug()` (single path segment; no control chars; max len)
 
 ## UX Design (Minimal v0)
+
 Add a “Workspace” section inside the existing **Status** tab (no new tab):
+
 - Workspace slug input + `Load` + `Save` buttons
 - Materials paths input (one per line or comma-separated)
 - Default language select (allowed list)
@@ -35,12 +41,16 @@ Add a “Workspace” section inside the existing **Status** tab (no new tab):
 - Inline message area for errors/success
 
 Persist behavior:
+
 - Selected workspace slug: localStorage key `autoappdev_workspace`
 - Workspace config: persisted in backend; UI loads it on demand and on boot if workspace is set.
 
 ## Implementation Steps (Next Phase: WORK)
+
 ### 1) Add workspace settings UI to Status tab
+
 Edit `pwa/index.html` under `#tab-status` (below the existing KV status rows):
+
 - Add a divider and a small toolbar:
   - `#ws-slug` (input)
   - `#ws-load` (button)
@@ -57,11 +67,14 @@ Edit `pwa/index.html` under `#tab-status` (below the existing KV status rows):
   - backend will reject traversal/out-of-workspace paths
 
 ### 2) Minimal styling (reuse existing primitives)
+
 Edit `pwa/styles.css` only if necessary:
+
 - Prefer reusing existing classes (`.scriptbar`, `.actiongrid`, `.action-text`, `.script-msg`, `.divider`, `.hintbox`).
 - If needed, add a tiny `.ws-text` class (monospace textarea) or `.wsbar` (flex toolbar) mirroring `.scriptbar`.
 
 ### 3) Add workspace state + API wiring in PWA
+
 Edit `pwa/app.js`:
 
 1. Extend `els` with new DOM references:
@@ -105,6 +118,7 @@ Edit `pwa/app.js`:
    - On `boot()`, load saved workspace slug from localStorage; if present, call `loadWorkspaceConfig(slug)` once.
 
 ### 4) Use workspace settings when generating scripts (IR + AAPS)
+
 Edit `pwa/app.js` generation functions:
 
 - In `programToIr(prog, title)`:
@@ -118,9 +132,11 @@ Edit `pwa/app.js` generation functions:
   - Again, only include when workspace is selected to avoid changing output for users not using the feature.
 
 Optional small QoL (still minimal):
+
 - Update the `update_readme` block drop prompt default value to the selected workspace slug (if set), so users don’t retype it.
 
 ## Commands To Run (Verification in DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -131,6 +147,7 @@ timeout 10s rg -n \"ws-slug|ws-load|ws-save|ws-materials|ws-language|ws-context-
 ```
 
 Manual smoke (requires backend running + Postgres + `DATABASE_URL`):
+
 1. Open PWA -> Status tab.
 2. Enter workspace slug (e.g. `my_workspace`) -> click `Load`:
    - should populate defaults from backend (`exists:false` case).
@@ -144,9 +161,9 @@ Manual smoke (requires backend running + Postgres + `DATABASE_URL`):
 5. Try an invalid path (e.g. materials path `../secrets`) and confirm the UI shows backend validation error.
 
 ## Acceptance Checklist
+
 - [ ] Status tab includes workspace slug + config form with Load/Save.
 - [ ] Selected workspace slug persists across reload (localStorage).
 - [ ] Workspace config persists in backend via `/api/workspaces/<workspace>/config`.
 - [ ] Generated IR and AAPS include workspace/config metadata when workspace selected; unchanged output when not selected.
 - [ ] Invalid workspace/path/language inputs surface clear inline errors.
-

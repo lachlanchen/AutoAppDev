@@ -9,6 +9,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && rg -n "ScriptsImportShellHand
 ```
 
 Output:
+
 ```text
 backend/app.py:390:class ScriptsImportShellHandler(BaseHandler):
 backend/app.py:822:            (r"/api/scripts/import-shell", ScriptsImportShellHandler),
@@ -38,11 +39,13 @@ PY
 ```
 
 Output:
+
 ```text
 OK 1 tasks 2 steps
 ```
 
 Negative case: parse error line mapping should report the original shell line number of the failing AAPS line.
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && timeout 10s python3 - <<'PY'
 from backend.pipeline_shell_import import import_shell_annotated_to_ir, ShellImportError
@@ -58,11 +61,13 @@ PY
 ```
 
 Output:
+
 ```text
 {'ok': False, 'error': 'invalid_header', 'line': 2, 'detail': 'expected header: AUTOAPPDEV_PIPELINE 1'}
 ```
 
 Negative case: missing annotations.
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && timeout 10s python3 - <<'PY'
 from backend.pipeline_shell_import import import_shell_annotated_to_ir, ShellImportError
@@ -77,10 +82,11 @@ PY
 ```
 
 Output:
+
 ```text
 {'ok': False, 'error': 'missing_annotations', 'line': 1, 'detail': 'expected at least one "# AAPS:" annotation line'}
 ```
 
 ## Notes / Limitations
-- Full HTTP verification of `POST /api/scripts/import-shell` requires running the backend server; this sandbox environment cannot bind/listen on ports, so verification here is limited to static checks and direct function smoke tests.
 
+- Full HTTP verification of `POST /api/scripts/import-shell` requires running the backend server; this sandbox environment cannot bind/listen on ports, so verification here is limited to static checks and direct function smoke tests.

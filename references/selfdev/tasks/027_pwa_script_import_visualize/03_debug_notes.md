@@ -9,6 +9,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && rg -n 'data-tab="script"|id="
 ```
 
 Output:
+
 ```text
 pwa/index.html:97:          <button class="tab" data-tab="script">Script</button>
 pwa/index.html:150:        <div class="tabview" id="tab-script" hidden>
@@ -30,5 +31,5 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev && timeout 10s node --check pwa/
 Result: exit 0, no output.
 
 ## Notes / Limitations
-- Full end-to-end verification (PWA in browser calling backend endpoints) requires running a local backend and a static server for `pwa/`. This sandbox environment cannot bind/listen on ports, so verification here is limited to static checks.
 
+- Full end-to-end verification (PWA in browser calling backend endpoints) requires running a local backend and a static server for `pwa/`. This sandbox environment cannot bind/listen on ports, so verification here is limited to static checks.

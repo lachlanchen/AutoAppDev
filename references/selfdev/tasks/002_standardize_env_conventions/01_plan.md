@@ -1,9 +1,11 @@
 # Plan: 002 standardize_env_conventions
 
 ## Goal
+
 Standardize and document `.env` conventions for AutoAppDev.
 
 Acceptance requires:
+
 - Docs specify required env vars: `DATABASE_URL` or `PG*` vars, `PORT`, `SECRET_KEY`.
 - Docs say how to copy from `.env.example`.
 - Docs include one command to validate env.
@@ -11,12 +13,14 @@ Acceptance requires:
 This phase (PLAN) does not change code.
 
 ## Current State (References)
+
 - Example env file: `.env.example` (currently has `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `DATABASE_URL`, pipeline vars; no `PORT`/`SECRET_KEY`/`PG*`).
 - Backend loads `.env` in dev: `backend/app.py` uses `dotenv.load_dotenv(REPO_ROOT / ".env")` and reads env via `safe_env()`.
   - Uses `AUTOAPPDEV_HOST`, `AUTOAPPDEV_PORT`, `DATABASE_URL`.
 - Dev tmux runner uses the same host/port vars: `scripts/run_autoappdev_tmux.sh`.
 
 ## Files To Change (Implementation Phase)
+
 - Update: `.env.example`
   - Add `PORT` and `SECRET_KEY` (even if not yet used by backend, reserve it now as a required convention).
   - Add commented `PG*` vars as an alternative to writing `DATABASE_URL` directly.
@@ -31,7 +35,9 @@ This phase (PLAN) does not change code.
   - Add one short “Env” note linking to `docs/env.md`.
 
 ## Env Conventions To Document
+
 Document these as “required to run the controller” even if some are not consumed yet:
+
 - `SECRET_KEY`
   - Required convention for future auth/signed state; set a dev value locally.
 - HTTP port
@@ -45,15 +51,19 @@ Document these as “required to run the controller” even if some are not cons
     - Note in docs: current backend reads `DATABASE_URL`; `PG*` is a documented convention for developers and future wiring.
 
 Also document existing (optional) keys already in `.env.example`:
+
 - `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT`
 - `AI_API_BASE_URL`, `AI_API_KEY` (optional)
 
 ## Validation Command (Single Command In Docs)
+
 Include exactly one copy-pastable command that:
+
 - Loads `.env` into the shell environment.
 - Verifies required keys are present and non-empty: `SECRET_KEY`, `DATABASE_URL`, plus one of `AUTOAPPDEV_PORT` or `PORT`.
 
 Proposed command to put in `docs/env.md`:
+
 ```bash
 bash -lc 'set -euo pipefail; test -f .env; set -a; source .env; set +a; \
 python3 - <<"PY"\
@@ -70,6 +80,7 @@ PY'
 ```
 
 ## Implementation Steps (Next Phase)
+
 1. Edit `.env.example`:
    - Add `SECRET_KEY=dev_change_me` (comment: generate a long random value).
    - Add `PORT=8788` (comment: keep in sync with `AUTOAPPDEV_PORT`).
@@ -83,6 +94,7 @@ PY'
 4. (Optional) Add a 2-3 line “Env” section in `backend/README.md` pointing to `docs/env.md`.
 
 ## Acceptance Checks (Commands)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

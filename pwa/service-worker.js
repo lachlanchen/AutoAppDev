@@ -19,7 +19,7 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -27,10 +27,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) =>
-        Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))))
-      )
-      .then(() => self.clients.claim())
+      .then((keys) => Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k)))))
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -39,22 +37,20 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   // Only handle same-origin requests.
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin) {
+    return;
+  }
 
   // For navigations, serve cached shell when offline.
   if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req).catch(() => caches.match("./index.html", { ignoreSearch: true }))
-    );
+    event.respondWith(fetch(req).catch(() => caches.match("./index.html", { ignoreSearch: true })));
     return;
   }
 
   // Cache-first for known shell assets.
   const isPrecached = PRECACHE_URLS.some((p) => url.pathname.endsWith(p.replace("./", "")));
   if (isPrecached) {
-    event.respondWith(
-      caches.match(req, { ignoreSearch: true }).then((hit) => hit || fetch(req))
-    );
+    event.respondWith(caches.match(req, { ignoreSearch: true }).then((hit) => hit || fetch(req)));
     return;
   }
 

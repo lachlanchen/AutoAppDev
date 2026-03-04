@@ -1,14 +1,17 @@
 # Plan: 034 pwa_update_readme_block
 
 ## Goal
+
 Add an **Update README** block to the PWA palette and ensure it exports into AAPS v1 / IR v1 as an `ACTION.kind="update_readme"` with the required params. The UI must make clear which workspace README is targeted (`auto-apps/<workspace>/README.md`).
 
 Acceptance:
+
 - PWA palette includes an “Update README” block.
 - Export to formatted script/IR includes `ACTION.kind="update_readme"` with `params.workspace` and `params.block_markdown`.
 - UI clearly indicates the workspace target for the block.
 
 ## Key Constraints / Facts
+
 - AAPS parsing enforces `STEP.block` is one of: `plan`, `work`, `debug`, `fix`, `summary`, `commit_push`:
   - `backend/pipeline_parser.py` (`ALLOWED_BLOCKS`).
 - The `update_readme` spec is an **ACTION** contract:
@@ -16,6 +19,7 @@ Acceptance:
 - Therefore: the PWA block must export a step whose `block` is allowed (recommended: `summary`) and include `update_readme` as the step’s action (not as `STEP.block`).
 
 ## Current State (References)
+
 - PWA block palette + canvas:
   - `pwa/index.html` (`#toolbox`, draggable blocks)
   - `pwa/app.js` (`BLOCK_META`, `bindDnD()`, `renderProgram()`)
@@ -28,6 +32,7 @@ Acceptance:
   - `POST /api/actions/update-readme` documented in `docs/api-contracts.md`.
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Add “Update README” to the palette
    - `pwa/index.html`:
      - Add a new draggable block to `#toolbox`:
@@ -75,6 +80,7 @@ Acceptance:
      - Update README is special-cased; other actions remain non-visualized.
 
 ## Commands To Run (Verification in DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -89,6 +95,7 @@ timeout 10s rg -n 'kind\"\\s*:\\s*\"update_readme\"|\\\"update_readme\\\"' pwa/a
 ```
 
 Manual UI check (outside sandbox, requires serving the PWA):
+
 1. `python3 -m backend.app`
 2. `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
 3. Open `http://127.0.0.1:5173/`:
@@ -98,9 +105,9 @@ Manual UI check (outside sandbox, requires serving the PWA):
    - (If step 4 implemented) Paste the script back and click “Parse AAPS -> Blocks”; confirm it recreates an Update README block with the workspace shown.
 
 ## Acceptance Checklist
+
 - [ ] `pwa/index.html` toolbox includes `data-block="update_readme"`.
 - [ ] Dropping the block prompts for workspace and stores it on the block instance.
 - [ ] Canvas rendering shows the target `auto-apps/<workspace>/README.md`.
 - [ ] Exported IR/AAPS represent Update README as `ACTION.kind="update_readme"` with `params.workspace` + `params.block_markdown`.
 - [ ] Exported AAPS remains parseable by backend (`STEP.block` stays within allowed blocks).
-

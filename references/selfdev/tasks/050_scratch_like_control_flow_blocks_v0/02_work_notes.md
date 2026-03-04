@@ -1,6 +1,7 @@
 # Work Notes: 050 scratch_like_control_flow_blocks_v0
 
 ## Summary of Changes
+
 - Added 4 new control-flow blocks to the PWA toolbox and block metadata:
   - `metatasks_generator`, `for_n_round`, `for_each_task`, `if_else`.
 - Kept `program` as a plain array, but allowed **nested container nodes** (children/body/if_body/else_body) to support a minimal Scratch-like control-flow view without a larger storage refactor.
@@ -12,6 +13,7 @@
   - Import detects those meta fields and reconstructs the nested container structure.
 
 ## Files Changed
+
 - `pwa/index.html`
   - Added draggable toolbox entries for the 4 new control-flow block types.
 - `pwa/i18n.js`
@@ -26,6 +28,7 @@
   - Import detects meta-round IR shape and reconstructs the nested template blocks.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -63,6 +66,6 @@ node --check pwa/app.js
 ```
 
 ## Notes / Design Constraints
-- AAPS v1 `STEP.block` remains constrained to existing palette keys (`plan|work|debug|fix|summary|commit_push`); control-flow is expressed via `meta` fields only (per `docs/meta-round-templates.md`).
-- v0 UI supports nested *display* and default template seeding, but does not implement drag-to-nest editing (drops append at top level).
 
+- AAPS v1 `STEP.block` remains constrained to existing palette keys (`plan|work|debug|fix|summary|commit_push`); control-flow is expressed via `meta` fields only (per `docs/meta-round-templates.md`).
+- v0 UI supports nested _display_ and default template seeding, but does not implement drag-to-nest editing (drops append at top level).

@@ -1,17 +1,21 @@
 # Plan: 025 pipeline_script_parser_v0
 
 ## Goal
+
 Implement a deterministic backend parser for the formatted pipeline script (AAPS v1) into canonical IR (`autoappdev_ir` v1):
+
 - Never executes code (parse only).
 - Invalid input returns actionable errors (line number, reason).
 - Deterministic: same input -> same IR or same error.
 
 Acceptance:
+
 - Backend parses AAPS v1 into IR.
 - Invalid input returns actionable errors.
 - Parsing never executes code.
 
 ## Current State (References)
+
 - Script + IR spec exists:
   - `docs/pipeline-formatted-script-spec.md`:
     - Header: `AUTOAPPDEV_PIPELINE 1`
@@ -29,6 +33,7 @@ Acceptance:
   - `/api/scripts` persists `script_text` and `ir` (optional).
 
 ## Approach (Minimal / Deterministic)
+
 1. Add a small parser module `backend/pipeline_parser.py`:
    - Pure functions, no I/O, no subprocess calls.
    - Parses text into IR or raises a structured `ParseError` including line number and error code.
@@ -40,6 +45,7 @@ Acceptance:
    - Keep optional for later if scope grows; primary acceptance is parsing itself.
 
 ## Implementation Steps (Next Phase)
+
 1. Create `backend/pipeline_parser.py`.
    - Define:
      - `class ParseError(Exception): ...` with fields:
@@ -94,7 +100,9 @@ Acceptance:
    - Keep optional if we want to keep changes smallest; `py_compile` + `python -c` smoke may suffice.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -117,13 +125,14 @@ PY
 ```
 
 Manual verification (outside this sandbox, which cannot bind ports):
+
 1. Start backend.
 2. `curl -s -X POST http://127.0.0.1:8788/api/scripts/parse -d @- -H 'content-type: application/json' <<<'{\"script_text\":\"AUTOAPPDEV_PIPELINE 1\\n\\nTASK {\\\"id\\\":\\\"t1\\\",\\\"title\\\":\\\"Demo\\\"}\\n\"}' | jq`
 3. Confirm it returns `{ ok:true, ir:{...} }`.
 4. Send an invalid script and confirm 400 with line number and detail.
 
 ## Acceptance Checklist
+
 - [ ] Deterministic parser implemented (`backend/pipeline_parser.py`) and does not execute code.
 - [ ] Backend exposes `POST /api/scripts/parse` returning IR or actionable 400 errors with line number.
 - [ ] Docs updated (`docs/api-contracts.md`) to document the parse endpoint and error shape.
-

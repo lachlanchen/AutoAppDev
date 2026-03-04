@@ -1,16 +1,20 @@
 # Plan: 021 settings_model_agent_selection
 
 ## Goal
+
 Wire the PWA agent/model selection UI to backend-persisted config so the selection survives reload:
+
 - User can pick `agent` + `model` options in the UI.
 - Selection is persisted via backend (`/api/config`) and restored on reload.
 - Keep default PWA theme light.
 
 Acceptance:
+
 - Settings UI lets user pick agent/model options.
 - Selection is persisted via backend and survives reload.
 
 ## Current State (References)
+
 - PWA already has UI controls (topbar) for agent/model:
   - `pwa/index.html`: `#agent-select`, `#model-select`
   - These are not currently wired in JS.
@@ -23,7 +27,9 @@ Acceptance:
   - `pwa/service-worker.js`: `CACHE_NAME` currently `autoappdev-shell-v4`.
 
 ## Approach (Minimal / Incremental)
+
 Use the existing topbar selects as the “settings” UI and persist the selected values to backend config keys:
+
 - Config keys: `agent`, `model` (matches `docs/api-contracts.md` examples).
 - On PWA boot:
   - `GET /api/config`, apply `config.agent` and `config.model` to the selects if valid.
@@ -32,6 +38,7 @@ Use the existing topbar selects as the “settings” UI and persist the selecte
 - Bump `pwa/service-worker.js` `CACHE_NAME` so manual verification doesn’t get stale `app.js`/`index.html`.
 
 ## Implementation Steps (Next Phase)
+
 1. Confirm UI elements are present (no structural changes unless needed).
    - `pwa/index.html` already contains:
      - `<select id="agent-select"> ...`
@@ -74,7 +81,9 @@ Use the existing topbar selects as the “settings” UI and persist the selecte
    - Only update docs if the implementation uses different keys (not expected).
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -88,6 +97,7 @@ timeout 5s python3 -m py_compile backend/app.py backend/storage.py
 ```
 
 Manual end-to-end verification (outside this sandbox, which cannot bind ports):
+
 1. Start backend + PWA:
    - Backend: `python3 -m backend.app`
    - PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
@@ -99,7 +109,7 @@ Manual end-to-end verification (outside this sandbox, which cannot bind ports):
 5. Reload the page and confirm selections restore to the persisted values.
 
 ## Acceptance Checklist
+
 - [ ] Selecting agent/model triggers `POST /api/config` and persists values.
 - [ ] Reloading the PWA restores agent/model via `GET /api/config`.
 - [ ] Default theme remains light.
-

@@ -1,7 +1,9 @@
 # Debug Notes: 022 end_to_end_happy_path_demo
 
 ## Goal
+
 Smallest possible verification for the new end-to-end demo docs:
+
 - Ensure the checklist doc and demo pipeline script exist.
 - Ensure the checklist contains the required steps (schema apply, backend start, PWA open, inbox, blocks, pipeline start, logs, pause/resume, stop).
 - Run a basic shell syntax check on the demo script.
@@ -9,6 +11,7 @@ Smallest possible verification for the new end-to-end demo docs:
 Note: This sandbox cannot bind/listen on ports, so the actual end-to-end run must be executed outside this sandbox by following the checklist.
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -23,6 +26,7 @@ rg -n \"end-to-end-demo-checklist\" README.md
 ```
 
 Result:
+
 - Checklist doc and demo script exist.
 - Checklist includes explicit steps for:
   - schema apply (`backend.apply_schema`)
@@ -35,8 +39,9 @@ Result:
 - `README.md` links to `docs/end-to-end-demo-checklist.md`.
 
 ## Issues Found
+
 - None in static verification.
 
 ## Follow-Up Manual Verification (Outside This Sandbox)
-Follow `docs/end-to-end-demo-checklist.md` exactly and confirm the expected outcomes at each step.
 
+Follow `docs/end-to-end-demo-checklist.md` exactly and confirm the expected outcomes at each step.

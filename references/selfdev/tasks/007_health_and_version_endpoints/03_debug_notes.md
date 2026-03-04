@@ -1,12 +1,14 @@
 # Debug/Verify Notes: 007 health_and_version_endpoints
 
 ## What I Verified
+
 - Static (no DB) verification:
   - `backend/app.py` compiles.
   - Routes are wired for `/api/health` and `/api/version`.
 - Live endpoint smoke test was skipped because no `.env` exists in this workspace (backend requires `DATABASE_URL` to start).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -37,4 +39,5 @@ fi
 ```
 
 ## Issues Found
+
 - None requiring code changes.

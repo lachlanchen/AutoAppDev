@@ -1,15 +1,18 @@
 # Plan: 036 pwa_action_library_editor
 
 ## Goal
+
 Add a minimal “Action library editor” UI to the PWA so a user can **list/create/edit/delete** action definitions (prompt + command) via the backend action registry API **without reloading** the page.
 
 Acceptance:
+
 - PWA lists action definitions from the registry
 - PWA can create a new action definition (prompt or command)
 - PWA can edit an existing action definition (title, enabled, spec fields) and persist via backend without reload
 - PWA can delete an action definition
 
 ## Current State (References)
+
 - Backend action registry API (already implemented):
   - `GET /api/actions?limit=N` (metadata list; no `spec`)
   - `POST /api/actions` (create; returns full record including `spec`)
@@ -28,7 +31,9 @@ Acceptance:
   - API wrapper: `pwa/api-client.js` (`window.AutoAppDevApi.requestJson`)
 
 ## UI Design (Minimal v0)
+
 Implement the editor as a new right-panel tab named **Actions**:
+
 - Tab shows:
   1. A scrollable list of action definitions (id/title/kind/enabled).
   2. An editor form for the selected action (or “New action” mode).
@@ -36,12 +41,16 @@ Implement the editor as a new right-panel tab named **Actions**:
 - No reload is needed: after create/update/delete, the list refreshes and selection updates in-place.
 
 Notes / guardrails:
+
 - Existing actions cannot change `kind` (backend rejects it); UI should disable kind changes for loaded actions and show a hint (“create a new action to change kind”).
 - “Command/script reference” is represented as `kind="command"` + `spec.cmd` (e.g. `bash scripts/my_tool.sh` or `python3 tools/foo.py`). `spec.cwd` remains repo-relative (backend enforces).
 
 ## Implementation Steps (Next Phase: WORK)
+
 ### 1) Add Actions tab markup
+
 Edit `pwa/index.html`:
+
 - Add a new tab button in the right panel:
   - In `.tabs`: add `<button class="tab" data-tab="actions">Actions</button>` (place between Logs and Script or at the end).
 - Add a new tab view container:
@@ -69,7 +78,9 @@ Edit `pwa/index.html`:
     - Hint box describing constraints (kind immutability; command cwd/shell rules).
 
 ### 2) Minimal styling for the editor
+
 Edit `pwa/styles.css`:
+
 - Update `.tabs` to fit the new 5th tab:
   - Either change to `grid-template-columns: repeat(5, 1fr);` (smallest diff), or make it future-proof with `repeat(auto-fit, minmax(0, 1fr))`.
 - Add small, theme-variable-based styles for the actions UI, reusing existing primitives:
@@ -78,10 +89,12 @@ Edit `pwa/styles.css`:
   - `.actionrow` + `.actionrow.is-selected` (selected highlight using `--blue` and existing stroke/panel colors)
   - `.actionform` / `.actiongrid` (compact two-column grid for small fields like enabled/kind/timeout)
   - `.actions-msg` (mirror `.script-msg` behavior)
-Keep the default theme light (no change to `body data-theme="light"`).
+    Keep the default theme light (no change to `body data-theme="light"`).
 
 ### 3) Wire the Actions tab behavior
+
 Edit `pwa/app.js`:
+
 - Extend the `els` map to include new DOM references:
   - `tabActions`, toolbar buttons, `actionsList`, all editor inputs/sections, `actionsMsg`.
 - Add local state:
@@ -123,6 +136,7 @@ Edit `pwa/app.js`:
   - Hook toolbar buttons and kind select change (toggle prompt/command section visibility).
 
 ## Commands To Run (Verification in DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -134,6 +148,7 @@ timeout 10s rg -n \"data-tab=\\\"actions\\\"|tab-actions|/api/actions\" pwa/inde
 ```
 
 Manual smoke (one-time, interactive):
+
 1. Start backend (requires Postgres + `DATABASE_URL`):
    - `python3 -m backend.app`
 2. Open `pwa/index.html` (or serve via any static server) and verify in the **Actions** tab:
@@ -143,6 +158,7 @@ Manual smoke (one-time, interactive):
    - Delete an action; verify it disappears immediately without page reload.
 
 ## Acceptance Checklist
+
 - [ ] “Actions” tab is visible and styled consistently in light theme.
 - [ ] List loads from `GET /api/actions` and renders rows.
 - [ ] Create prompt action (title + prompt) succeeds and shows in list without reload.
@@ -151,4 +167,3 @@ Manual smoke (one-time, interactive):
 - [ ] Delete persists via `DELETE /api/actions/<id>` without reload.
 - [ ] Kind change is not offered for existing actions (or clearly rejected with an inline error message).
 - [ ] Backend validation errors (e.g. `invalid_prompt`, `invalid_cwd`, `invalid_shell`) surface in `#actions-msg`.
-

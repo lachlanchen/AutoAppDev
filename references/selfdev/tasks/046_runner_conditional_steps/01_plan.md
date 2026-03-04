@@ -1,14 +1,18 @@
 # Plan: 046 runner_conditional_steps
 
 ## Goal
+
 Update runner codegen so **generated bash runners** respect `STEP.meta.conditional`, with initial support for:
+
 - `on_debug_failure`: run the step only if the immediately preceding **debug step** in the same task had a failing action.
 
 Acceptance:
+
 - Generated runners respect `STEP.meta.conditional` (e.g. `on_debug_failure`) so fix steps run only when previous debug/run actions fail.
 - Include an example IR + generated runner demonstrating both paths (skip vs run).
 
 ## Current State (Relevant Files)
+
 - Runner template (execution semantics live here):
   - `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
   - Currently: linear execution with `set -euo pipefail`; any failing `run` aborts the script (so fix steps can’t run after a failing debug).
@@ -21,7 +25,9 @@ Acceptance:
   - `docs/pipeline-runner-codegen.md` (needs a conditional-steps section once implemented).
 
 ## Proposed Minimal Design
+
 Implement conditional steps as a **runner v0 extension** with minimal branching:
+
 1. Generator reads `step.meta.conditional` (optional string) and emits it as a context export:
    - `export AUTOAPPDEV_CTX_STEP_CONDITIONAL='on_debug_failure'` (or empty).
 2. Template implements:
@@ -39,7 +45,9 @@ This keeps all semantics deterministic and runner-local, without changing the IR
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Runner Template: Add Conditional Step Helpers + State
+
 Edit `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
+
 - Add state variables (runner-global):
   - `AUTOAPPDEV_TASK_LAST_DEBUG_FAILED=0` (reset by generated body at each `TASK` start; see step 2).
 - Add helper functions:
@@ -49,7 +57,9 @@ Edit `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
     - unknown: print error and exit non-zero.
 
 ### 2) Generator: Emit Conditional Metadata + Task Reset
+
 Edit `scripts/pipeline_codegen/generate_runner_from_ir.py`:
+
 - Parse step meta:
   - `step.meta` must be an object if present.
   - `step.meta.conditional` must be a string if present.
@@ -65,7 +75,9 @@ Edit `scripts/pipeline_codegen/generate_runner_from_ir.py`:
   - `AUTOAPPDEV_TASK_LAST_DEBUG_FAILED="$step_failed"`
 
 ### 3) Add Example IR Demonstrating Skip vs Run
+
 Add `examples/pipeline_ir_conditional_steps_demo_v0.json`:
+
 - Must be valid `autoappdev_ir` v1 JSON.
 - Include two tasks (to demonstrate both paths in a single runner invocation):
   1. Task where debug succeeds and fix step is skipped.
@@ -76,7 +88,9 @@ Add `examples/pipeline_ir_conditional_steps_demo_v0.json`:
   - `actions`: `run` action that prints a sentinel string, e.g. `FIX_RAN`.
 
 ### 4) Add Smoke Script That Proves Conditional Execution
+
 Add `scripts/pipeline_codegen/smoke_conditional_steps.sh`:
+
 - Generate runner to `/tmp/autoappdev_runner_conditional.sh` from the new IR.
 - `bash -n` the runner.
 - Run with `timeout` and isolated runtime dir in `/tmp`.
@@ -86,13 +100,16 @@ Add `scripts/pipeline_codegen/smoke_conditional_steps.sh`:
   - A “SKIP” log line appears for the skipped fix step.
 
 ### 5) Document Runner Conditional Support
+
 Update `docs/pipeline-runner-codegen.md`:
+
 - Add a short “Conditional steps (v0)” section:
   - Supported conditionals (initially `on_debug_failure`).
   - Definition of “debug failure” (any non-zero action exit inside a debug step; runner continues to allow fix).
   - Mention that unknown `STEP.meta.conditional` values fail fast.
 
 ## Verification Commands (DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -107,9 +124,9 @@ timeout 20s scripts/pipeline_codegen/smoke_codegen.sh
 ```
 
 ## Acceptance Checklist
+
 - [ ] Generator reads `STEP.meta.conditional` and generates conditional gating code for steps.
 - [ ] Debug-step failures are captured so the runner can continue to a conditional fix step.
 - [ ] `on_debug_failure` fix steps are skipped on passing debug and executed on failing debug.
 - [ ] Example IR + smoke script demonstrate behavior deterministically (with timeouts).
 - [ ] `docs/pipeline-runner-codegen.md` documents supported conditional keys and semantics.
-

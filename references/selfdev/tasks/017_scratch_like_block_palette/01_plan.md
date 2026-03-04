@@ -1,18 +1,22 @@
 # Plan: 017 scratch_like_block_palette
 
 ## Goal
+
 Ensure the PWA has a Scratch-like minimal block palette and workspace:
+
 - Palette shows 3-6 draggable blocks.
 - Blocks can be dragged into the workspace canvas.
 - Workspace can be serialized to JSON.
 
 Acceptance:
+
 - PWA renders a minimal block palette (3-6 blocks).
 - Supports dragging blocks into a workspace.
 - Workspace serializes to JSON.
 - Default theme remains light.
 
 ## Current State (References)
+
 - Block palette + workspace already exist in `pwa/index.html`:
   - Palette container: `#toolbox` (`.panel--toolbox`).
   - Current palette includes 8 blocks (`Plan`, `Work`, `Debug`, `Fix`, `Summary`, `Commit+Push`, `While`, `Wait Input`) which exceeds the acceptance target.
@@ -24,15 +28,19 @@ Acceptance:
   - JSON export: `#btn-export` shows `JSON.stringify({ program }, ...)` into `#export`.
 
 ## Approach (Minimal / Incremental)
+
 Keep the existing DnD and serialization code, and only trim the visible block palette down to 6 blocks to meet the acceptance criteria.
 
 Recommended visible blocks (6):
+
 - `plan`, `work`, `debug`, `fix`, `summary`, `commit_push`
 
 Defer advanced control blocks for later tasks:
+
 - Remove `while_loop` and `wait_input` from the palette UI for now.
 
 ## Implementation Steps (Next Phase)
+
 1. Trim palette to 6 blocks in `pwa/index.html`.
    - In the `#toolbox` section, remove:
      - the divider
@@ -48,7 +56,9 @@ Defer advanced control blocks for later tasks:
    - `bindDnD()` / `persistProgram()` / export behavior should remain unchanged.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -69,6 +79,7 @@ node --check pwa/app.js
 ```
 
 Manual UI verification (outside this sandbox, which cannot bind ports):
+
 1. Serve the PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
 2. Open `http://127.0.0.1:5173/`.
 3. Confirm the palette shows 6 blocks.
@@ -77,8 +88,8 @@ Manual UI verification (outside this sandbox, which cannot bind ports):
 6. Reload; confirm the program persists (loaded from `localStorage`).
 
 ## Acceptance Checklist
+
 - [ ] Palette shows 3-6 blocks (target 6).
 - [ ] Dragging blocks into canvas adds them to the workspace list.
 - [ ] “Export JSON” outputs the workspace JSON.
 - [ ] Default theme remains light.
-

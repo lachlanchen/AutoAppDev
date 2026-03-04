@@ -1,6 +1,7 @@
 # Debug Notes: 041 pipeline_chat_outbox_channel
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -17,6 +18,7 @@ timeout 10s rg -n "/api/outbox|outbox_messages|runtime/outbox" backend/app.py ba
 ```
 
 Result (excerpt):
+
 ```text
 backend/app.py:1390:            (r"/api/outbox", OutboxHandler, {"storage": storage}),
 backend/storage.py:613:                    "insert into outbox_messages(role, content) values($1, $2)",
@@ -28,6 +30,7 @@ docs/workspace-layout.md:43:- `runtime/outbox/` for a file-based outbox queue ..
 ```
 
 Smoke test: runtime/outbox file ingestion (no DB; uses `runtime/state.json` fallback in `Storage`):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python - <<'PY'
@@ -61,6 +64,7 @@ PY
 ```
 
 Result:
+
 ```json
 [
   { "role": "pipeline", "content": "hello from file pipeline" },
@@ -69,6 +73,7 @@ Result:
 ```
 
 ## Issue Found + Fix
+
 - Issue: outbox file role inference incorrectly defaulted to `pipeline` for filenames like `*_system.txt`.
 - Cause: regex in `backend/app.py:_infer_outbox_role_from_name` used `r"...\\."` (expected a backslash before the extension), so filenames didn’t match the expected `<ts>_<role>.ext` pattern.
 - Fix: changed it to `r"...\."` so the dot before the extension is matched and the role is extracted correctly.

@@ -1,13 +1,16 @@
 # Plan: 026 pipeline_shell_script_import_v0
 
 ## Goal
+
 Implement a **best-effort importer** that converts an **annotated shell script** (bash) into canonical IR (`autoappdev_ir` v1), without executing anything.
 
 Acceptance:
+
 - Backend can import an annotated shell pipeline script (via structured comments) into IR with clear limitations.
 - At least one example imports successfully.
 
 ## Current State (References)
+
 - AAPS v1 + IR spec:
   - `docs/pipeline-formatted-script-spec.md`
 - Deterministic AAPS v1 parser:
@@ -19,17 +22,21 @@ Acceptance:
   - `examples/pipeline_ir_v1.json`
 
 ## Import Format (Shell Annotations v0)
+
 Use structured comment lines inside a `.sh` file:
+
 - Only lines matching `^\s*#\s*AAPS:\s*(.*)$` are considered annotations.
 - The captured remainder is treated as an **AAPS line** (may be blank).
 - All captured AAPS lines are concatenated (in-order) into `script_text` and parsed via `parse_aaps_v1`.
 
 Limitations (document explicitly):
+
 - **No shell parsing.** Unannotated shell code is ignored (no inference of tasks/steps/actions from bash).
 - **No execution.** Import is parse-only and deterministic.
 - Only the embedded AAPS is validated; `source`, `bash`, `set -e`, functions, loops are not interpreted.
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Add importer module: `backend/pipeline_shell_import.py`
    - Implement:
      - `extract_aaps_from_shell(shell_text: str) -> tuple[str, list[int]]`
@@ -71,7 +78,9 @@ Limitations (document explicitly):
      - Document `POST /api/scripts/import-shell` with request/response + error shape.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -80,6 +89,7 @@ timeout 10s python3 -m py_compile backend/app.py backend/pipeline_parser.py back
 ```
 
 Functional smoke (no server required):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python3 - <<'PY'
@@ -97,6 +107,7 @@ PY
 ```
 
 Manual HTTP verification (outside this sandbox; requires running the backend):
+
 ```bash
 curl -sS -X POST 'http://127.0.0.1:8788/api/scripts/import-shell' \
   -H 'content-type: application/json' \
@@ -106,8 +117,8 @@ JSON
 ```
 
 ## Acceptance Checklist
+
 - [ ] `POST /api/scripts/import-shell` exists and returns `{ok:true, script_text, ir}` for a valid annotated shell script.
 - [ ] Importer never executes code (parse-only) and documents limitations.
 - [ ] At least one repo example imports successfully (`examples/pipeline_shell_annotated_v0.sh`).
 - [ ] Invalid annotations return actionable 400 errors including a **shell** line number.
-

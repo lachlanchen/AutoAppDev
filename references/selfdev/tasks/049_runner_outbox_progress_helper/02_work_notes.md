@@ -1,6 +1,7 @@
 # Work Notes: 049 runner_outbox_progress_helper
 
 ## Implementation Notes
+
 - Added a runner-native, best-effort outbox helper in the generated runner template:
   - `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
     - new `OUTBOX_DIR="$RUNTIME_DIR/outbox"`
@@ -16,11 +17,13 @@
   - `docs/pipeline-runner-codegen.md`
 
 ## Files Changed
+
 - Updated: `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
 - Updated: `scripts/pipeline_codegen/smoke_meta_round_v0.sh`
 - Updated: `docs/pipeline-runner-codegen.md`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -33,4 +36,3 @@ timeout 30s bash -x scripts/pipeline_codegen/smoke_meta_round_v0.sh
 # Re-run after fixing the smoke rg pattern
 timeout 30s bash scripts/pipeline_codegen/smoke_meta_round_v0.sh
 ```
-

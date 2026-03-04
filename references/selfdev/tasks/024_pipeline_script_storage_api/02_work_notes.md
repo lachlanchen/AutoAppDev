@@ -1,11 +1,13 @@
 # Work Notes: 024 pipeline_script_storage_api
 
 ## Summary
+
 - Added `pipeline_scripts` persistence (DB table + storage helpers) and exposed CRUD endpoints under `/api/scripts`.
 - Added minimal PWA wiring to save the current block program as a stored script+IR and reload it by id.
 - Updated API contracts doc to document the new endpoints.
 
 ## Changes Made
+
 - `backend/schema.sql`
   - Added `pipeline_scripts` table:
     - `title`, `script_text`, `script_version`, `script_format`, `ir (jsonb)`, timestamps.
@@ -38,6 +40,7 @@
   - Bumped `CACHE_NAME` to `autoappdev-shell-v6` to avoid stale `index.html/app.js` during manual verification.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -47,4 +50,3 @@ timeout 5s python3 -m py_compile backend/app.py backend/storage.py backend/apply
 timeout 5s node --check pwa/app.js
 timeout 5s node --check pwa/service-worker.js
 ```
-

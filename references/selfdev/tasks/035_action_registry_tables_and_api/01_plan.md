@@ -1,14 +1,17 @@
 # Plan: 035 action_registry_tables_and_api
 
 ## Goal
+
 Add a minimal **action registry** backed by Postgres so the controller can store reusable action definitions (prompt-based and command-based) and expose CRUD endpoints with validation and safe defaults.
 
 Acceptance:
+
 - Backend stores action definitions in Postgres (prompt + command)
 - Minimal CRUD endpoints exist and validate inputs
 - Safe defaults are applied for optional fields (agent/model/reasoning/timeouts/cwd)
 
 ## Current State (References)
+
 - DB schema is applied at backend startup from:
   - `backend/schema.sql` (idempotent `create table if not exists ...`)
 - DB access pattern:
@@ -22,7 +25,9 @@ Acceptance:
   - `docs/pipeline-runner-codegen.md` (`codex_exec`, `run`, `note`)
 
 ## Data Model (v0)
+
 Create a single table storing action definitions with a typed `kind` and JSON `spec`:
+
 - Table: `action_definitions`
   - `id bigserial primary key`
   - `title text not null`
@@ -34,7 +39,9 @@ Create a single table storing action definitions with a typed `kind` and JSON `s
   - Index: `updated_at` (and optionally `kind`)
 
 ### Action Spec Shapes
+
 Prompt action (`kind="prompt"`) spec:
+
 ```json
 {
   "agent": "codex",
@@ -46,6 +53,7 @@ Prompt action (`kind="prompt"`) spec:
 ```
 
 Command action (`kind="command"`) spec:
+
 ```json
 {
   "shell": "bash",
@@ -56,13 +64,16 @@ Command action (`kind="command"`) spec:
 ```
 
 Notes:
+
 - `spec` is stored but **not executed** in this task; validation is about shape/safety for future execution.
 - `cwd` must resolve under the repo root (similar to `PipelineStartHandler` checks in `backend/app.py`).
 
 ## API Design (Minimal CRUD)
+
 Use `/api/actions` for the registry (definitions). Keep the existing executor endpoint at `/api/actions/update-readme` unchanged.
 
 Endpoints:
+
 1. `GET /api/actions?limit=N`
    - Response: `{ "actions": [ { id, title, kind, enabled, created_at, updated_at } ] }`
 2. `POST /api/actions`
@@ -77,6 +88,7 @@ Endpoints:
    - Response: `{ "ok": true }`
 
 Error codes (examples):
+
 - `invalid_json`, `invalid_body`
 - `invalid_title`, `invalid_kind`, `invalid_spec`
 - `invalid_cmd`, `invalid_prompt`
@@ -84,6 +96,7 @@ Error codes (examples):
 - `not_found`
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Add the action registry table
    - Update `backend/schema.sql`:
      - Add `create table if not exists action_definitions (...)`
@@ -133,6 +146,7 @@ Error codes (examples):
        - registry (definitions) vs executor endpoints.
 
 ## Commands To Run (Verification in DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -153,8 +167,8 @@ timeout 10s rg -n \"/api/actions\\b\" backend/app.py docs/api-contracts.md
 ```
 
 ## Acceptance Checklist
+
 - [ ] `backend/schema.sql` creates `action_definitions` table + index.
 - [ ] `backend/storage.py` has CRUD methods for action definitions.
 - [ ] `backend/app.py` exposes CRUD endpoints under `/api/actions` with validation and safe defaults.
 - [ ] `docs/api-contracts.md` documents the action registry endpoints and distinguishes registry vs executor endpoints.
-

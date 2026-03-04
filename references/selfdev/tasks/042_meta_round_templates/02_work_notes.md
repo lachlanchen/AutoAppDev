@@ -1,6 +1,7 @@
 # Work Notes: 042 meta_round_templates
 
 ## Implementation Notes
+
 - Added `docs/meta-round-templates.md` defining a standard meta-round pipeline convention:
   - `N_ROUND` task synthesis/refinement loop from `goal` + shared context.
   - Standard per-task phase template: `plan -> work -> debug -> fix -> translate -> summary -> log -> commit`.
@@ -11,6 +12,7 @@
 - Updated `docs/pipeline-formatted-script-spec.md` with a short section linking to the meta-round template convention and clarifying it is `meta`-driven (engine-defined).
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -21,4 +23,3 @@ timeout 10s rg -n "Meta-round|meta[- ]round|N_ROUND|multi[- ]round" docs/pipelin
 
 timeout 10s rg -n "plan/work/debug/fix/translate/summary/log/commit|plan -> work -> debug -> fix -> translate -> summary -> log -> commit" docs/meta-round-templates.md docs/pipeline-formatted-script-spec.md && timeout 10s rg -n "runtime/outbox|/api/outbox" docs/meta-round-templates.md docs/api-contracts.md docs/workspace-layout.md | head -n 80
 ```
-

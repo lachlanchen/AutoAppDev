@@ -1,11 +1,13 @@
 # Work Notes: 025 pipeline_script_parser_v0
 
 ## Summary
+
 - Implemented a deterministic parser for the formatted pipeline script (AAPS v1) into canonical IR (`autoappdev_ir` v1).
 - Added a backend endpoint to parse script text into IR with actionable 400 errors that include line number and detail.
 - Updated API contracts to document the parse endpoint and error shape.
 
 ## Changes Made
+
 - `backend/pipeline_parser.py`
   - New pure parser module:
     - `parse_aaps_v1(text)` -> IR dict
@@ -24,6 +26,7 @@
   - Added `POST /api/scripts/parse` documentation and an error example.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -41,4 +44,3 @@ PY
 
 rg -n '/api/scripts/parse' backend/app.py docs/api-contracts.md
 ```
-

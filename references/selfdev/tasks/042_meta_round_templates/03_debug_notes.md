@@ -1,6 +1,7 @@
 # Debug Notes: 042 meta_round_templates
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -11,6 +12,7 @@ timeout 10s rg -n "meta_round_v0" docs/meta-round-templates.md docs/pipeline-for
 ```
 
 Result (excerpt):
+
 ```text
 docs/pipeline-formatted-script-spec.md:198:## 5) Meta-round Templates (Convention v0)
 docs/pipeline-formatted-script-spec.md:208:- `docs/meta-round-templates.md` defines a standard `meta_round_v0` convention, including how to represent:
@@ -21,5 +23,5 @@ docs/meta-round-templates.md:113:Meta-round configuration is stored under `TASK.
 ```
 
 ## Issues Found
-- None (docs-only change; references and required template strings present).
 
+- None (docs-only change; references and required template strings present).

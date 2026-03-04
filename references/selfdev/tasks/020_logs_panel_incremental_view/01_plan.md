@@ -1,19 +1,23 @@
 # Plan: 020 logs_panel_incremental_view
 
 ## Goal
+
 Upgrade the PWA Logs panel so it behaves like a basic log viewer:
+
 - Polls (or streams) **incremental** logs (append-only, not full replace each refresh).
 - **Auto-scrolls** to the bottom while “follow” is enabled.
 - Provides a **pause toggle** to stop auto-scroll (so the user can read/select/copy).
 - User can **copy selected text** from the log view.
 
 Acceptance:
+
 - Logs panel polls/streams incremental logs.
 - Auto-scroll with a pause toggle.
 - Selected text can be copied.
 - Default PWA theme remains light (`<body data-theme="light">`).
 
 ## Current State (References)
+
 - PWA logs UI:
   - `pwa/index.html`: Logs tab contains:
     - `#log-select` (pipeline/backend)
@@ -31,12 +35,15 @@ Acceptance:
   - `docs/api-contracts.md`: “Logs” section includes `GET /api/logs` and `GET /api/logs/tail`.
 
 ## Approach (Minimal / Incremental)
+
 Use the existing backend incremental endpoint (`GET /api/logs`) and make the PWA:
+
 1. Track a per-source cursor (`since`) so each poll fetches only new entries.
 2. Append new lines to `#logview` without re-rendering the whole `<pre>` (reduces selection disruption).
 3. Auto-scroll only when “follow” is enabled; pause toggle disables follow so the user can select/copy.
 
 ## Implementation Steps (Next Phase)
+
 1. Add a pause/follow toggle control in the Logs panel.
    - Edit `pwa/index.html` in the Logs tab `.logbar`:
      - Add a new button, e.g.:
@@ -91,7 +98,9 @@ Use the existing backend incremental endpoint (`GET /api/logs`) and make the PWA
    - Only update docs if new UI controls need to be mentioned somewhere (likely not needed for this small step).
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -112,6 +121,7 @@ timeout 5s node --check pwa/service-worker.js
 ```
 
 Manual UI verification (outside this sandbox, which cannot bind ports):
+
 1. Start backend + PWA:
    - Backend: `python3 -m backend.app`
    - PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
@@ -122,8 +132,8 @@ Manual UI verification (outside this sandbox, which cannot bind ports):
    - Toggle follow on again and confirm it snaps to the bottom and continues following new lines.
 
 ## Acceptance Checklist
+
 - [ ] Logs panel appends incremental entries using `GET /api/logs?source=...&since=...`.
 - [ ] Auto-scroll is enabled by default and can be paused via a toggle.
 - [ ] User can select and copy text from the logs view (pause prevents forced scrolling).
 - [ ] Default theme remains light.
-

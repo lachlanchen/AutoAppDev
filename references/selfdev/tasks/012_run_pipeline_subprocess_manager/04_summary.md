@@ -1,6 +1,7 @@
 # Summary: 012 run_pipeline_subprocess_manager
 
 ## What Changed
+
 - Hardened `PipelineControl` in `backend/app.py`:
   - Closes the parent-side pipeline log file handle after spawning.
   - `stop()` now waits after SIGKILL, updates DB state, and clears internal process references.
@@ -8,9 +9,11 @@
 - Added a Tornado `PeriodicCallback` to poll for subprocess exit.
 
 ## Why
+
 This makes pipeline subprocess management more reliable and prevents common failure modes (orphaned process groups, leaked file handles, stale running state when the process exits).
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

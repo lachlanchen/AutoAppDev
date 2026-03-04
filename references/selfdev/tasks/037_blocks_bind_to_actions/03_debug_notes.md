@@ -1,6 +1,7 @@
 # Debug Notes: 037 blocks_bind_to_actions
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -71,6 +72,7 @@ timeout 10s rg -n \"action_ref\" pwa/app.js docs/pipeline-formatted-script-spec.
 ```
 
 ## Results
+
 - `timeout 10s node --check pwa/app.js`
   - Exit code: `0`
 - `timeout 10s node - ...`
@@ -80,5 +82,5 @@ timeout 10s rg -n \"action_ref\" pwa/app.js docs/pipeline-formatted-script-spec.
   - Exit code: `0`
 
 ## Issues Found
-- None in these smoke checks.
 
+- None in these smoke checks.

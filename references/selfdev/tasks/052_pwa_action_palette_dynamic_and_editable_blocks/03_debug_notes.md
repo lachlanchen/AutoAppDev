@@ -8,6 +8,7 @@ timeout 10s node --check pwa/app.js
 ```
 
 Result:
+
 - exit code: `0`
 - output: (none)
 
@@ -17,9 +18,10 @@ timeout 10s node --check pwa/i18n.js
 ```
 
 Result:
+
 - exit code: `0`
 - output: (none)
 
 ## Fixes Required
-- None found in this phase.
 
+- None found in this phase.

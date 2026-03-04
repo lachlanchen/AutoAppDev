@@ -1,12 +1,14 @@
 # Work Notes: 031 llm_assisted_script_parse_optional
 
 ## Summary
+
 - Added an optional Codex-powered parse fallback endpoint: `POST /api/scripts/parse-llm`.
 - Endpoint is **disabled by default** and guarded by `AUTOAPPDEV_ENABLE_LLM_PARSE=1`.
 - The endpoint stores provenance artifacts (prompt/input/raw JSONL/extracted AAPS/provenance JSON) under `AUTOAPPDEV_RUNTIME_DIR/logs/llm_parse/<id>/`.
 - Updated docs for the new endpoint + env flag.
 
 ## Changes Made
+
 - `backend/llm_assisted_parse.py`
   - Implements:
     - prompt builder (`build_prompt`)
@@ -28,10 +30,10 @@
   - Documented `POST /api/scripts/parse-llm` contract and error modes.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
 timeout 10s python3 -m py_compile backend/app.py backend/llm_assisted_parse.py
 rg -n "parse-llm|AUTOAPPDEV_ENABLE_LLM_PARSE|llm_parse" backend/app.py backend/llm_assisted_parse.py docs/env.md docs/api-contracts.md
 ```
-

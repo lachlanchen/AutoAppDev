@@ -3,6 +3,7 @@
 ## Verification (Smallest Smoke)
 
 ### Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -33,5 +34,5 @@ head -n 40 /tmp/runner_a.sh
 ```
 
 ## Issues Found
-- None in the smoke checks above.
 
+- None in the smoke checks above.

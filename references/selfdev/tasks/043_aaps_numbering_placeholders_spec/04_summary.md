@@ -1,6 +1,7 @@
 # Summary: 043 aaps_numbering_placeholders_spec
 
 ## What Changed
+
 - Added `docs/aaps-numbering-placeholders.md` defining two AAPS v1-compatible conventions:
   - Scratch-like **numbering** via `# 1.2.3` comment lines plus indentation (display-only; parser ignores comments).
   - Minimal `{{...}}` **placeholder** syntax for strings in `ACTION.params.prompt` / `ACTION.params.cmd`:
@@ -10,9 +11,11 @@
   - `examples/pipeline_meta_round_numbered_placeholders_v0.aaps` (includes `meta_round_v0`, conditional fix step via `STEP.meta.conditional`, numbering comments, indentation, and placeholder usage).
 
 ## Why
+
 Task 043 acceptance requires docs to define a Scratch-like numbered/indented AAPS convention (still AAPS v1-compatible) and a minimal placeholder syntax used in prompts/cmds, plus at least one complete example using `meta_round_v0` and conditional fix steps.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -28,4 +31,3 @@ assert ir["kind"] == "autoappdev_ir" and ir["version"] == 1
 print("OK")
 PY
 ```
-

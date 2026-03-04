@@ -1,12 +1,14 @@
 # Debug/Verify Notes: 005 apply_schema_sql_migration
 
 ## What I Verified
+
 - The CLI schema apply command `python -m backend.apply_schema`:
   - Fails fast and clearly when `DATABASE_URL` is missing.
   - Fails fast (with timeouts) when the target is unreachable.
 - Real-DB idempotency (apply twice) was skipped because no local `.env` exists in this workspace.
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -33,4 +35,5 @@ fi
 ```
 
 ## Issues Found
+
 - None requiring code changes.

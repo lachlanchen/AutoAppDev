@@ -1,6 +1,7 @@
 # Summary: 026 pipeline_shell_script_import_v0
 
 ## What Changed
+
 - Added a pure, deterministic shell annotation importer:
   - `backend/pipeline_shell_import.py` extracts `# AAPS:` comment lines into AAPS v1 `script_text`, parses via `backend/pipeline_parser.py`, and maps parse errors back to original shell line numbers.
 - Added backend endpoint:
@@ -12,10 +13,13 @@
   - `docs/api-contracts.md` (import-shell endpoint)
 
 ## Why
+
 To support best-effort import of existing pipeline shell scripts into canonical IR without attempting to parse or execute bash. The import is deterministic and debuggable via shell line-numbered errors.
 
 ## How To Verify
+
 In this repo (static + function smoke):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python3 -m py_compile backend/app.py backend/pipeline_parser.py backend/pipeline_shell_import.py
@@ -31,6 +35,7 @@ PY
 ```
 
 Manual HTTP check (requires running the backend; not possible in this sandbox):
+
 ```bash
 curl -sS -X POST 'http://127.0.0.1:8788/api/scripts/import-shell' \
   -H 'content-type: application/json' \

@@ -1,18 +1,22 @@
 # Plan: 027 pwa_script_import_visualize
 
 ## Goal
+
 Add a **Script** panel to the PWA:
+
 - User can paste/import a script.
 - PWA calls backend parse/import endpoints.
 - Parsed IR is rendered as blocks on the canvas.
 - User can switch between editing raw script and viewing blocks (blocks are the canvas; script is the Script tab).
 
 Acceptance:
+
 - Script panel exists in PWA.
 - Paste/import -> backend parse -> blocks rendered on canvas.
 - User can switch between raw script and blocks view.
 
 ## Current State (References)
+
 - PWA blocks canvas is backed by `program` (array of `{type}`):
   - `pwa/app.js`: `program`, `renderProgram()`, `persistProgram()`
 - IR <-> blocks mapping is already implemented:
@@ -29,7 +33,9 @@ Acceptance:
   - `pwa/service-worker.js`: `CACHE_NAME = autoappdev-shell-v6`
 
 ## Approach (Minimal / Consistent)
+
 Implement Script UI as a 4th right-panel tab (keeps layout stable):
+
 - Script tab provides a textarea for raw script plus:
   - `Parse AAPS -> Blocks` (calls `/api/scripts/parse`)
   - Optional: `Import Shell -> Blocks` (calls `/api/scripts/import-shell`) to support `.sh` annotations from task 026
@@ -40,9 +46,11 @@ Implement Script UI as a 4th right-panel tab (keeps layout stable):
   - Show an inline message (ok/error) with line numbers on failures
 
 Known limitation (document in UI hint text, not new docs unless required):
+
 - Visualization is step-level only: `STEP.block` -> block; task/step titles and actions are not preserved in the block canvas.
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. **Add Script tab UI**
    - Update `pwa/index.html`:
      - Add a new tab button: `<button class="tab" data-tab="script">Script</button>`
@@ -96,7 +104,9 @@ Known limitation (document in UI hint text, not new docs unless required):
    - Only if needed for clarity: add a short optional step to `docs/end-to-end-demo-checklist.md` showing “Script tab: paste AAPS -> Parse -> blocks appear”.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -105,6 +115,7 @@ node --check pwa/app.js
 ```
 
 Manual browser smoke (outside this sandbox; requires running backend + a static server for `pwa/`):
+
 1. Start backend (as per `docs/end-to-end-demo-checklist.md`).
 2. Serve PWA (`cd pwa && python3 -m http.server ...`).
 3. In PWA:
@@ -121,8 +132,8 @@ Manual browser smoke (outside this sandbox; requires running backend + a static 
    - Expected: message shows `error` + `line` number from backend.
 
 ## Acceptance Checklist
+
 - [ ] Script tab exists in the PWA right panel and can be selected.
 - [ ] Pasting a valid AAPS v1 script and clicking parse calls backend and renders blocks on the canvas.
 - [ ] User can switch between raw script (Script tab textarea) and blocks view (canvas), and can round-trip using `From Blocks`.
 - [ ] Invalid script shows actionable error (including line number) without breaking the UI.
-

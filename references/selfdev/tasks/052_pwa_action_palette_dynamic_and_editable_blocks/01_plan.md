@@ -1,7 +1,9 @@
 # Plan: 052 pwa_action_palette_dynamic_and_editable_blocks
 
 ## Goal
+
 Make the PWA feel “Scratch-like” by turning the **action registry** into a **dynamic draggable palette**, while keeping the existing step-block architecture:
+
 - Toolbox includes **built-in actions + user-created actions** (from `GET /api/actions`) as draggable blocks.
 - Dropping an action creates a canvas step block **pre-bound** to that action (`block.action_ref`).
 - Canvas blocks are editable:
@@ -10,12 +12,14 @@ Make the PWA feel “Scratch-like” by turning the **action registry** into a *
 - Built-in actions are readonly; editing them in the PWA follows clone-on-edit behavior already implemented (Task 051), and the palette reflects updated actions after refresh.
 
 Acceptance:
+
 - PWA toolbox is generated from Action library + built-ins.
 - User-created actions appear as draggable blocks.
 - Blocks are editable (binding + parameters).
 - Editing a built-in action clones then edits the clone.
 
 ## Current State (Relevant Files)
+
 - Toolbox is static HTML:
   - `pwa/index.html` `#toolbox` contains fixed blocks (plan/work/debug/...) plus control-flow blocks (Task 050).
 - Drag/drop and program rendering:
@@ -30,15 +34,19 @@ Acceptance:
     - `PUT`/`DELETE` builtin returns `403 { error: "readonly" }`.
 
 ## Design (Minimal + Incremental)
+
 Keep the “program = step blocks” model:
-- Action palette blocks are *shortcuts* that create a normal leaf step block (ex: default `type: "work"`) and set `action_ref: { id }`.
+
+- Action palette blocks are _shortcuts_ that create a normal leaf step block (ex: default `type: "work"`) and set `action_ref: { id }`.
 - Built-in action blocks can map to a more appropriate default step type by ID convention (Plan -> `plan`, Work -> `work`, etc). User-created actions default to `work` initially.
 - Editing “parameters” is prompt-based (consistent with existing `Bind`/`update_readme` flows) to keep UI changes small.
 
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Add a Dynamic “Actions Palette” Render Pass
+
 Edit `pwa/app.js`:
+
 - Add `renderActionPalette()` that:
   - uses `actionsIndex` (populated from `/api/actions?limit=200`) to build draggable `.block` DOM nodes for each action
   - includes both builtins (`readonly:true`) and DB actions (`readonly:false`)
@@ -52,15 +60,18 @@ Edit `pwa/app.js`:
   - once during `boot()` (so palette appears even before opening the Actions tab)
 
 Notes:
+
 - If `/api/actions` fails (backend down), keep existing static toolbox as a fallback and just don’t append the dynamic section.
 
 ### 2) Update Drag/Drop Wiring to Support Dynamically Created Blocks
+
 Edit `pwa/app.js` `bindDnD()`:
+
 - Switch from “attach listeners to existing `.toolbox .block` nodes” to **event delegation** on `els.toolbox` so dynamically injected blocks are draggable without re-binding.
 - Encode drag payload so drop handler can distinguish:
   - normal palette block types (`plan`, `work`, `metatasks_generator`, ...)
   - action palette blocks (action id)
-  Example approach:
+    Example approach:
   - `text/plain` = `block:<type>` or `action:<id>` (simple string protocol)
 - Update drop handler:
   - For `action:<id>`:
@@ -74,7 +85,9 @@ Edit `pwa/app.js` `bindDnD()`:
     - control-flow blocks use `makeBlockFromType()`
 
 ### 3) Make Canvas Blocks Editable (Binding + Parameters)
+
 Edit `pwa/app.js` `renderProgram()`:
+
 - Keep current `Bind` flow for leaf step blocks (already satisfies “editable binding”).
 - Add a minimal `Edit` button for blocks that have parameters:
   - `update_readme`: edit `workspace` via existing workspace prompt + validation (`parseWorkspaceSlug()`), then persist.
@@ -89,21 +102,28 @@ Edit `pwa/app.js` `renderProgram()`:
   - (Other languages can fallback via `t()`.)
 
 Optional small enhancement (if still small):
-- For leaf step blocks, allow changing the *phase* type (plan/work/...) via an `Edit` prompt (only for leaf step blocks).
+
+- For leaf step blocks, allow changing the _phase_ type (plan/work/...) via an `Edit` prompt (only for leaf step blocks).
 
 ### 4) Ensure Built-in Clone-On-Edit is Reflected in Palette
+
 No new backend work expected (Task 051 already provides clone endpoint).
 Edit `pwa/app.js` to ensure palette refresh happens after:
+
 - create/update/delete action flows (already call `refreshActionsList()`; ensure `renderActionPalette()` is invoked from there)
 - clone-on-save flows (Task 051 logic in `saveActionFromForm()`)
 
 ### 5) (If Needed) Small Docs Note
+
 If UX changes are user-visible enough, add a short note to `pwa/README.md`:
+
 - toolbox includes dynamically loaded Actions from backend
 - dragging an action creates a bound step block
 
 ## Verification (DEBUG/VERIFY Phase)
+
 Static checks:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s node --check pwa/app.js
@@ -111,21 +131,29 @@ timeout 10s node --check pwa/i18n.js
 ```
 
 Manual smoke (with backend running):
+
 1. Open PWA:
-  - toolbox shows dynamic action blocks (builtins + any DB actions)
+
+- toolbox shows dynamic action blocks (builtins + any DB actions)
+
 2. Drag a user-created action onto canvas:
-  - a step appears with label showing binding (`-> #<id> <title>`)
+
+- a step appears with label showing binding (`-> #<id> <title>`)
+
 3. Edit block parameters:
-  - update_readme workspace can be changed via Edit
-  - meta-round `n_round` and `task_list_path` can be changed via Edit and the nested round body resizes
+
+- update_readme workspace can be changed via Edit
+- meta-round `n_round` and `task_list_path` can be changed via Edit and the nested round body resizes
+
 4. Built-in action clone-on-edit:
-  - select a builtin action in Actions tab, change prompt/title, click Save
-  - confirms “cloned and saved”, and the palette now includes the cloned editable action
+
+- select a builtin action in Actions tab, change prompt/title, click Save
+- confirms “cloned and saved”, and the palette now includes the cloned editable action
 
 ## Acceptance Checklist
+
 - [ ] Toolbox shows actions fetched from `/api/actions` (includes built-ins).
 - [ ] Dragging an action adds a new bound block on the canvas.
 - [ ] Leaf step blocks can be rebound/cleared (binding editable).
 - [ ] Parameterized blocks (`update_readme`, meta-round containers) are editable in the canvas.
 - [ ] Editing a built-in action results in a cloned editable copy (no direct mutation).
-

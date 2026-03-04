@@ -1,15 +1,18 @@
 # Plan: 032 common_action_update_readme_spec
 
 ## Goal
+
 Define a **common pipeline ACTION** named `update_readme` so pipelines can update a workspace README in a safe, deterministic way.
 
 Acceptance:
+
 - Docs define an `update_readme` ACTION including:
   - the **marker strings** used for the auto-managed README block
   - a canonical **Philosophy** section to include in that block
   - safe targeting of a workspace README under `auto-apps/` (no arbitrary path writes)
 
 ## Current State (References)
+
 - Controller repo README already uses marker-based patching for an auto-generated status block:
   - Markers: `<!-- AUTOAPPDEV:STATUS:BEGIN -->` / `<!-- AUTOAPPDEV:STATUS:END -->`: `README.md`
   - Patch logic: `scripts/auto-autoappdev-development.sh` (`update_readme_autogen`)
@@ -19,7 +22,9 @@ Acceptance:
   - AAPS + IR schema: `docs/pipeline-formatted-script-spec.md`
 
 ## Documentation Design (Spec v0)
+
 Create a new doc that acts as the canonical spec for this action:
+
 - New file: `docs/common-actions.md`
   - Add a section: `## update_readme`
   - Define:
@@ -31,7 +36,7 @@ Create a new doc that acts as the canonical spec for this action:
        - Mention that backend implementations MUST validate resolved paths remain under `auto-apps/`.
     3. **Markers** for the auto-managed block (distinct from controller self-dev markers):
        - Begin: `<!-- AUTOAPPDEV:README:BEGIN -->`
-       - End:   `<!-- AUTOAPPDEV:README:END -->`
+       - End: `<!-- AUTOAPPDEV:README:END -->`
        - Semantics:
          - Content between markers is owned by `update_readme` and may be replaced wholesale.
          - Content outside markers is user-owned and must be preserved.
@@ -50,6 +55,7 @@ Create a new doc that acts as the canonical spec for this action:
        - Example resulting README snippet showing markers + Philosophy section.
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Add the new action spec doc
    - Create `docs/common-actions.md` with:
      - `update_readme` definition (markers, params, philosophy text, examples).
@@ -61,10 +67,12 @@ Create a new doc that acts as the canonical spec for this action:
      - `docs/common-actions.md`: Common action specs (includes `update_readme`)
 
 Notes:
+
 - Keep this task doc-only (no backend/PWA changes).
 - Backend endpoint/API contract for executing `update_readme` is deferred to task 033.
 
 ## Commands To Run (Verification)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -81,9 +89,9 @@ rg -n \"docs/common-actions\\.md\" README.md
 ```
 
 ## Acceptance Checklist
+
 - [ ] `docs/common-actions.md` defines `update_readme` action kind + params.
 - [ ] Doc defines marker strings and replacement semantics.
 - [ ] Doc includes a canonical `## Philosophy` section for workspaces.
 - [ ] Doc defines safe targeting of `auto-apps/<workspace>/README.md` without allowing arbitrary paths.
 - [ ] `README.md` links to `docs/common-actions.md`.
-

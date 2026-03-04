@@ -1,6 +1,7 @@
 # Debug Notes: 035 action_registry_tables_and_api
 
 ## Verification (Smallest Smoke)
+
 - Static compile of backend modules changed in this task.
 - Pure-function smoke test for action payload validation/normalization:
   - prompt actions get safe defaults and clamp timeout
@@ -9,6 +10,7 @@
 - Grep check confirming schema/storage/routes/docs reference the new registry.
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -123,5 +125,5 @@ timeout 10s rg -n "action_definitions|/api/actions\\b|validate_action_" backend/
 ```
 
 ## Issues Found
-- None in these smoke checks.
 
+- None in these smoke checks.

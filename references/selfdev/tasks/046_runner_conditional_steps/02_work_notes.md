@@ -1,6 +1,7 @@
 # Work Notes: 046 runner_conditional_steps
 
 ## Implementation Notes
+
 - Added runner support for `STEP.meta.conditional` (v0), with initial conditional:
   - `on_debug_failure` (used by meta-round templates for conditional fix steps).
 - Updated runner codegen so debug steps capture action failures (no early exit) and set a per-task flag used for conditional evaluation.
@@ -10,6 +11,7 @@
 - Documented runner conditional behavior in `docs/pipeline-runner-codegen.md`.
 
 ## Files Changed / Added
+
 - Updated:
   - `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
   - `scripts/pipeline_codegen/generate_runner_from_ir.py`
@@ -19,5 +21,5 @@
   - `scripts/pipeline_codegen/smoke_conditional_steps.sh`
 
 ## Commands Run
-Work phase focused on implementation; no verification commands run yet (reserved for DEBUG/VERIFY phase).
 
+Work phase focused on implementation; no verification commands run yet (reserved for DEBUG/VERIFY phase).

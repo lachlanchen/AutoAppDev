@@ -1,19 +1,23 @@
 # Plan: 009 inbox_messages_table_and_api
 
 ## Goal
+
 Add a first-class “Inbox” persistence API backed by Postgres.
 
 Acceptance:
+
 - Create DB table for inbox messages.
 - Implement `GET /api/inbox` (latest N) and `POST /api/inbox` (create) with basic validation.
 
 ## Current State (References)
+
 - DB schema in `backend/schema.sql` includes `chat_messages`, but no `inbox_messages` table.
 - Backend has a Chat handler in `backend/app.py` (`GET|POST /api/chat`).
   - `POST /api/chat` already writes a file artifact to `runtime/inbox/*_user.md` via `_write_inbox_message()`.
 - Storage layer `backend/storage.py` persists chat messages into `chat_messages`.
 
 ## Design Choice (Minimal)
+
 Introduce a new “Inbox” API and table without breaking existing `/api/chat`.
 
 - New table: `inbox_messages`
@@ -23,6 +27,7 @@ Introduce a new “Inbox” API and table without breaking existing `/api/chat`.
   - When an inbox message is created, also write `runtime/inbox/*_user.md` (so pipeline scripts can consume it).
 
 ## Files To Change (Implementation Phase)
+
 - Update: `backend/schema.sql`
   - Add `create table if not exists inbox_messages (...)`.
 - Update: `backend/storage.py`
@@ -33,7 +38,9 @@ Introduce a new “Inbox” API and table without breaking existing `/api/chat`.
   - Add `/api/inbox` contract section (or a short note mapping inbox to chat/inbox semantics).
 
 ## Schema Details
+
 In `backend/schema.sql`, add:
+
 - `inbox_messages` table:
   - `id bigserial primary key`
   - `role text not null` (keep consistent with `chat_messages`; for now accept at least `user`)
@@ -44,7 +51,9 @@ In `backend/schema.sql`, add:
 Because the schema uses `IF NOT EXISTS`, running apply twice is safe.
 
 ## Storage API
+
 In `backend/storage.py`, add:
+
 - `async def add_inbox_message(self, role: str, content: str) -> None`
   - Insert into `inbox_messages(role, content)`.
 - `async def list_inbox_messages(self, limit: int = 50) -> list[dict[str, Any]]`
@@ -54,14 +63,17 @@ In `backend/storage.py`, add:
 Keep implementation consistent with existing Postgres helpers (`require_pool()` + acquire) added in task 006.
 
 ## Handler API
+
 In `backend/app.py`, add `InboxHandler(BaseHandler)`:
 
 ### GET /api/inbox
+
 - Query param: `limit` (default `50`, clamp `1..500`).
 - Response:
   - `{ "messages": [ { "id": ..., "role": ..., "content": ..., "created_at": ... }, ... ] }`
 
 ### POST /api/inbox
+
 - Request body: `{ "content": "..." }`
 - Basic validation:
   - Must be JSON object.
@@ -77,13 +89,17 @@ In `backend/app.py`, add `InboxHandler(BaseHandler)`:
   - `400 {"error":"empty"}` for empty content.
 
 ## Route Wiring
+
 In `backend/app.py` route list inside `make_app(...)`:
+
 - Add `(r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir})`.
 
 ## Commands To Run (Verification)
+
 Requires a working `.env` with `DATABASE_URL`.
 
-1) Apply schema:
+1. Apply schema:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -94,7 +110,8 @@ timeout 5s python -m backend.db_smoketest
 timeout 10s python -m backend.apply_schema
 ```
 
-2) Endpoint smoke (start backend briefly; no leftover processes):
+2. Endpoint smoke (start backend briefly; no leftover processes):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -131,6 +148,7 @@ ls -la "$RT_DIR/inbox" | head
 ```
 
 ## Acceptance Criteria Checks
+
 - DB table `inbox_messages` exists after applying schema.
 - `POST /api/inbox` accepts valid content and returns `{ ok: true }`.
 - `GET /api/inbox` returns latest N messages with `id/role/content/created_at`.

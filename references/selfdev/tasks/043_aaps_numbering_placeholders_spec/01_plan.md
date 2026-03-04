@@ -1,18 +1,23 @@
 # Plan: 043 aaps_numbering_placeholders_spec
 
 ## Goal
+
 Update documentation to define:
+
 1. A **Scratch-like “numbered + indented” AAPS convention** that remains **AAPS v1-compatible** (i.e., valid for the existing `KEYWORD <json-object>` parser).
 2. A **minimal placeholder syntax** for use inside `ACTION.params.prompt` / `ACTION.params.cmd` strings (e.g. `{{task.title}}`, `{{task.acceptance}}`, `{{runtime_dir}}`).
 3. At least one **complete example script** that:
-  - uses `meta_round_v0`, and
-  - includes **conditional fix steps** (`STEP.meta.conditional`).
+
+- uses `meta_round_v0`, and
+- includes **conditional fix steps** (`STEP.meta.conditional`).
 
 Constraints:
+
 - Docs-only in this task (no engine implementation required).
 - Keep changes minimal and consistent with existing AAPS/IR and meta-round docs.
 
 ## Current State (Relevant Files)
+
 - AAPS grammar + IR schema:
   - `docs/pipeline-formatted-script-spec.md`
   - Notes: indentation is already allowed; comment lines are ignored.
@@ -26,9 +31,11 @@ Constraints:
 ## Proposed Minimal Design (Docs-Only)
 
 ### A) “Numbered + Indented” Convention That Stays AAPS v1-Compatible
+
 Because `backend/pipeline_parser.py` requires `TASK|STEP|ACTION` to be the first token (after indentation), we cannot prefix statement lines with `1.` without changing the grammar.
 
 Instead, define a **display-only numbering convention using comment lines**, which AAPS v1 already ignores:
+
 - Use indentation to show nesting (already allowed):
   - `TASK` at 0 spaces
   - `STEP` indented 2 spaces
@@ -39,7 +46,9 @@ Instead, define a **display-only numbering convention using comment lines**, whi
 This achieves “Scratch-like numbered blocks” while remaining fully parseable by current AAPS v1 tooling.
 
 ### B) Minimal Placeholder Syntax (Convention v0)
+
 Define a placeholder expansion convention for engines/runners:
+
 - Syntax: `{{path}}` where `path` is a dot-separated identifier (e.g. `task.title`).
 - Expansion occurs only inside **string fields** (not in JSON structure): primarily `ACTION.params.prompt` and `ACTION.params.cmd`.
 - Required placeholders for this task:
@@ -51,7 +60,9 @@ Define a placeholder expansion convention for engines/runners:
 - Safety note (docs only): placeholder values are untrusted strings; shell commands should quote appropriately.
 
 ### C) Example Script
+
 Add a single, complete AAPS v1 script that demonstrates:
+
 - meta-round controller task (`TASK.meta.meta_round_v0`)
 - conditional fix step (`STEP.meta.conditional: "on_debug_failure"`)
 - numbering comments + indentation
@@ -60,7 +71,9 @@ Add a single, complete AAPS v1 script that demonstrates:
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Add a New Doc Explaining Both Conventions
+
 Create `docs/aaps-numbering-placeholders.md`:
+
 - Section: “Numbered + indented AAPS (display-only)”
   - Re-state the base grammar from `docs/pipeline-formatted-script-spec.md`
   - Define indentation levels and the numbering comment pattern (`# 1.2.3`)
@@ -76,13 +89,17 @@ Create `docs/aaps-numbering-placeholders.md`:
   - Reference an example file under `examples/` (next step), or embed the full script if we decide to avoid adding a file.
 
 ### 2) Link From the Canonical AAPS Spec
+
 Update `docs/pipeline-formatted-script-spec.md`:
+
 - Add a short section after “1.4 Statement Lines” or near the end:
   - Point to `docs/aaps-numbering-placeholders.md` for the display-only numbering + placeholder conventions.
   - Reiterate these are **conventions** that do not change the grammar.
 
 ### 3) Add A Complete Example Script File
+
 Add `examples/pipeline_meta_round_numbered_placeholders_v0.aaps` containing:
+
 - Header: `AUTOAPPDEV_PIPELINE 1`
 - Numbering comments (`# 1`, `# 1.1`, …) + indentation
 - Meta-round controller task:
@@ -98,13 +115,17 @@ Add `examples/pipeline_meta_round_numbered_placeholders_v0.aaps` containing:
 Note: placeholders are not executed in this task; the goal is to define the contract.
 
 ### 4) (Optional) Cross-link From Meta-round Doc
+
 If the example benefits from discoverability:
+
 - Add a short “See also” link in `docs/meta-round-templates.md` pointing to `docs/aaps-numbering-placeholders.md`.
 
 Keep optional to minimize diff.
 
 ## Verification Commands (DEBUG/VERIFY Phase)
+
 Docs-only verification:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -113,6 +134,7 @@ timeout 10s rg -n "Numbered|numbering|\\{\\{task\\.title\\}\\}|\\{\\{task\\.acce
 ```
 
 Ensure the example is truly AAPS v1-parseable (despite numbering comments/placeholders):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python3 - <<'PY'
@@ -127,6 +149,7 @@ PY
 ```
 
 ## Acceptance Checklist
+
 - [ ] Docs define a numbered + indented AAPS convention that remains AAPS v1-compatible (no grammar changes).
 - [ ] Docs define minimal placeholder syntax including:
   - [ ] `{{task.title}}`
@@ -137,4 +160,3 @@ PY
   - [ ] conditional fix steps (`STEP.meta.conditional`)
   - [ ] numbering + indentation
   - [ ] placeholder usage in prompt/cmd strings
-

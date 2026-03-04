@@ -80,29 +80,87 @@
           <div class="panel-hint" data-i18n="ui.panel.blocks.hint">Drag to canvas</div>
         </div>
         <div class="toolbox" id="toolbox">
-          <div class="block block--plan" draggable="true" data-block="plan" data-i18n="ui.block.plan">Plan</div>
-          <div class="block block--work" draggable="true" data-block="work" data-i18n="ui.block.work">Work</div>
-          <div class="block block--debug" draggable="true" data-block="debug" data-i18n="ui.block.debug">Debug</div>
-          <div class="block block--fix" draggable="true" data-block="fix" data-i18n="ui.block.fix">Fix</div>
-          <div class="block block--summary" draggable="true" data-block="summary" data-i18n="ui.block.summary">
+          <div
+            class="block block--plan"
+            draggable="true"
+            data-block="plan"
+            data-i18n="ui.block.plan"
+          >
+            Plan
+          </div>
+          <div
+            class="block block--work"
+            draggable="true"
+            data-block="work"
+            data-i18n="ui.block.work"
+          >
+            Work
+          </div>
+          <div
+            class="block block--debug"
+            draggable="true"
+            data-block="debug"
+            data-i18n="ui.block.debug"
+          >
+            Debug
+          </div>
+          <div class="block block--fix" draggable="true" data-block="fix" data-i18n="ui.block.fix">
+            Fix
+          </div>
+          <div
+            class="block block--summary"
+            draggable="true"
+            data-block="summary"
+            data-i18n="ui.block.summary"
+          >
             Summary
           </div>
-          <div class="block block--summary" draggable="true" data-block="update_readme" data-i18n="ui.block.update_readme">
+          <div
+            class="block block--summary"
+            draggable="true"
+            data-block="update_readme"
+            data-i18n="ui.block.update_readme"
+          >
             Update README
           </div>
-          <div class="block block--release" draggable="true" data-block="commit_push" data-i18n="ui.block.commit_push">
+          <div
+            class="block block--release"
+            draggable="true"
+            data-block="commit_push"
+            data-i18n="ui.block.commit_push"
+          >
             Commit+Push
           </div>
-          <div class="block block--loop" draggable="true" data-block="metatasks_generator" data-i18n="ui.block.metatasks_generator">
+          <div
+            class="block block--loop"
+            draggable="true"
+            data-block="metatasks_generator"
+            data-i18n="ui.block.metatasks_generator"
+          >
             Meta Tasks
           </div>
-          <div class="block block--loop" draggable="true" data-block="for_n_round" data-i18n="ui.block.for_n_round">
+          <div
+            class="block block--loop"
+            draggable="true"
+            data-block="for_n_round"
+            data-i18n="ui.block.for_n_round"
+          >
             For N_ROUND
           </div>
-          <div class="block block--loop" draggable="true" data-block="for_each_task" data-i18n="ui.block.for_each_task">
+          <div
+            class="block block--loop"
+            draggable="true"
+            data-block="for_each_task"
+            data-i18n="ui.block.for_each_task"
+          >
             For each task
           </div>
-          <div class="block block--loop" draggable="true" data-block="if_else" data-i18n="ui.block.if_else">
+          <div
+            class="block block--loop"
+            draggable="true"
+            data-block="if_else"
+            data-i18n="ui.block.if_else"
+          >
             If/Else
           </div>
         </div>
@@ -113,13 +171,26 @@
           <div class="panel-title" data-i18n="ui.panel.program.title">Program</div>
           <div class="panel-actions">
             <button class="btn btn--ghost" id="btn-clear" data-i18n="ui.btn.clear">Clear</button>
-            <button class="btn btn--ghost" id="btn-export" data-i18n="ui.btn.export_json">Export JSON</button>
-            <button class="btn btn--ghost" id="btn-send-plan" data-i18n="ui.btn.send_plan">Send Plan</button>
-            <button class="btn btn--ghost" id="btn-save-script" data-i18n="ui.btn.save_script">Save Script</button>
-            <button class="btn btn--ghost" id="btn-load-script" data-i18n="ui.btn.load_script">Load Script</button>
+            <button class="btn btn--ghost" id="btn-export" data-i18n="ui.btn.export_json">
+              Export JSON
+            </button>
+            <button class="btn btn--ghost" id="btn-send-plan" data-i18n="ui.btn.send_plan">
+              Send Plan
+            </button>
+            <button class="btn btn--ghost" id="btn-save-script" data-i18n="ui.btn.save_script">
+              Save Script
+            </button>
+            <button class="btn btn--ghost" id="btn-load-script" data-i18n="ui.btn.load_script">
+              Load Script
+            </button>
           </div>
         </div>
-        <div class="canvas" id="canvas" aria-label="Program canvas" data-i18n-aria-label="ui.canvas.aria">
+        <div
+          class="canvas"
+          id="canvas"
+          aria-label="Program canvas"
+          data-i18n-aria-label="ui.canvas.aria"
+        >
           <div class="canvas-empty" id="canvas-empty">
             <span data-i18n="ui.canvas.empty">Drop blocks here to build a pipeline.</span>
           </div>
@@ -154,15 +225,23 @@
             <div class="v" id="pipeline-pid">-</div>
           </div>
           <div class="hintbox">
-            Use Inbox to inject guidance while the pipeline runs. Messages are written to a runtime inbox that scripts can consume.
+            Use Inbox to inject guidance while the pipeline runs. Messages are written to a runtime
+            inbox that scripts can consume.
           </div>
 
           <div class="divider"></div>
           <div class="panel-title" data-i18n="ui.panel.workspace.title">Workspace</div>
-          <div class="panel-hint" data-i18n="ui.panel.workspace.hint">Materials + shared context (persisted per workspace)</div>
+          <div class="panel-hint" data-i18n="ui.panel.workspace.hint">
+            Materials + shared context (persisted per workspace)
+          </div>
 
           <div class="actionsection scriptbar">
-            <input class="input" id="ws-slug" placeholder="my_workspace" data-i18n-placeholder="ui.ws.slug_ph" />
+            <input
+              class="input"
+              id="ws-slug"
+              placeholder="my_workspace"
+              data-i18n-placeholder="ui.ws.slug_ph"
+            />
             <button class="btn btn--ghost" id="ws-load" data-i18n="ui.btn.load">Load</button>
             <button class="btn btn--ghost" id="ws-save" data-i18n="ui.btn.save">Save</button>
           </div>
@@ -183,7 +262,9 @@
               </select>
             </div>
             <div class="select">
-              <label data-i18n="ui.ws.shared_context_path_optional">Shared context path (optional)</label>
+              <label data-i18n="ui.ws.shared_context_path_optional"
+                >Shared context path (optional)</label
+              >
               <input
                 class="input"
                 id="ws-context-path"
@@ -252,17 +333,27 @@
             >
               Pause
             </button>
-            <button class="btn btn--ghost" id="log-refresh" data-i18n="ui.btn.refresh">Refresh</button>
+            <button class="btn btn--ghost" id="log-refresh" data-i18n="ui.btn.refresh">
+              Refresh
+            </button>
           </div>
           <pre class="logview" id="logview"></pre>
         </div>
 
         <div class="tabview" id="tab-actions" hidden>
           <div class="actionbar">
-            <button class="btn btn--ghost" id="actions-refresh" data-i18n="ui.btn.refresh">Refresh</button>
+            <button class="btn btn--ghost" id="actions-refresh" data-i18n="ui.btn.refresh">
+              Refresh
+            </button>
             <button class="btn btn--ghost" id="actions-new" data-i18n="ui.btn.new">New</button>
             <button class="btn btn--ghost" id="actions-save" data-i18n="ui.btn.save">Save</button>
-            <button class="btn btn--ghost btn--danger" id="actions-delete" data-i18n="ui.btn.delete">Delete</button>
+            <button
+              class="btn btn--ghost btn--danger"
+              id="actions-delete"
+              data-i18n="ui.btn.delete"
+            >
+              Delete
+            </button>
           </div>
 
           <div
@@ -344,7 +435,15 @@
               </div>
               <div class="select">
                 <label data-i18n="ui.actions.timeout_optional">Timeout (s, optional)</label>
-                <input class="input" id="action-timeout" type="number" min="5" max="300" step="1" placeholder="45" />
+                <input
+                  class="input"
+                  id="action-timeout"
+                  type="number"
+                  min="5"
+                  max="300"
+                  step="1"
+                  placeholder="45"
+                />
               </div>
             </div>
           </div>
@@ -367,7 +466,12 @@
               </div>
               <div class="select">
                 <label data-i18n="ui.actions.cwd_repo_relative">CWD (repo-relative)</label>
-                <input class="input" id="action-cwd" placeholder="." data-i18n-placeholder="ui.actions.cwd_ph" />
+                <input
+                  class="input"
+                  id="action-cwd"
+                  placeholder="."
+                  data-i18n-placeholder="ui.actions.cwd_ph"
+                />
               </div>
               <div class="select">
                 <label data-i18n="ui.actions.timeout_optional">Timeout (s, optional)</label>
@@ -386,8 +490,8 @@
 
           <div class="script-msg" id="actions-msg" aria-live="polite"></div>
           <div class="hintbox">
-            Kind changes are not supported in v0. For command actions, <code>shell</code> is always <code>bash</code> and
-            <code>cwd</code> must stay within the repo.
+            Kind changes are not supported in v0. For command actions, <code>shell</code> is always
+            <code>bash</code> and <code>cwd</code> must stay within the repo.
           </div>
         </div>
 
@@ -449,8 +553,8 @@
           ></textarea>
           <div class="script-msg" id="script-msg" aria-live="polite"></div>
           <div class="hintbox">
-            Canvas visualization is step-level only: STEP.block values become blocks. TASK/STEP titles and ACTIONs are not
-            visualized (yet).
+            Canvas visualization is step-level only: STEP.block values become blocks. TASK/STEP
+            titles and ACTIONs are not visualized (yet).
           </div>
         </div>
       </section>

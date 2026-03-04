@@ -1,7 +1,9 @@
 # Debug Notes: 015 pwa_api_client_and_status
 
 ## What I Verified (Smallest Possible)
+
 This sandbox disallows binding sockets, so I could not run a real browser/HTTP smoke test. Verification here is limited to:
+
 - Static wiring checks (HTML/CSS/JS references)
 - JS syntax checks
 - Confirming the polling interval meets the 2s acceptance
@@ -14,6 +16,7 @@ bash -lc 'test -s pwa/api-client.js && echo api_client_ok && test -s pwa/index.h
 ```
 
 Result (exit 0):
+
 ```text
 api_client_ok
 index_ok
@@ -33,6 +36,7 @@ rg -n 'api-client\\.js' pwa/service-worker.js
 ```
 
 Result (exit 0):
+
 ```text
 16:    <script src="api-client.js" defer></script>
 105:            <div class="v badge badge--unknown" id="db-health">unknown</div>
@@ -63,22 +67,26 @@ timeout 5s python3 -m json.tool pwa/manifest.json > /tmp/autoappdev_manifest_che
 ```
 
 Result (exit 0):
+
 ```text
 manifest_json_ok
 ```
 
 Attempted local serving (blocked by sandbox socket restrictions):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 3s bash -lc 'cd pwa && python3 -m http.server 5173 --bind 127.0.0.1'
 ```
 
 Result (exit 1):
+
 ```text
 PermissionError: [Errno 1] Operation not permitted
 ```
 
 ## Manual Verification (Outside This Sandbox)
+
 1. `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
 2. Open `http://127.0.0.1:5173/`.
 3. Confirm Status shows 3 badges (Backend, DB, Pipeline) and updates within ~2 seconds.

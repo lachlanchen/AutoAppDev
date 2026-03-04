@@ -1,6 +1,7 @@
 # Work Notes: 015 pwa_api_client_and_status
 
 ## Summary of Changes
+
 - Added a small standalone API client module:
   - `pwa/api-client.js` exposes `window.AutoAppDevApi.requestJson()` (JSON fetch wrapper with timeout + normalized errors).
 - Upgraded Status UI to show badges for Backend, DB, and Pipeline:
@@ -15,6 +16,7 @@
   - `pwa/service-worker.js` now includes `./api-client.js` in `PRECACHE_URLS`.
 
 ## Files Changed
+
 - Added: `pwa/api-client.js`
 - Updated: `pwa/index.html`
 - Updated: `pwa/styles.css`
@@ -22,6 +24,7 @@
 - Updated: `pwa/service-worker.js`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -36,4 +39,3 @@ timeout 5s node --check pwa/api-client.js
 timeout 5s node --check pwa/app.js
 timeout 5s node --check pwa/service-worker.js
 ```
-

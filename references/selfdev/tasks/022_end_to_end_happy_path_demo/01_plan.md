@@ -1,7 +1,9 @@
 # Plan: 022 end_to_end_happy_path_demo
 
 ## Goal
+
 Add a deterministic, end-to-end manual demo checklist to the docs that proves the controller “happy path” works:
+
 1. Start backend
 2. Apply schema
 3. Open PWA
@@ -13,10 +15,12 @@ Add a deterministic, end-to-end manual demo checklist to the docs that proves th
 9. Stop
 
 Acceptance:
+
 - Docs include a deterministic manual test covering the steps above.
 - Default PWA theme remains light (no theme changes required).
 
 ## Current State (References)
+
 - Backend run + schema:
   - `backend/app.py`: starts Tornado, ensures `backend/schema.sql` on startup.
   - `backend/apply_schema.py`: CLI tool to apply `backend/schema.sql` (`python -m backend.apply_schema`).
@@ -33,11 +37,13 @@ Acceptance:
   - `docs/env.md` + `.env.example` (required keys include `DATABASE_URL`, `SECRET_KEY`, `AUTOAPPDEV_PORT/PORT`).
 
 ## Approach (Minimal / Deterministic)
+
 1. Add a single doc page with a copy/paste “happy path demo” checklist and expected outcomes.
 2. Add a tiny, safe pipeline demo script that produces logs for ~60-120 seconds and respects the runtime pause flag so pause/resume is observable.
 3. Keep the default pipeline (self-dev driver) unchanged; the demo uses `AUTOAPPDEV_PIPELINE_SCRIPT` to point the backend at the demo script for the duration of the checklist.
 
 ## Implementation Steps (Next Phase)
+
 1. Add a deterministic demo pipeline script.
    - Add `scripts/pipeline_demo.sh`:
      - Prints a header line (script name, start time).
@@ -88,7 +94,9 @@ Acceptance:
    - This task is documentation + a small demo script only.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -101,11 +109,12 @@ rg -n \"apply_schema|backend\\.apply_schema|/api/inbox|/api/pipeline|/api/logs|A
 ```
 
 Manual verification (outside this sandbox, which cannot bind ports):
+
 1. Follow `docs/end-to-end-demo-checklist.md` exactly.
 2. Confirm each expected outcome in the checklist.
 
 ## Acceptance Checklist
+
 - [ ] `docs/end-to-end-demo-checklist.md` exists and contains a deterministic manual test covering: backend start, schema apply, PWA open, inbox send, blocks drag, pipeline start, logs visible, pause/resume, stop.
 - [ ] Demo uses a safe deterministic pipeline script (no git/codex side-effects) and is selectable via `AUTOAPPDEV_PIPELINE_SCRIPT`.
 - [ ] README links to the checklist doc (or another obvious entrypoint does).
-

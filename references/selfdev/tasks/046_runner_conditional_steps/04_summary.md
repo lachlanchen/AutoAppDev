@@ -3,6 +3,7 @@
 Generated runners now support conditional steps via `STEP.meta.conditional` (v0). The initial supported conditional is `on_debug_failure`, allowing fix steps to run only when the previous debug step in the same task had any failing action.
 
 ## What Changed
+
 - `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
   - Added `step_should_run` and a per-task debug-failure flag (`AUTOAPPDEV_TASK_LAST_DEBUG_FAILED`).
 - `scripts/pipeline_codegen/generate_runner_from_ir.py`
@@ -14,9 +15,11 @@ Generated runners now support conditional steps via `STEP.meta.conditional` (v0)
   - Documented conditional step semantics and supported keys.
 
 ## Why
+
 Meta-round templates already model fix steps as conditional (`on_debug_failure`). The runner needed a minimal, deterministic way to execute that pattern without changing the IR schema or introducing non-deterministic behavior.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -30,4 +33,3 @@ timeout 20s scripts/pipeline_codegen/smoke_conditional_steps.sh
 timeout 20s scripts/pipeline_codegen/smoke_placeholders.sh
 timeout 20s scripts/pipeline_codegen/smoke_codegen.sh
 ```
-

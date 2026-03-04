@@ -1,14 +1,18 @@
 # Plan: 042 meta_round_templates
 
 ## Goal
+
 Define (in docs) a **standard multi-round pipeline template**:
+
 - For `N_ROUND`: generate/refine a task list from a goal + shared context.
 - For each resulting task: run a configurable action template: `plan -> work -> debug -> fix -> translate -> summary -> log -> commit`.
 
 Acceptance:
+
 - Documentation clearly defines the multi-round template and how it maps onto the existing AAPS/IR concepts (TASK/STEP/ACTION) without changing runtime behavior.
 
 ## Current State (Relevant Files)
+
 - Canonical pipeline schema is AAPS/IR (`TASK -> STEP -> ACTION`):
   - `docs/pipeline-formatted-script-spec.md` (no standard meta-round/template convention yet; `meta` is “engine-defined”).
 - Runner codegen supports only a minimal set of action kinds:
@@ -20,19 +24,24 @@ Acceptance:
   - `docs/common-actions.md` (currently only `update_readme`).
 
 ## Proposed Minimal Design (Docs-Only)
+
 Add a **doc-defined convention** for meta-round pipelines that:
+
 - Keeps AAPS/IR parsing deterministic (no templating in the parser).
 - Uses `meta` fields (already allowed by the spec) to express:
   - the meta-round loop configuration (`N_ROUND`, goal/context inputs, where the refined task list is written), and
   - the per-task “standard action template” (how steps/actions are structured and where translate/log fit).
 
 Important: this task is docs-only; it will not add new `STEP.block` values beyond the existing palette keys.
+
 - Map `translate` and `log` to **actions within existing steps** (typically within `summary` and/or `commit_push`) so docs remain consistent with `docs/pipeline-formatted-script-spec.md` and the PWA block palette.
 
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Add a New Doc: `docs/meta-round-templates.md`
+
 Create `docs/meta-round-templates.md` containing:
+
 - **Definitions**:
   - “Round”, “Task list”, “Task template”, “Action template”, “Shared context”, “Materials”.
 - **Standard multi-round workflow (v0)**:
@@ -58,20 +67,26 @@ Create `docs/meta-round-templates.md` containing:
     - `ACTION.meta.action_ref` (id-based) for the configurable actions used by the template.
 
 ### 2) Link From the Canonical Spec
+
 Edit `docs/pipeline-formatted-script-spec.md`:
+
 - Add a short section near the end (e.g. new `## 5) Meta-round Templates (Convention v0)`) that:
   - states meta-round loops are represented via `meta` fields and are **engine conventions** (data-only),
   - links to `docs/meta-round-templates.md`,
   - reiterates no new `STEP.block` keys are introduced by the convention (translate/log are actions inside existing blocks).
 
 ### 3) (Optional, If It Helps Clarity) Add an Example File
+
 If the example is too long for the doc:
+
 - Add `examples/pipeline_meta_round_template_v0.aaps` and reference it from `docs/meta-round-templates.md`.
 
 Keep this optional to minimize changes; prefer embedding the example in the doc unless it gets unwieldy.
 
 ## Verification Commands (DEBUG/VERIFY Phase)
+
 Docs-only checks:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -81,16 +96,17 @@ timeout 10s rg -n \"runtime/outbox|/api/outbox\" docs/meta-round-templates.md do
 ```
 
 If an example `.aaps` file is added:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s rg -n \"AUTOAPPDEV_PIPELINE 1\" examples/pipeline_meta_round_template_v0.aaps
 ```
 
 ## Acceptance Checklist
+
 - [ ] `docs/meta-round-templates.md` defines:
   - [ ] `N_ROUND` loop to generate/refine tasks from goal + shared context.
   - [ ] A per-task configurable template covering `plan/work/debug/fix/translate/summary/log/commit`.
   - [ ] “translate before summary/log” default behavior (as a convention).
   - [ ] How to “log” via `/api/outbox` or `runtime/outbox/`.
 - [ ] `docs/pipeline-formatted-script-spec.md` references the convention and remains consistent with existing `STEP.block` palette keys.
-

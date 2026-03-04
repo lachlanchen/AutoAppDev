@@ -1,12 +1,15 @@
 # Debug Notes: 023 pipeline_formatted_script_spec
 
 ## Goal
+
 Smallest possible verification for the new formatted script + IR spec:
+
 - Ensure the doc exists and contains the required concepts (versioned script, TASK/STEP/ACTION, IR schema, mapping to PWA blocks).
 - Ensure the example IR JSON is valid.
 - Ensure `README.md` links to the spec for discoverability.
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -24,6 +27,7 @@ rg -n 'pipeline-formatted-script-spec\\.md' README.md
 ```
 
 Result:
+
 - Spec doc and both example artifacts exist.
 - Spec includes:
   - Script header `AUTOAPPDEV_PIPELINE 1`
@@ -34,5 +38,5 @@ Result:
 - `README.md` links to the spec doc.
 
 ## Issues Found
-- None in static verification.
 
+- None in static verification.

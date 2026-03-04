@@ -1,7 +1,9 @@
 # Plan: 044 aaps_numbered_prefix_parser
 
 ## Goal
+
 Extend the deterministic AAPS v1 parser so it accepts an **optional numeric prefix** before the statement keyword:
+
 - Examples:
   - `1 TASK {...}`
   - `1.2 STEP {...}`
@@ -9,11 +11,13 @@ Extend the deterministic AAPS v1 parser so it accepts an **optional numeric pref
   - (optionally) allow a trailing dot: `1.2. STEP {...}`
 
 Acceptance:
+
 - `backend/pipeline_parser.py` accepts optional numeric prefixes before `TASK|STEP|ACTION` while remaining deterministic.
 - Add an example under `examples/`.
 - Verify parsing via a small Python snippet.
 
 ## Current State (Relevant Files)
+
 - Parser (strict today: first token must be `TASK|STEP|ACTION`):
   - `backend/pipeline_parser.py` (`parse_aaps_v1`)
 - Shell import uses the same parser:
@@ -24,7 +28,9 @@ Acceptance:
   - `docs/aaps-numbering-placeholders.md` (currently states inline numeric prefixes won’t parse; this will need a small correction once the parser accepts them)
 
 ## Proposed Minimal Design
+
 Keep AAPS v1 semantics unchanged; treat the numeric prefix as **ignored decoration**:
+
 - Parse statement lines as:
   - `KEYWORD <json-object>` (existing), OR
   - `<num-prefix> KEYWORD <json-object>` (new)
@@ -38,11 +44,14 @@ Implementation should not change any ID/ordering semantics, only how the keyword
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Update `backend/pipeline_parser.py` Statement Tokenization
+
 Edit `backend/pipeline_parser.py` in `parse_aaps_v1` where it currently does:
+
 - `stripped = raw.lstrip()`
 - `parts = stripped.split(None, 1)`
 
 Replace with a deterministic tokenization that supports numbered prefixes:
+
 1. `tokens = stripped.split(None, 2)` (max 3 tokens: prefix/keyword/json)
 2. Cases:
    - If `len(tokens) == 2` and `tokens[0] in {"TASK","STEP","ACTION"}`:
@@ -53,6 +62,7 @@ Replace with a deterministic tokenization that supports numbered prefixes:
      - raise `ParseError("invalid_statement", lineno, "...")` (update detail to mention optional numeric prefixes)
 
 Add a small helper in the module for readability/testability:
+
 - `_is_numeric_prefix(tok: str) -> bool`
   - strip trailing `.`
   - split by `.`
@@ -61,23 +71,30 @@ Add a small helper in the module for readability/testability:
 Keep the rest of parsing/validation unchanged (JSON parsing, duplicate IDs, allowed blocks, etc.).
 
 ### 2) Add Example Script Under `examples/`
+
 Add a new file:
+
 - `examples/pipeline_formatted_script_numbered_prefix_v1.aaps`
 
 Content requirements:
+
 - Valid header: `AUTOAPPDEV_PIPELINE 1`
 - At least one `TASK`, `STEP`, and `ACTION` line using numeric prefixes (e.g. `1 TASK ...`, `1.1 STEP ...`, `1.1.1 ACTION ...`)
 - Keep IDs valid/non-duplicated (per existing parser rules).
 
 ### 3) Minimal Doc Correction (Keep Docs Accurate)
+
 Because `docs/aaps-numbering-placeholders.md` currently claims inline numeric prefixes won’t parse, update it to reflect the new parser behavior:
+
 - Keep “comment numbering” as the most portable convention.
 - Add a note that `backend/pipeline_parser.py` also accepts an optional numeric prefix token (deterministic extension) such as `1.2 STEP {...}`.
 
 This should be a small edit limited to that doc section; no new docs required.
 
 ## Verification Commands (DEBUG/VERIFY Phase)
+
 Smallest checks that prove acceptance:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -97,6 +114,7 @@ PY
 ```
 
 Optional regression sanity:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python3 - <<'PY'
@@ -109,7 +127,7 @@ PY
 ```
 
 ## Acceptance Checklist
+
 - [ ] `backend/pipeline_parser.py` accepts `1.2 STEP {...}` style prefixes and remains deterministic.
 - [ ] New example file exists under `examples/` and parses successfully via `parse_aaps_v1`.
 - [ ] `docs/aaps-numbering-placeholders.md` no longer claims numeric prefixes are unparseable by the backend parser.
-

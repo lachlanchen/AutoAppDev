@@ -1,6 +1,7 @@
 # Work Notes: 008 define_api_contracts
 
 ## Summary of Changes
+
 - Added `docs/api-contracts.md` documenting request/response shapes (with example JSON) for:
   - Settings (`/api/config`)
   - Inbox messages (`/api/chat`)
@@ -9,10 +10,12 @@
 - Updated `README.md` to link to the new API contracts doc.
 
 ## Files Changed
+
 - Added: `docs/api-contracts.md`
 - Updated: `README.md`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

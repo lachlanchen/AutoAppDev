@@ -1,11 +1,13 @@
 # AutoAppDev Controller MVP Scope
 
 ## Purpose
+
 AutoAppDev is a Scratch-like PWA for controlling and observing a long-running auto-development pipeline. The controller UI is static HTML/CSS/JS, backed by a Python Tornado API with PostgreSQL for persistence (config, messages, run status) and a small runtime directory for inbox + logs.
 
 Default UI theme: light.
 
 ## MVP Screens (PWA)
+
 The MVP controller is considered usable when it has these screens/panels and they are wired to minimal APIs.
 
 - Blocks
@@ -25,6 +27,7 @@ The MVP controller is considered usable when it has these screens/panels and the
   - Select agent and model (UI first; persistence via backend config)
 
 ## Minimal Backend APIs
+
 This is the minimal API surface that makes the controller functional. The current implementation lives in `backend/app.py`.
 
 - Health
@@ -44,6 +47,7 @@ This is the minimal API surface that makes the controller functional. The curren
   - `GET /api/logs/tail?name=pipeline|backend&lines=N` -> `{ "name": "...", "lines": ["..."] }`
 
 ## Runtime Artifacts
+
 The controller and pipeline exchange a few file-based artifacts under the runtime directory.
 
 - `runtime/inbox/`
@@ -55,6 +59,7 @@ The controller and pipeline exchange a few file-based artifacts under the runtim
   - Task plans, work notes, summaries, and other self-development state
 
 ## Non-Goals (For MVP)
+
 - Authentication / multi-user
 - Full Scratch compatibility (nesting, variables, custom blocks, complex control flow)
 - Websocket streaming logs (simple polling/tail endpoints are enough)

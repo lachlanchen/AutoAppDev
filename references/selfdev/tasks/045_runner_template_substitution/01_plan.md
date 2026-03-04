@@ -1,21 +1,26 @@
 # Plan: 045 runner_template_substitution
 
 ## Goal
+
 Implement deterministic placeholder substitution in **generated runners** for:
+
 - `ACTION.kind="codex_exec"`: substitute inside `params.prompt`
 - `ACTION.kind="run"`: substitute inside `params.cmd`
 
 Supported substitution inputs must include:
+
 - task/step ids
 - task “list fields” (title + acceptance)
 - `runtime_dir`
 
 Acceptance:
+
 - Generated runners apply deterministic placeholder substitution for `codex_exec.prompt` and `run.cmd`.
 - Supported placeholder keys are documented.
 - Include a smoke check.
 
 ## Current State (Relevant Files)
+
 - Runner generator:
   - `scripts/pipeline_codegen/generate_runner_from_ir.py`
   - Emits calls like `action_run '<cmd>'` and `action_codex_exec '<prompt>'`
@@ -28,7 +33,9 @@ Acceptance:
   - `docs/aaps-numbering-placeholders.md` (defines `{{...}}` paths like `{{task.title}}`, `{{task.acceptance}}`, `{{runtime_dir}}`)
 
 ## Proposed Minimal Design
+
 Add a deterministic, runtime substitution step inside the generated runner:
+
 1. The generator sets “current context” variables before each action:
    - task: id/title/acceptance
    - step: id/title/block
@@ -38,13 +45,16 @@ Add a deterministic, runtime substitution step inside the generated runner:
    - `codex_exec.prompt` before writing the prompt file / invoking `codex`
 
 Implementation choice (keep minimal + robust):
+
 - Implement substitution via a small `python3` snippet invoked by the runner (python3 is already required by the template for session id extraction).
 - Unknown placeholder keys should fail fast with a clear error.
 
 ## Implementation Steps (Next Phase: WORK)
 
 ### 1) Runner Template: Add Substitution Helper
+
 Edit `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
+
 - Add a function like `subst_placeholders()` that:
   - reads text from stdin
   - replaces `{{ ... }}` placeholders (whitespace-tolerant) using current context values
@@ -58,7 +68,9 @@ Edit `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
   - either `export RUNTIME_DIR`, or set/export a dedicated var like `AUTOAPPDEV_RUNTIME_DIR_RESOLVED="$RUNTIME_DIR"`
 
 ### 2) Runner Template: Apply Substitution In Actions
+
 In `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
+
 - Update `action_run()` to:
   - substitute placeholders in `cmd` before logging/executing
   - execute the substituted command via `bash -lc`
@@ -66,11 +78,14 @@ In `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`:
   - substitute placeholders in `prompt` before writing the prompt file
 
 For the smoke check (avoid calling `codex`):
+
 - Add a minimal env guard (default off) inside `action_codex_exec()`:
   - If `AUTOAPPDEV_CODEX_DISABLE=1`, log the substituted prompt and return success without invoking `codex`.
 
 ### 3) Generator: Emit Context Variables For Substitution
+
 Edit `scripts/pipeline_codegen/generate_runner_from_ir.py`:
+
 - Before each task loop:
   - set variables for task context (quoted):
     - `AUTOAPPDEV_CTX_TASK_ID`
@@ -88,7 +103,9 @@ Edit `scripts/pipeline_codegen/generate_runner_from_ir.py`:
 - Keep actual action calls unchanged (`action_run ...`, `action_codex_exec ...`); the substitution happens in the template functions.
 
 ### 4) Add A Placeholder Smoke IR Example
+
 Add `examples/pipeline_ir_placeholders_smoke_v0.json`:
+
 - Must be valid `autoappdev_ir` v1 JSON.
 - One task with:
   - `meta.acceptance` string (so `{{task.acceptance}}` has a defined source)
@@ -99,7 +116,9 @@ Add `examples/pipeline_ir_placeholders_smoke_v0.json`:
     - `echo ...` and/or `printf ...`
 
 ### 5) Add A Smoke Script That Executes The Runner Deterministically
+
 Add `scripts/pipeline_codegen/smoke_placeholders.sh`:
+
 - Generate a runner to `/tmp/autoappdev_runner_placeholders.sh` from the new IR.
 - `bash -n` the runner.
 - Run the runner with timeouts and safe env:
@@ -114,7 +133,9 @@ Add `scripts/pipeline_codegen/smoke_placeholders.sh`:
 Keep this smoke separate from `scripts/pipeline_codegen/smoke_codegen.sh` to avoid changing the existing determinism check, unless it’s trivial to chain them.
 
 ### 6) Document Supported Keys
+
 Update `docs/pipeline-runner-codegen.md`:
+
 - Add a section “Placeholder substitution (v0)”:
   - lists supported keys (`runtime_dir`, `task.*`, `step.*`, optional `action.*`)
   - states substitution applies to `run.cmd` and `codex_exec.prompt`
@@ -123,6 +144,7 @@ Update `docs/pipeline-runner-codegen.md`:
 - Link to `docs/aaps-numbering-placeholders.md` for the `{{...}}` syntax convention.
 
 ## Verification Commands (DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -137,12 +159,13 @@ timeout 20s scripts/pipeline_codegen/smoke_placeholders.sh
 ```
 
 Optional: keep existing determinism check:
+
 ```bash
 scripts/pipeline_codegen/smoke_codegen.sh
 ```
 
 ## Acceptance Checklist
+
 - [ ] Runner template substitutes placeholders in `run.cmd` and `codex_exec.prompt`.
 - [ ] Supported keys documented in `docs/pipeline-runner-codegen.md`.
 - [ ] Smoke script runs deterministically with timeouts and proves substitution works (no `{{...}}` remains in executed/logged strings).
-

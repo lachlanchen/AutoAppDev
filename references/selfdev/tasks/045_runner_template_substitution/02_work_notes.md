@@ -1,6 +1,7 @@
 # Work Notes: 045 runner_template_substitution
 
 ## Implementation Notes
+
 - Added strict `{{...}}` placeholder substitution inside generated runners (implemented in `scripts/pipeline_codegen/templates/runner_v0.sh.tpl` via a small `python3` helper).
 - Substitution is applied at runtime in:
   - `action_run()` (before `bash -lc`)
@@ -13,6 +14,7 @@
 - Updated `docs/pipeline-runner-codegen.md` to document supported placeholder keys and behavior.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -23,4 +25,3 @@ python3 -m json.tool examples/pipeline_ir_placeholders_smoke_v0.json >/dev/null
 timeout 20s scripts/pipeline_codegen/smoke_placeholders.sh
 timeout 20s scripts/pipeline_codegen/smoke_codegen.sh
 ```
-

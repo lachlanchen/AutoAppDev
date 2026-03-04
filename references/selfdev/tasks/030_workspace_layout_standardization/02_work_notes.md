@@ -1,10 +1,12 @@
 # Work Notes: 030 workspace_layout_standardization
 
 ## Summary
+
 - Added a dedicated workspace contract doc describing standard folders and how AutoAppDev uses workspace vs runtime storage.
 - Linked the new doc from `README.md`.
 
 ## Changes Made
+
 - `docs/workspace-layout.md`
   - Defined the standard workspace folders: `materials/`, `interactions/`, `outputs/`, `docs/`, `references/`, `scripts/`, `tools/`, `logs/`, and the `auto-apps/` workspace container.
   - Documented runtime (ephemeral) paths and current implementations: `AUTOAPPDEV_RUNTIME_DIR`, `runtime/PAUSE`, `runtime/logs/`, `runtime/inbox/`.
@@ -13,6 +15,7 @@
   - Added `docs/workspace-layout.md` to the Contents list.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -28,4 +31,3 @@ sed -n '1,200p' docs/workspace-layout.md
 rg -n "docs/workspace-layout\\.md" README.md
 python3 -m py_compile backend/app.py >/dev/null
 ```
-

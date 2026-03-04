@@ -6,6 +6,7 @@ Static PWA UI served by a simple local HTTP server during development.
 - Backend API: `http://127.0.0.1:8788/`
 
 Toolbox notes:
+
 - The left Blocks palette is extended at runtime with draggable **Actions** loaded from the backend (`GET /api/actions`).
 - Dropping an action creates a normal step block pre-bound via `action_ref`.
 

@@ -1,12 +1,14 @@
 # Debug/Verify Notes: 013 log_capture_and_storage
 
 ## What I Verified
+
 - Static verification:
   - Backend compiles with the new rolling log buffer and `/api/logs` handler.
   - API contracts doc includes the new endpoint.
 - Live endpoint verification was skipped because no `.env` exists in this workspace (backend requires `DATABASE_URL` to start).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -41,4 +43,5 @@ fi
 ```
 
 ## Issues Found
+
 - None requiring code changes.

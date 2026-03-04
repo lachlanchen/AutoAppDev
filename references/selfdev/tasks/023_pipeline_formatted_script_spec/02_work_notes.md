@@ -1,11 +1,13 @@
 # Work Notes: 023 pipeline_formatted_script_spec
 
 ## Summary
+
 - Added a docs spec for a deterministic, versioned formatted pipeline script (“AAPS”) and the canonical IR schema (`TASK -> STEP -> ACTION`).
 - Included a complete example (script + equivalent IR JSON) and explicitly mapped `STEP.block` to the current PWA block palette keys.
 - Added example artifacts under `examples/` and linked the spec from `README.md`.
 
 ## Changes Made
+
 - `docs/pipeline-formatted-script-spec.md`
   - Defines:
     - Script header: `AUTOAPPDEV_PIPELINE 1`
@@ -22,6 +24,7 @@
   - Linked `docs/pipeline-formatted-script-spec.md` in the Contents list.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -36,4 +39,3 @@ rg -n 'plan\\b|work\\b|debug\\b|fix\\b|summary\\b|commit_push\\b' docs/pipeline-
 python3 -m json.tool examples/pipeline_ir_v1.json >/dev/null
 rg -n 'pipeline-formatted-script-spec\\.md' README.md
 ```
-

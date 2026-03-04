@@ -1,11 +1,13 @@
 # Debug Notes: 034 pwa_update_readme_block
 
 ## Verification (Smallest Smoke)
+
 - Static JS syntax check for the updated PWA script.
 - Grep checks confirming the new palette block exists and the export code includes `block_markdown`.
 - Backend parser smoke check proving an `ACTION.kind="update_readme"` can be represented in AAPS with `STEP.block="summary"` (allowed) and parses successfully (no server required).
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -57,5 +59,5 @@ PY
 ```
 
 ## Issues Found
-- None in these smoke checks.
 
+- None in these smoke checks.

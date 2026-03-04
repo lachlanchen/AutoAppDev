@@ -1,15 +1,18 @@
 # Summary: 007 health_and_version_endpoints
 
 ## What Changed
+
 - Updated `GET /api/health` to include DB connectivity status (`db.ok` plus `db.time` or `db.error`).
 - Added `GET /api/version` returning app/service name plus a git-less build id and version string.
   - `version` comes from `AUTOAPPDEV_VERSION` (default `dev`).
   - `build`/`started_at` are derived from process start time.
 
 ## Why
+
 This makes the controller backend observable from the PWA: clients can distinguish “backend up” from “DB reachable”, and can display a stable build/version identifier without relying on git.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

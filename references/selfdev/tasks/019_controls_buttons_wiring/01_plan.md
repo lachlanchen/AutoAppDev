@@ -1,18 +1,22 @@
 # Plan: 019 controls_buttons_wiring
 
 ## Goal
+
 Make the pipeline control buttons behave correctly:
+
 - Buttons call the pipeline control endpoints (already wired).
 - UI disables invalid actions based on current pipeline state.
 - UI shows an error message when the backend returns HTTP 400 (invalid transition, etc).
 
 Acceptance:
+
 - Buttons call `/api/pipeline/start|pause|resume|stop`.
 - UI disables invalid actions based on current state.
 - UI shows error text on 400.
 - Default PWA theme remains light.
 
 ## Current State (References)
+
 - Buttons already exist in `pwa/index.html`:
   - `#btn-start`, `#btn-pause`, `#btn-resume`, `#btn-stop`
 - Buttons are wired in `pwa/app.js` `bindControls()`:
@@ -27,23 +31,27 @@ Acceptance:
   - `pwa/styles.css` defines `.btn` but no `.btn:disabled`.
 
 ## Approach (Minimal / Incremental)
+
 1. Use the polled pipeline state from `GET /api/pipeline/status` to compute which actions are valid.
 2. Set `disabled` on the buttons accordingly.
 3. Add a small inline control message area to show 400 errors (and clear it on success).
 4. Add minimal CSS for disabled buttons and the message text.
 
 State mapping (from `status.state`):
+
 - Treat `running` as running.
 - Treat `paused` as paused.
 - Treat `idle|stopped|completed|failed|unknown` as “not running” (start allowed).
 
 Button enable rules:
+
 - Start enabled only when not running/paused.
 - Pause enabled only when running.
 - Resume enabled only when paused.
 - Stop enabled when running or paused.
 
 ## Implementation Steps (Next Phase)
+
 1. Add a control message element in `pwa/index.html`.
    - In the top bar `.controls` (near the buttons), add:
      - `<span class="ctrl-msg" id="ctrl-msg" aria-live="polite"></span>`
@@ -82,7 +90,9 @@ Button enable rules:
    - Increment `CACHE_NAME` (ex: `autoappdev-shell-v3`) for reliable manual verification.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -101,6 +111,7 @@ timeout 5s node --check pwa/service-worker.js
 ```
 
 Manual UI verification (outside this sandbox, which cannot bind ports):
+
 1. Start backend + PWA:
    - Backend: `python3 -m backend.app`
    - PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
@@ -111,7 +122,7 @@ Manual UI verification (outside this sandbox, which cannot bind ports):
 3. Force an invalid transition (race or manual) and confirm HTTP 400 shows an inline error message (no page reload).
 
 ## Acceptance Checklist
+
 - [ ] Buttons are enabled/disabled based on current pipeline state.
 - [ ] Attempting an invalid transition results in visible error text on 400.
 - [ ] Default theme remains light.
-

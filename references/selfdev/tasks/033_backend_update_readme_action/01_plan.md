@@ -1,14 +1,17 @@
 # Plan: 033 backend_update_readme_action
 
 ## Goal
+
 Implement a backend endpoint that executes the common `ACTION.kind="update_readme"` contract by safely upserting a workspace `README.md` block between fixed markers under `auto-apps/`.
 
 Acceptance:
+
 - Backend exposes a **safe** endpoint that patches a workspace README between markers
 - Rejects path traversal / any resolved path outside `auto-apps/`
 - Logs the change (writes artifacts under runtime logs and/or emits a backend log line)
 
 ## Current State (References)
+
 - Action contract/spec (markers + safe target path + required `block_markdown` + Philosophy requirement):
   - `docs/common-actions.md` (`## update_readme`)
 - Backend routing patterns + path safety example:
@@ -20,10 +23,13 @@ Acceptance:
   - `backend/app.py` (`_compute_paths()` creates `runtime/logs/`)
 
 ## API Design (Minimal)
+
 Add a single endpoint (no general “action runner” yet):
+
 - `POST /api/actions/update-readme`
 
 Request JSON:
+
 ```json
 {
   "workspace": "my_workspace",
@@ -32,6 +38,7 @@ Request JSON:
 ```
 
 Response JSON (success):
+
 ```json
 {
   "ok": true,
@@ -44,6 +51,7 @@ Response JSON (success):
 ```
 
 Errors (non-exhaustive; 400 unless noted):
+
 - `invalid_json`
 - `invalid_body`
 - `invalid_workspace` (empty, contains `/` or `\\`, `.`/`..`, etc.)
@@ -53,6 +61,7 @@ Errors (non-exhaustive; 400 unless noted):
 - `path_outside_auto_apps` (resolved path check fails; 403/400)
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Implement the patching + validation helpers (new module)
    - Add `backend/update_readme_action.py`:
      - Constants for markers (must match `docs/common-actions.md`):
@@ -105,6 +114,7 @@ Errors (non-exhaustive; 400 unless noted):
        - Error codes
 
 ## Commands To Run (Verification in DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -156,10 +166,10 @@ timeout 10s rg -n "/api/actions/update-readme" backend/app.py docs/api-contracts
 ```
 
 ## Acceptance Checklist
+
 - [ ] `POST /api/actions/update-readme` exists in `backend/app.py` routing.
 - [ ] Workspace slug/path traversal is rejected; resolved README path must remain under `auto-apps/`.
 - [ ] README owned block is inserted/replaced between `<!-- AUTOAPPDEV:README:BEGIN -->` and `<!-- AUTOAPPDEV:README:END -->`.
 - [ ] `block_markdown` is required and must include a `## Philosophy` section.
 - [ ] Update writes change artifacts under `AUTOAPPDEV_RUNTIME_DIR/logs/update_readme/<id>/` (before/after/diff/meta).
 - [ ] `docs/api-contracts.md` documents the new endpoint.
-

@@ -1,7 +1,9 @@
 # Debug Notes: 018 blocks_to_plan_payload
 
 ## What I Verified (Smallest Possible)
+
 This sandbox disallows binding sockets, so I could not run an end-to-end HTTP smoke test for `POST /api/plan`. Verification here is limited to:
+
 - Backend route + handler existence and syntax
 - PWA UI wiring (`Send Plan` button) + transformation function presence and syntax
 - Docs updated with the new endpoint
@@ -10,24 +12,28 @@ This sandbox disallows binding sockets, so I could not run an end-to-end HTTP sm
 ## Commands Run + Results
 
 Backend handler + route wiring:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 rg -n 'class PlanHandler|\\(r\"/api/plan\"|/api/plan' backend/app.py
 ```
 
 Result (exit 0):
+
 ```text
 184:class PlanHandler(BaseHandler):
 621:            (r"/api/plan", PlanHandler, {"storage": storage}),
 ```
 
 PWA UI wiring + endpoint usage:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 rg -n 'btn-send-plan|programToPlan\\(|/api/plan' pwa/index.html pwa/app.js
 ```
 
 Result (exit 0):
+
 ```text
 pwa/index.html:78:            <button class="btn btn--ghost" id="btn-send-plan">Send Plan</button>
 pwa/app.js:15:  sendPlanBtn: document.getElementById("btn-send-plan"),
@@ -37,12 +43,14 @@ pwa/app.js:116:    const ack = await api("/api/plan", { method: "POST", body: JS
 ```
 
 PWA plan transformation excerpt:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 sed -n '90,150p' pwa/app.js
 ```
 
 Result (exit 0; excerpt):
+
 ```text
 function programToPlan(prog) {
   const steps = (Array.isArray(prog) ? prog : []).map((b, idx) => ({
@@ -54,12 +62,14 @@ function programToPlan(prog) {
 ```
 
 Backend validation excerpt:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 sed -n '160,250p' backend/app.py
 ```
 
 Result (exit 0; excerpt):
+
 ```text
 class PlanHandler(BaseHandler):
     ...
@@ -77,12 +87,14 @@ class PlanHandler(BaseHandler):
 ```
 
 Docs updated:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 rg -n '## Plan Payload|GET /api/plan|POST /api/plan' docs/api-contracts.md
 ```
 
 Result (exit 0):
+
 ```text
 45:## Plan Payload
 47:### GET /api/plan
@@ -90,12 +102,14 @@ Result (exit 0):
 ```
 
 Service worker cache name bump (helps manual verification):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 rg -n 'CACHE_NAME|api-client\\.js|app\\.js|index\\.html' pwa/service-worker.js
 ```
 
 Result (exit 0):
+
 ```text
 6:const CACHE_NAME = "autoappdev-shell-v2";
 8:  "./index.html",
@@ -105,6 +119,7 @@ Result (exit 0):
 ```
 
 Syntax checks:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 5s node --check pwa/app.js
@@ -116,17 +131,20 @@ timeout 5s python3 -m py_compile backend/app.py
 Result (exit 0): no output.
 
 Attempted local serving (blocked by sandbox socket restrictions):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 3s bash -lc 'cd pwa && python3 -m http.server 5173 --bind 127.0.0.1'
 ```
 
 Result (exit 1):
+
 ```text
 PermissionError: [Errno 1] Operation not permitted
 ```
 
 ## Manual Verification (Outside This Sandbox)
+
 1. Start backend and PWA:
    - Backend: `python3 -m backend.app`
    - PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
@@ -135,4 +153,3 @@ PermissionError: [Errno 1] Operation not permitted
    - `POST /api/plan` returns `{ "ok": true }`.
    - The ack renders in the UI (in the export panel) without a page reload.
 4. (Optional) `GET /api/plan` returns the stored payload.
-

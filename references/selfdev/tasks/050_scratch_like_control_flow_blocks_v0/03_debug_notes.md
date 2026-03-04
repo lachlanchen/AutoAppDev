@@ -16,6 +16,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 ```
 
 ### Meta-round AAPS Parser Smoke (Backend)
+
 Ensures backend AAPS v1 parser accepts multi-task scripts with `meta_round_v0` + `task_template_v0` and conditional `fix` meta.
 
 ```bash
@@ -62,6 +63,7 @@ PY
 ```
 
 Result:
+
 ```text
 kind= autoappdev_ir
 tasks= 2
@@ -70,12 +72,13 @@ t2_steps= 2
 ```
 
 ## Issues Found
+
 - None in static checks.
 
 ## Manual Verification (Outside Sandbox)
+
 1. Open PWA and confirm a fresh load shows the nested default template:
    `Meta Tasks -> For N_ROUND -> For each task -> If/Else`.
 2. Script tab:
    - Click `From Blocks`, confirm exported AAPS contains 2 tasks and `TASK.meta.meta_round_v0` / `TASK.meta.task_template_v0`.
    - Click `Parse AAPS -> Blocks`, confirm nested structure is reconstructed.
-

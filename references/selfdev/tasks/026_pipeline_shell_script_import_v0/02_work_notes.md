@@ -1,11 +1,13 @@
 # Work Notes: 026 pipeline_shell_script_import_v0
 
 ## Summary
+
 - Implemented a best-effort importer that extracts embedded AAPS v1 lines from annotated shell scripts (`# AAPS:` comments) and parses them into canonical IR (`autoappdev_ir` v1).
 - Added a backend endpoint to import shell text and return extracted `script_text` + `ir`, with errors mapped to original shell line numbers.
 - Added a repo example shell script that imports successfully and documented the format/limitations.
 
 ## Changes Made
+
 - `backend/pipeline_shell_import.py`
   - Added `extract_aaps_from_shell(shell_text)` and `import_shell_annotated_to_ir(shell_text)`.
   - Added `ShellImportError(code,line,detail)` with `to_dict()` for consistent API errors.
@@ -21,6 +23,7 @@
   - Documented `POST /api/scripts/import-shell` request/response and error behavior (shell line numbers).
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -53,4 +56,3 @@ else:
     raise SystemExit("expected error")
 PY
 ```
-

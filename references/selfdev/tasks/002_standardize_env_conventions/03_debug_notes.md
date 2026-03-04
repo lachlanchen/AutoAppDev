@@ -1,13 +1,16 @@
 # Debug/Verify Notes: 002 standardize_env_conventions
 
 ## What I Verified
+
 Doc-level smoke verification (no services started) to confirm:
+
 - `.env.example` includes the standardized required conventions (`SECRET_KEY`, `PORT`) and documents `PG*` as an alternative convention.
 - `docs/env.md` exists, includes copy instructions from `.env.example`, and includes exactly one validation command.
 - `README.md` links to `docs/env.md`.
 - `.gitignore` ignores `.env` (so the suggested `cp .env.example .env` workflow is safe from accidental commits).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -37,7 +40,9 @@ sed -n '1,60p' .gitignore
 ```
 
 ## Issues Found
+
 - None.
 
 ## Notes
+
 - I did not execute the validation command because it requires a real `.env` file in the repo root; the command is present and copy/pasteable as required by acceptance.

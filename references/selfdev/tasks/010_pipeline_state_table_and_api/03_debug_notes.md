@@ -1,12 +1,14 @@
 # Debug/Verify Notes: 010 pipeline_state_table_and_api
 
 ## What I Verified
+
 - Static verification:
   - Backend compiles with the new `pipeline_state` table helpers and `/api/pipeline` handler.
   - API contracts doc includes `GET /api/pipeline`.
 - Live endpoint verification was skipped because no `.env` exists in this workspace (backend requires `DATABASE_URL` to start).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -41,4 +43,5 @@ fi
 ```
 
 ## Issues Found
+
 - None requiring code changes.

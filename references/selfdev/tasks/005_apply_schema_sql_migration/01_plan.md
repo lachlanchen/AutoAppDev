@@ -1,13 +1,16 @@
 # Plan: 005 apply_schema_sql_migration
 
 ## Goal
+
 Provide a small, deterministic command to apply `backend/schema.sql` to the configured Postgres DB.
 
 Acceptance:
+
 - Add a small script/command to apply `backend/schema.sql` to the configured DB.
 - Running it twice is idempotent or clearly warns without crashing.
 
 ## Current State (References)
+
 - Schema file: `backend/schema.sql`.
   - Already uses `create table if not exists ...`, so it is idempotent by design.
 - Backend server startup in `backend/app.py` currently applies schema implicitly:
@@ -17,6 +20,7 @@ Acceptance:
 - There is already a CLI Postgres check: `backend/db_smoketest.py`.
 
 ## Approach (Minimal)
+
 Add a dedicated CLI module for schema application.
 
 - Add: `backend/apply_schema.py`
@@ -30,10 +34,12 @@ Add a dedicated CLI module for schema application.
 Optionally, document the command in `backend/README.md`.
 
 ## Files To Change (Implementation Phase)
+
 - Add: `backend/apply_schema.py`
 - Update: `backend/README.md` (add one short section: “Apply schema.sql”)
 
 ## Step-by-Step Implementation Details
+
 1. Create `backend/apply_schema.py`.
    - Similar structure to `backend/db_smoketest.py` for consistency:
      - `REPO_ROOT = Path(__file__).resolve().parents[1]`
@@ -53,23 +59,27 @@ Optionally, document the command in `backend/README.md`.
    - Keep it minimal.
 
 ## Commands To Run (Verification)
+
 Use `timeout` for anything that could hang.
 
-1) Missing env should fail fast:
+1. Missing env should fail fast:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 (timeout 3s env DATABASE_URL= python -m backend.apply_schema) ; echo EXIT_CODE:$?
 # Expect: non-zero exit, message mentions missing DATABASE_URL and points at docs/env.md.
 ```
 
-2) Invalid/unreachable DSN should fail fast with actionable error:
+2. Invalid/unreachable DSN should fail fast with actionable error:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 (timeout 5s env DATABASE_URL='postgresql://invalid' python -m backend.apply_schema) ; echo EXIT_CODE:$?
 # Expect: non-zero exit, error includes exception type/message and sanitized DSN.
 ```
 
-3) Real DB should apply schema successfully and be idempotent:
+3. Real DB should apply schema successfully and be idempotent:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 # With a real DATABASE_URL in .env:
@@ -79,6 +89,7 @@ cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 ```
 
 ## Acceptance Criteria Checks
+
 - Command exists and applies `backend/schema.sql` to the configured DB (`DATABASE_URL`).
 - Second run succeeds (schema is idempotent because it uses `IF NOT EXISTS`).
 - Failure modes exit non-zero quickly and print actionable diagnostics.

@@ -3,13 +3,16 @@
 AutoAppDev reads configuration from environment variables. In local development, create a `.env` file in the repo root.
 
 ## Quickstart
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 cp .env.example .env
 ```
+
 Then edit `.env` with your local values.
 
 ## Required Conventions
+
 These keys are required by convention for running the controller reliably (some are reserved for near-future features).
 
 - `SECRET_KEY`
@@ -26,6 +29,7 @@ These keys are required by convention for running the controller reliably (some 
   - Alternate convention: set `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` and derive `DATABASE_URL` in your tooling.
 
 ## Optional
+
 - `AUTOAPPDEV_RUNTIME_DIR`
   - Overrides the runtime directory (defaults to `./runtime`).
 - `AUTOAPPDEV_PIPELINE_CWD`, `AUTOAPPDEV_PIPELINE_SCRIPT`
@@ -38,6 +42,7 @@ These keys are required by convention for running the controller reliably (some 
   - Reserved for future AI integrations.
 
 ## Validate Your .env (Single Command)
+
 Run this from the repo root. It fails non-zero if required keys are missing.
 
 ```bash

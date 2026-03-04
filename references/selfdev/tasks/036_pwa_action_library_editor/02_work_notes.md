@@ -1,6 +1,7 @@
 # Work Notes: 036 pwa_action_library_editor
 
 ## What Changed
+
 - Added an **Actions** tab to the PWA right panel to manage action registry entries without page reload:
   - List action definitions (`GET /api/actions?limit=200`)
   - Load selected action (`GET /api/actions/<id>`)
@@ -15,6 +16,7 @@
   - Optional fields: blank on **create** omits the field (backend defaults apply); blank on **update** sends `null` to reset to backend defaults.
 
 ## Files Touched
+
 - `pwa/index.html`
   - Added `data-tab="actions"` button and `#tab-actions` tabview containing the list + editor controls.
 - `pwa/styles.css`
@@ -24,6 +26,7 @@
   - Hooked tab switching so actions are loaded on first open (and manual Refresh is available).
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -33,6 +36,6 @@ timeout 10s rg -n 'data-tab="actions"|tab-actions|/api/actions' pwa/index.html p
 ```
 
 Results:
+
 - `node --check` exited `0` (syntax OK).
 - `rg` shows the new tab/view and the API calls are present.
-

@@ -1,13 +1,16 @@
 # Plan: 013 log_capture_and_storage
 
 ## Goal
+
 Improve log observability beyond file tailing by adding an incremental log API.
 
 Acceptance:
+
 - Backend captures subprocess stdout/stderr into a rolling buffer and optionally persists last N lines in DB.
 - `GET /api/logs?since=<id>` returns incremental lines.
 
 ## Current State (References)
+
 - Logs are currently file-based:
   - Pipeline subprocess writes to `runtime/logs/pipeline.log` via `PipelineControl._spawn()` in `backend/app.py`.
   - Backend stdout/stderr are redirected to `runtime/logs/backend.log` in `backend/app.py`.
@@ -17,14 +20,17 @@ Acceptance:
 - DB schema has no log table.
 
 ## Approach (Minimal)
+
 Implement an in-memory rolling buffer first, with an optional DB persistence path.
 
-1) Add a `LogBuffer` class in `backend/app.py` (or a small new module `backend/logs.py`).
+1. Add a `LogBuffer` class in `backend/app.py` (or a small new module `backend/logs.py`).
+
 - Stores log entries with monotonically increasing integer `id`.
 - Keeps a fixed maximum number of entries in memory (e.g. 2000).
 - Each entry: `{ id, ts, source, line }`.
 
-2) Capture sources:
+2. Capture sources:
+
 - Pipeline subprocess output:
   - Change `PipelineControl._spawn()` to pipe stdout/stderr to the parent (use `stdout=PIPE, stderr=STDOUT`).
   - Start an async reader task that reads lines and appends to `LogBuffer` and still writes to `pipeline.log` for persistence.
@@ -33,7 +39,8 @@ Implement an in-memory rolling buffer first, with an optional DB persistence pat
   - Keep current file redirection for now.
   - Optionally also tee lines into `LogBuffer` (this is harder because stdout/stderr are redirected). To keep the step small, start with pipeline logs only.
 
-3) Add DB persistence (optional in this step):
+3. Add DB persistence (optional in this step):
+
 - Add `pipeline_log_lines` table to `backend/schema.sql`:
   - `id bigserial primary key`
   - `run_id bigint`
@@ -43,15 +50,17 @@ Implement an in-memory rolling buffer first, with an optional DB persistence pat
 - Add `Storage.add_log_line(run_id, source, line)` that inserts.
 - In the pipeline reader task, optionally insert last N lines (or insert all; retention later).
 
-4) Add incremental log endpoint:
+4. Add incremental log endpoint:
+
 - `GET /api/logs?since=<id>&limit=<n>&source=pipeline`
   - Returns entries with `id > since`, up to `limit`.
   - Response shape:
     - `{ "since": <since>, "next": <last_id>, "lines": [ {"id":...,"ts":...,"source":"pipeline","line":"..."}, ... ] }`
 
-5) Keep existing `/api/logs/tail` intact for now.
+5. Keep existing `/api/logs/tail` intact for now.
 
 ## Files To Change (Implementation Phase)
+
 - Update: `backend/app.py`
   - Add `LogBuffer`.
   - Modify `PipelineControl` to capture output lines into the buffer (and file).
@@ -61,9 +70,11 @@ Implement an in-memory rolling buffer first, with an optional DB persistence pat
   - Update: `backend/storage.py`
 
 ## Commands To Run (Verification)
+
 Requires a working `.env` with Postgres (backend requires DB).
 
-1) Start backend briefly, start pipeline, fetch incremental logs:
+1. Start backend briefly, start pipeline, fetch incremental logs:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -94,6 +105,7 @@ timeout 25s bash -lc '
 ```
 
 ## Acceptance Criteria Checks
+
 - `GET /api/logs?since=...` returns incremental entries with stable ids.
 - Buffer does not grow unbounded (fixed max).
 - Pipeline output is captured (at least when pipeline is running).

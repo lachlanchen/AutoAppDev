@@ -1,6 +1,7 @@
 # Work Notes: 038 workspace_materials_and_context_api
 
 ## What Changed
+
 - Added persistent per-workspace configuration storage + API:
   - DB table `workspace_configs` in `backend/schema.sql`
   - Storage helpers in `backend/storage.py`:
@@ -14,6 +15,7 @@
   - `docs/api-contracts.md` now documents the workspace config endpoints and safety constraints.
 
 ## Files Touched
+
 - `backend/schema.sql`
 - `backend/storage.py`
 - `backend/workspace_config.py`
@@ -21,6 +23,7 @@
 - `docs/api-contracts.md`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -31,6 +34,6 @@ timeout 10s rg -n 'GET /api/workspaces/<workspace>/config|POST /api/workspaces/<
 ```
 
 Results:
+
 - `py_compile` exited `0` (syntax OK).
 - `rg` confirms handler + route are present and docs updated.
-

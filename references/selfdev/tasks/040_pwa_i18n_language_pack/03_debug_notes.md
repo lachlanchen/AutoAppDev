@@ -1,6 +1,7 @@
 # Debug Notes: 040 pwa_i18n_language_pack
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -20,6 +21,7 @@ timeout 10s rg -n 'id=\"ui-lang\"|AutoAppDevI18n|data-i18n' pwa/index.html pwa/a
 ```
 
 Result (first 80 lines):
+
 ```text
 pwa/app.js:82:  const i18n = window.AutoAppDevI18n && typeof window.AutoAppDevI18n === "object" ? window.AutoAppDevI18n : null;
 pwa/app.js:89:  const i18n = window.AutoAppDevI18n && typeof window.AutoAppDevI18n === "object" ? window.AutoAppDevI18n : null;
@@ -123,6 +125,7 @@ NODE
 ```
 
 Result:
+
 ```text
 SUPPORTED=zh-Hans,zh-Hant,en,ja,ko,vi,ar,fr,es
 PACK_LANGS=en,zh-Hans,zh-Hant,ja,ko,vi,ar,fr,es
@@ -139,9 +142,10 @@ es:ui.btn.start=Iniciar
 ```
 
 ## Manual Smoke (Not Run Here)
+
 - Switch `Language` selector and verify tabs/buttons/labels update without reload.
 - Switch to Arabic and verify `document.documentElement.dir === "rtl"`, then switch back and verify it returns to `ltr`.
 
 ## Issues Found
-- None during these checks.
 
+- None during these checks.

@@ -4,23 +4,48 @@
 
   function normalize(raw) {
     const s = String(raw || "").trim();
-    if (!s) return "en";
-    if (SUPPORTED.includes(s)) return s;
+    if (!s) {
+      return "en";
+    }
+    if (SUPPORTED.includes(s)) {
+      return s;
+    }
 
     const lower = s.toLowerCase();
     const base = lower.split(/[-_]/)[0];
     if (base === "zh") {
-      if (lower.includes("hant") || lower.includes("tw") || lower.includes("hk") || lower.includes("mo")) return "zh-Hant";
+      if (
+        lower.includes("hant") ||
+        lower.includes("tw") ||
+        lower.includes("hk") ||
+        lower.includes("mo")
+      ) {
+        return "zh-Hant";
+      }
       return "zh-Hans";
     }
 
-    if (base === "en") return "en";
-    if (base === "ja") return "ja";
-    if (base === "ko") return "ko";
-    if (base === "vi") return "vi";
-    if (base === "ar") return "ar";
-    if (base === "fr") return "fr";
-    if (base === "es") return "es";
+    if (base === "en") {
+      return "en";
+    }
+    if (base === "ja") {
+      return "ja";
+    }
+    if (base === "ko") {
+      return "ko";
+    }
+    if (base === "vi") {
+      return "vi";
+    }
+    if (base === "ar") {
+      return "ar";
+    }
+    if (base === "fr") {
+      return "fr";
+    }
+    if (base === "es") {
+      return "es";
+    }
     return "en";
   }
 
@@ -534,7 +559,8 @@
       "ui.prompt.script_title": "スクリプトのタイトル？",
       "ui.prompt.load_script_id": "読み込むスクリプト id？",
       "ui.prompt.runner_title": "Runner のタイトル？",
-      "ui.prompt.workspace_slug_for_readme": "auto-apps/<workspace>/README.md のワークスペース slug？",
+      "ui.prompt.workspace_slug_for_readme":
+        "auto-apps/<workspace>/README.md のワークスペース slug？",
       "ui.alert.invalid_workspace": "無効なワークスペース",
 
       "ui.health.ok": "OK",
@@ -743,7 +769,8 @@
       "ui.ws.materials_paths": "Đường dẫn tài liệu (mỗi dòng một)",
       "ui.ws.materials_paths_ph": "materials\nmaterials/screenshots",
       "ui.ws.shared_context_text": "Văn bản ngữ cảnh chung",
-      "ui.ws.shared_context_text_ph": "Ngữ cảnh chung hiển thị cho mọi tác vụ trong workspace này...",
+      "ui.ws.shared_context_text_ph":
+        "Ngữ cảnh chung hiển thị cho mọi tác vụ trong workspace này...",
 
       "ui.chat.input_ph": "Gửi tin nhắn vào hộp thư pipeline...",
       "ui.btn.send": "Gửi",
@@ -888,7 +915,7 @@
       "ui.btn.new": "جديد",
       "ui.btn.delete": "حذف",
       "ui.actions.list_aria": "تعريفات الإجراءات",
-      "ui.actions.empty": "لا توجد إجراءات بعد. انقر \"جديد\" لإنشاء واحد.",
+      "ui.actions.empty": 'لا توجد إجراءات بعد. انقر "جديد" لإنشاء واحد.',
       "ui.actions.id": "ID",
       "ui.actions.id_ph": "(جديد)",
       "ui.actions.enabled": "مفعل",
@@ -1007,7 +1034,8 @@
       "ui.ws.materials_paths": "Chemins des matériaux (un par ligne)",
       "ui.ws.materials_paths_ph": "materials\nmaterials/screenshots",
       "ui.ws.shared_context_text": "Texte du contexte partagé",
-      "ui.ws.shared_context_text_ph": "Contexte partagé visible pour toutes les tâches de cet espace...",
+      "ui.ws.shared_context_text_ph":
+        "Contexte partagé visible pour toutes les tâches de cet espace...",
 
       "ui.chat.input_ph": "Envoyer un message à la boîte de réception du pipeline...",
       "ui.btn.send": "Envoyer",
@@ -1139,7 +1167,8 @@
       "ui.ws.materials_paths": "Rutas de materiales (una por línea)",
       "ui.ws.materials_paths_ph": "materials\nmaterials/screenshots",
       "ui.ws.shared_context_text": "Texto de contexto compartido",
-      "ui.ws.shared_context_text_ph": "Contexto compartido visible para todas las tareas de este espacio...",
+      "ui.ws.shared_context_text_ph":
+        "Contexto compartido visible para todas las tareas de este espacio...",
 
       "ui.chat.input_ph": "Enviar un mensaje a la bandeja del pipeline...",
       "ui.btn.send": "Enviar",
@@ -1194,7 +1223,8 @@
       "ui.prompt.script_title": "¿Título del script?",
       "ui.prompt.load_script_id": "¿ID del script a cargar?",
       "ui.prompt.runner_title": "¿Título del runner?",
-      "ui.prompt.workspace_slug_for_readme": "¿Slug del workspace para auto-apps/<workspace>/README.md?",
+      "ui.prompt.workspace_slug_for_readme":
+        "¿Slug del workspace para auto-apps/<workspace>/README.md?",
       "ui.alert.invalid_workspace": "Workspace inválido",
 
       "ui.health.ok": "ok",

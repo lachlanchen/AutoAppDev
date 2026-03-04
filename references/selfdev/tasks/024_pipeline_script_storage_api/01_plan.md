@@ -1,13 +1,16 @@
 # Plan: 024 pipeline_script_storage_api
 
 ## Goal
+
 Persist pipeline scripts (formatted script text) and their parsed IR in Postgres, and expose minimal CRUD endpoints so the PWA can save/reload by id.
 
 Acceptance:
+
 - Backend adds DB tables + minimal CRUD endpoints for pipeline scripts + IR.
 - PWA can save and reload a script by id.
 
 ## Current State (References)
+
 - Backend DB + schema:
   - `backend/schema.sql` contains core tables (`app_config`, `inbox_messages`, `pipeline_runs`, etc.).
   - `backend/app.py` calls `storage.ensure_schema(schema.sql)` on startup.
@@ -21,6 +24,7 @@ Acceptance:
   - `pwa/app.js` already uses `window.AutoAppDevApi.requestJson()` and renders results into `#export` for plan posting (`/api/plan`).
 
 ## Approach (Minimal / Incremental)
+
 1. Add a single `pipeline_scripts` table that stores:
    - formatted script text (AAPS v1 string)
    - optional IR JSON (`jsonb`)
@@ -30,6 +34,7 @@ Acceptance:
    - A “Load Script” button that fetches by id and (minimally) shows the stored object in `#export` (optionally also restores the block program from IR steps).
 
 ## Implementation Steps (Next Phase)
+
 1. Add DB table(s) to `backend/schema.sql`.
    - Add:
      - `pipeline_scripts` with columns:
@@ -105,7 +110,9 @@ Acceptance:
      - Bump `CACHE_NAME` to avoid stale cached `index.html/app.js` during manual verification.
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -123,6 +130,7 @@ timeout 5s python3 -m py_compile backend/app.py backend/storage.py backend/apply
 ```
 
 DB-backed smoke (if Postgres + `.env` available in this environment):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 20s conda run -n autoappdev python -m backend.apply_schema
@@ -131,13 +139,14 @@ timeout 20s conda run -n autoappdev python -m backend.apply_schema
 ```
 
 Manual end-to-end verification (outside this sandbox, which cannot bind ports):
+
 1. Start backend + PWA and open the UI.
 2. Click “Save Script” (with a non-empty program) and confirm the response includes a numeric `id`.
 3. Reload the page and use “Load Script” with that id; confirm the stored script/IR returns and (if implemented) the canvas restores from IR.
 
 ## Acceptance Checklist
+
 - [ ] `pipeline_scripts` table exists in `backend/schema.sql` and is applied idempotently.
 - [ ] Backend exposes CRUD endpoints under `/api/scripts` and stores/retrieves `script_text` + `ir` from Postgres.
 - [ ] PWA can save and reload by id using the new endpoints (at minimum via `#export` output).
 - [ ] Default PWA theme remains light.
-

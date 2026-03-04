@@ -1,7 +1,9 @@
 # Debug Notes: 024 pipeline_script_storage_api
 
 ## Goal
+
 Smallest possible verification for script storage API + minimal PWA wiring:
+
 - Confirm DB schema includes `pipeline_scripts`.
 - Confirm backend routes/handlers and storage methods exist.
 - Confirm API contracts doc updated.
@@ -11,6 +13,7 @@ Smallest possible verification for script storage API + minimal PWA wiring:
 Note: This sandbox cannot bind/listen on ports, so end-to-end HTTP verification (creating a script and loading it back via the UI) must be performed outside this sandbox.
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -27,6 +30,7 @@ timeout 5s node --check pwa/service-worker.js
 ```
 
 Result:
+
 - `pipeline_scripts` table exists in `backend/schema.sql`.
 - Backend routes for `/api/scripts` and `/api/scripts/<id>` exist in `backend/app.py`.
 - Storage methods exist in `backend/storage.py`.
@@ -35,9 +39,11 @@ Result:
 - `py_compile` passes for backend modules; `node --check` passes for PWA JS.
 
 ## Issues Found
+
 - None in static verification.
 
 ## Follow-Up Manual Verification (Outside This Sandbox)
+
 1. Apply schema and start backend:
    - `conda run -n autoappdev python -m backend.apply_schema`
    - `conda run -n autoappdev python -m backend.app`
@@ -45,4 +51,3 @@ Result:
    - `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
 3. Create a small program on canvas and click `Save Script`; confirm response includes `script.id`.
 4. Reload the page and click `Load Script` with that id; confirm script returns and canvas restores from `script.ir` steps.
-

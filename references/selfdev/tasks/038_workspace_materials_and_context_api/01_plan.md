@@ -1,14 +1,17 @@
 # Plan: 038 workspace_materials_and_context_api
 
 ## Goal
+
 Add a minimal backend feature to **persist per-workspace configuration** (materials path(s), shared context text/file reference, default language) with strict **safe path rules under `auto-apps/`**, and expose simple **read/write HTTP endpoints**.
 
 Acceptance:
+
 - Backend stores workspace config in Postgres
 - All configured paths are validated to resolve **within** `auto-apps/<workspace>/`
 - Exposes read/write endpoints to get/upsert config
 
 ## Current State (References)
+
 - DB schema is applied at backend startup from `backend/schema.sql` via `backend/app.py`/`Storage.ensure_schema()`.
 - Storage patterns:
   - `backend/storage.py` has Postgres-first CRUD and a JSON fallback store.
@@ -19,13 +22,16 @@ Acceptance:
 - Workspace layout contract exists in `docs/workspace-layout.md` (workspace roots under `auto-apps/` and contain `materials/`, `docs/`, etc.).
 
 ## Data Model (DB)
+
 Add a new table holding one JSON config per workspace:
+
 - Table: `workspace_configs`
   - `workspace text primary key`
   - `config jsonb not null`
   - `updated_at timestamptz not null default now()`
 
 Config shape stored in `config` (v0):
+
 ```json
 {
   "materials_paths": ["materials"],
@@ -36,6 +42,7 @@ Config shape stored in `config` (v0):
 ```
 
 Notes:
+
 - Paths are stored as **workspace-relative** strings, but validated to resolve under `auto-apps/<workspace>/`.
 - Defaults (recommended):
   - `materials_paths`: `["materials"]`
@@ -43,9 +50,11 @@ Notes:
   - `shared_context_text`/`shared_context_path`: omitted or empty.
 
 ## Validation / Safety Rules (Backend)
+
 Implement a small validator/normalizer module to keep `backend/app.py` thin.
 
 Rules:
+
 - `workspace`: validate with `backend/update_readme_action.py:validate_workspace_slug()` (single path segment; no control chars; max length).
 - `materials_paths`:
   - Must be a list of 1..20 strings (or omitted -> default `["materials"]`).
@@ -63,10 +72,13 @@ Rules:
   - Default `"en"` if omitted.
 
 Implementation detail:
+
 - Use the same symlink guard pattern as `backend/update_readme_action.py:resolve_workspace_readme_path()` to ensure `auto-apps/` itself cannot resolve outside the repo.
 
 ## API Design (Minimal)
+
 Add one handler with GET (read) and POST (upsert) under a workspace-scoped URL:
+
 - `GET /api/workspaces/<workspace>/config`
   - Response:
     ```json
@@ -89,6 +101,7 @@ Add one handler with GET (read) and POST (upsert) under a workspace-scoped URL:
     ```
 
 Error codes (examples):
+
 - `invalid_workspace`
 - `invalid_body`, `invalid_json`
 - `invalid_materials_paths`, `invalid_materials_path`
@@ -97,6 +110,7 @@ Error codes (examples):
 - `invalid_default_language`
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Schema: add table
    - Edit `backend/schema.sql`:
      - Add `create table if not exists workspace_configs (...)`
@@ -142,6 +156,7 @@ Error codes (examples):
      - Document path safety rules (workspace-relative but validated under `auto-apps/<workspace>/`) and allowed languages list.
 
 ## Commands To Run (Verification in DEBUG/VERIFY Phase)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -154,6 +169,7 @@ timeout 10s rg -n \"GET /api/workspaces/<workspace>/config|POST /api/workspaces/
 ```
 
 Optional manual API smoke (requires Postgres + backend running):
+
 ```bash
 # start backend (in a separate terminal)
 python3 -m backend.app
@@ -173,10 +189,10 @@ curl -sS -X POST http://127.0.0.1:8788/api/workspaces/my_workspace/config \\
 ```
 
 ## Acceptance Checklist
+
 - [ ] `backend/schema.sql` creates `workspace_configs`.
 - [ ] `backend/storage.py` can get/upsert workspace configs.
 - [ ] Backend validates workspace slug and rejects paths resolving outside `auto-apps/<workspace>/`.
 - [ ] `GET` returns defaults with `exists:false` when no config stored.
 - [ ] `POST` upserts normalized config and returns it.
 - [ ] `docs/api-contracts.md` documents the endpoints and safety rules.
-

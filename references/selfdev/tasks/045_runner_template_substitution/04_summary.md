@@ -3,6 +3,7 @@
 Generated bash runners now perform deterministic `{{...}}` placeholder substitution for `ACTION.kind="run"` (`params.cmd`) and `ACTION.kind="codex_exec"` (`params.prompt`), using the current task/step/action context and the resolved runtime directory.
 
 ## What Changed
+
 - `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
   - Added strict placeholder expansion (`subst_placeholders`) and applied it in `action_run()` and `action_codex_exec()`.
   - Added `AUTOAPPDEV_CODEX_DISABLE=1` to skip invoking `codex` (writes + prints substituted prompt) for smoke testing.
@@ -17,9 +18,11 @@ Generated bash runners now perform deterministic `{{...}}` placeholder substitut
   - Documented supported placeholder keys and behavior.
 
 ## Why
+
 This enables reusable prompt/command templates in IR-generated runners while keeping execution deterministic and testable (including in environments without `codex` installed).
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -31,4 +34,3 @@ timeout 20s scripts/pipeline_codegen/smoke_placeholders.sh
 # Optional: existing determinism smoke
 timeout 20s scripts/pipeline_codegen/smoke_codegen.sh
 ```
-

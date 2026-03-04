@@ -1,11 +1,13 @@
 # Debug/Verify Notes: 006 storage_layer_pg_pool
 
 ## What I Verified
+
 - Backend now fails fast (non-zero) when `DATABASE_URL` is set but Postgres is unreachable.
 - Pool-creation failures are surfaced as a clear startup error (not a silent fallback).
 - Real DB startup + "DB time:" log verification was skipped because no `.env` exists in this workspace.
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -27,7 +29,9 @@ fi
 ```
 
 ## Issues Found
+
 - Initially, DB connection failure did not terminate the backend because `make_app()` ran as a background task; the IOLoop stayed running.
 
 ## Fix Applied In This Phase
+
 - Updated `backend/app.py` to run `make_app()` via `loop.run_until_complete(...)` before starting the IOLoop so startup failures propagate and exit immediately.

@@ -1,6 +1,7 @@
 # Debug Notes: 044 aaps_numbered_prefix_parser
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -8,6 +9,7 @@ timeout 10s python3 -m py_compile backend/pipeline_parser.py
 ```
 
 Result:
+
 ```text
 OK: py_compile
 ```
@@ -26,6 +28,7 @@ PY
 ```
 
 Result:
+
 ```text
 OK: numbered-prefix example parses
 ```
@@ -42,10 +45,11 @@ PY
 ```
 
 Result:
+
 ```text
 OK: existing example still parses
 ```
 
 ## Issues Found
-- None.
 
+- None.

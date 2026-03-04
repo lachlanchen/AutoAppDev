@@ -1,14 +1,17 @@
 # Plan: 031 llm_assisted_script_parse_optional
 
 ## Goal
+
 Add an **optional** backend endpoint that uses **Codex (non-interactive CLI)** to convert an arbitrary “pipeline-like” script/text into the canonical pipeline IR (`autoappdev_ir` v1).
 
 Acceptance:
+
 - Backend exposes an optional endpoint that runs `codex exec` non-interactively to perform the conversion.
 - The endpoint runs with strict guardrails + timeouts.
 - The endpoint stores provenance + prompts (artifacts) for later audit/debug.
 
 ## Current State (References)
+
 - Deterministic parsers already exist (no execution):
   - AAPS v1 parser: `backend/pipeline_parser.py` (`parse_aaps_v1`)
   - Annotated shell import v0: `backend/pipeline_shell_import.py` (extract `# AAPS:` only)
@@ -24,7 +27,9 @@ Acceptance:
   - `Storage.create_pipeline_script(...)`: `backend/storage.py`
 
 ## Design Choice (Minimal + Safer)
+
 Have Codex output **AAPS v1 text**, then validate it with the existing deterministic parser:
+
 1. `codex exec` produces a candidate AAPS v1 script.
 2. Backend extracts the AAPS region (strip fences / extra text).
 3. Backend runs `parse_aaps_v1(script_text)` to produce IR.
@@ -32,10 +37,13 @@ Have Codex output **AAPS v1 text**, then validate it with the existing determini
 This keeps the LLM output constrained and reuses existing validation/error reporting.
 
 ## Endpoint Contract (Proposed)
+
 Add:
+
 - `POST /api/scripts/parse-llm` (optional; disabled by default)
 
 Request (JSON):
+
 ```json
 {
   "source_text": "<arbitrary text or script>",
@@ -49,6 +57,7 @@ Request (JSON):
 ```
 
 Response (success):
+
 ```json
 {
   "ok": true,
@@ -74,15 +83,18 @@ Response (success):
   "script": { "id": 123, "title": "...", "script_text": "...", "ir": { ... } }
 }
 ```
+
 `script` is only returned when `save=true`.
 
 Response (errors):
+
 - `403` `{ "ok": false, "error": "disabled" }` if not enabled
 - `503` `{ "ok": false, "error": "codex_not_found" }` if `codex` isn’t on `PATH`
 - `408/504` `{ "ok": false, "error": "timeout" }` if Codex exceeds the timeout
 - `400` with existing AAPS parse errors if the LLM output can’t be parsed
 
 ## Guardrails
+
 1. Opt-in enable flag (default off)
    - Require `AUTOAPPDEV_ENABLE_LLM_PARSE=1` or return `403 disabled`.
    - Document this in `docs/env.md`.
@@ -103,10 +115,13 @@ Response (errors):
    - Set `cwd` for the subprocess to the per-request artifact dir under `runtime/logs/llm_parse/<id>/`.
 
 ## Provenance + Prompt Storage
+
 Write artifacts per request under:
+
 - `runtime/logs/llm_parse/<id>/`
 
 Files to write:
+
 - `source.txt`: raw input `source_text`
 - `prompt.txt`: exact prompt sent to Codex (includes instructions + input)
 - `codex.jsonl`: raw `codex exec --json` output
@@ -114,9 +129,11 @@ Files to write:
 - `provenance.json`: metadata (id, hashes, model, reasoning, timeout, extraction notes, parse result status)
 
 Rationale:
+
 - `runtime/` is already the home for operational logs and is gitignored by default (`.gitignore`).
 
 ## Implementation Steps (Next Phase: WORK)
+
 1. Add a small Codex runner + extractor module
    - New file: `backend/llm_assisted_parse.py`
    - Implement:
@@ -148,7 +165,9 @@ Rationale:
      - Add optional `AUTOAPPDEV_ENABLE_LLM_PARSE` (and optionally `AUTOAPPDEV_LLM_PARSE_TIMEOUT_S` default behavior if implemented).
 
 ## Commands To Run (Verification)
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -157,6 +176,7 @@ rg -n \"parse-llm\" backend/app.py docs/api-contracts.md
 ```
 
 Manual check (outside sandbox; requires `codex` on PATH and working `.env` DB):
+
 ```bash
 export AUTOAPPDEV_ENABLE_LLM_PARSE=1
 
@@ -170,9 +190,9 @@ ls -la runtime/logs/llm_parse | tail
 ```
 
 ## Acceptance Checklist
+
 - [ ] `POST /api/scripts/parse-llm` exists and is disabled unless `AUTOAPPDEV_ENABLE_LLM_PARSE=1`.
 - [ ] Endpoint runs `codex exec --json` with an enforced timeout and returns actionable errors.
 - [ ] Endpoint returns validated AAPS (`script_text`) + canonical IR (`ir`) on success.
 - [ ] Endpoint writes provenance artifacts (source/prompt/jsonl/result/provenance.json) under `runtime/logs/llm_parse/<id>/`.
 - [ ] Docs updated: `docs/api-contracts.md` + `docs/env.md`.
-

@@ -1,6 +1,7 @@
 # Summary: 006 storage_layer_pg_pool
 
 ## What Changed
+
 - Tightened `backend/storage.py` into a Postgres-first storage layer:
   - Deterministic pool creation (raises if `DATABASE_URL` is set but pool creation fails).
   - Exposed a single shared pool (`pool`/`require_pool()`) plus simple query helpers.
@@ -10,9 +11,11 @@
   - Fail fast on startup errors by running `make_app()` before entering the Tornado IOLoop.
 
 ## Why
+
 This makes DB connectivity a first-class requirement (no silent fallback) and provides a simple, testable proof that the backend can talk to Postgres by fetching server time.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

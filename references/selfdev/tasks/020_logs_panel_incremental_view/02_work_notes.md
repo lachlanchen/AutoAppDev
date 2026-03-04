@@ -1,11 +1,13 @@
 # Work Notes: 020 logs_panel_incremental_view
 
 ## Summary
+
 - Switched the PWA Logs panel from “tail + replace” to **incremental polling + append** using `GET /api/logs?source=...&since=...`.
 - Added a **follow/pause toggle** that controls auto-scroll so users can pause, select, and copy text.
 - Kept changes minimal (PWA-only) and bumped the service worker cache name to reduce stale shell assets during manual verification.
 
 ## Changes Made
+
 - `pwa/index.html`
   - Added a Logs toolbar toggle button `#log-follow` (Pause/Follow) next to `#log-refresh`.
 - `pwa/styles.css`
@@ -31,6 +33,7 @@
   - Bumped `CACHE_NAME` to `autoappdev-shell-v4`.
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 rg -n 'id=\"log-follow\"' pwa/index.html
@@ -40,4 +43,3 @@ rg -n '<body[^>]*data-theme=\"light\"' pwa/index.html
 timeout 5s node --check pwa/app.js
 timeout 5s node --check pwa/service-worker.js
 ```
-

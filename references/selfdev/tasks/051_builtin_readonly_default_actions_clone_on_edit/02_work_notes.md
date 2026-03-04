@@ -1,6 +1,7 @@
 # Work Notes: 051 builtin_readonly_default_actions_clone_on_edit
 
 ## Summary of Changes
+
 - Added a backend-built-in action set (virtual, read-only) exposed via the existing Actions API.
 - Marked built-ins as `readonly:true` and enforced immutability:
   - `PUT`/`DELETE` on built-in ids now return `403` with `{ error: "readonly" }`.
@@ -11,6 +12,7 @@
 - Updated `docs/api-contracts.md` to document `readonly` and the clone endpoint.
 
 ## Implementation Details
+
 - Built-ins are **not persisted** in Postgres (no schema migration). They live in a new module:
   - `backend/builtin_actions.py`
   - IDs are in a reserved high range (`9_000_000_000+`) to avoid collisions while staying in JS safe integer range.
@@ -22,6 +24,7 @@
   - `GET /api/actions/<id>`: built-ins return full spec; DB actions return `readonly:false`.
 
 ## Files Changed / Added
+
 - Added: `backend/builtin_actions.py`
 - Updated: `backend/app.py`
   - Merged built-ins into actions list/get
@@ -34,6 +37,7 @@
   - Documented `readonly` and clone endpoint
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -70,4 +74,3 @@ PY
 git diff --stat
 git status --porcelain
 ```
-

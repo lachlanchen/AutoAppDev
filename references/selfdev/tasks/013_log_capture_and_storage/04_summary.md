@@ -1,15 +1,18 @@
 # Summary: 013 log_capture_and_storage
 
 ## What Changed
+
 - Added an in-memory rolling log buffer in `backend/app.py`.
 - Added `GET /api/logs?source=...&since=<id>&limit=N` returning incremental log entries.
 - Added file tail pollers that capture lines from `runtime/logs/pipeline.log` and `runtime/logs/backend.log` into the rolling buffer.
 - Updated `docs/api-contracts.md` to document the new incremental logs endpoint.
 
 ## Why
+
 This enables incremental log viewing for the controller UI (poll-by-id), without relying only on whole-file tailing.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

@@ -1,18 +1,22 @@
 # Plan: 012 run_pipeline_subprocess_manager
 
 ## Goal
+
 Harden the backend subprocess manager so the pipeline can be reliably controlled:
+
 - Start the pipeline driver as a subprocess.
 - Stop it reliably (no orphaned process group).
 - Detect subprocess exit and update DB state accordingly.
 
 Acceptance:
+
 - Backend can start the driver/pipeline as a subprocess.
 - Backend can stop it.
 - Backend detects exit.
 - No orphan processes after stop.
 
 ## Current State (References)
+
 - Subprocess manager exists in `backend/app.py` as `PipelineControl`.
   - Uses `preexec_fn=os.setsid` and `os.killpg(...)` (good foundation).
   - Writes subprocess output to `runtime/logs/pipeline.log`.
@@ -26,13 +30,16 @@ Acceptance:
   - `pipeline_state` table and `Storage.set_pipeline_state(...)` (task 010).
 
 ## Approach (Minimal)
+
 1. Fix resource/process handling in `PipelineControl`:
+
 - Close the parent-side log file handle after spawning.
 - Make stop() stronger:
   - After SIGKILL, wait again (short timeout).
   - Always clear `self.proc` and `self.run_id` when the process is confirmed dead.
 
 2. Add an exit monitor that runs inside Tornado’s IOLoop:
+
 - Periodically (e.g. every 0.5s) check `self.proc.poll()`.
 - When it exits:
   - Determine terminal status:
@@ -45,6 +52,7 @@ Acceptance:
 3. Keep changes localized (no API changes required).
 
 ## Files To Change (Implementation Phase)
+
 - Update: `backend/app.py`
   - `PipelineControl._spawn()` close stdout log file handle in parent.
   - `PipelineControl.stop()` wait after SIGKILL and clear internal references.
@@ -56,13 +64,17 @@ Acceptance:
 ## Step-by-Step Implementation Details
 
 ### Step 1: Close Log FD After Spawn
+
 In `PipelineControl._spawn()` (`backend/app.py`):
+
 - Open `pipeline.log` as it currently does.
 - After `subprocess.Popen(...)` returns, immediately close the file object in the parent process.
   - The child retains the underlying fd.
 
 ### Step 2: Strengthen stop()
+
 In `PipelineControl.stop()`:
+
 - On SIGTERM: wait up to 10s.
 - On timeout:
   - send SIGKILL
@@ -72,10 +84,13 @@ In `PipelineControl.stop()`:
   - clear `self.proc` and `self.run_id`
 
 Also handle edge cases:
+
 - If `killpg` fails (process already gone), treat as stopped.
 
 ### Step 3: Detect Exit
+
 Add `async def maybe_collect_exit(self) -> None`:
+
 - If no `self.proc`: return.
 - `rc = self.proc.poll()`; if `rc is None`: return.
 - Determine status:
@@ -86,7 +101,9 @@ Add `async def maybe_collect_exit(self) -> None`:
 - Clear `self.proc`/`self.run_id`.
 
 ### Step 4: Register Monitor
+
 In `make_app(...)` in `backend/app.py`:
+
 - After `controller = PipelineControl(...)`:
   - Create `tornado.ioloop.PeriodicCallback(lambda: loop.create_task(controller.maybe_collect_exit()), 500)`
   - Start the callback.
@@ -94,9 +111,11 @@ In `make_app(...)` in `backend/app.py`:
 (Keep it simple: one periodic callback; avoid background threads.)
 
 ## Commands To Run (Verification)
+
 Requires a working `.env` with Postgres.
 
-1) Preflight:
+1. Preflight:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -105,7 +124,8 @@ timeout 5s python -m backend.db_smoketest
 timeout 10s python -m backend.apply_schema
 ```
 
-2) Start backend briefly and start/stop the pipeline:
+2. Start backend briefly and start/stop the pipeline:
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -139,11 +159,13 @@ timeout 20s bash -lc '
 '
 ```
 
-3) Orphan check (best-effort):
+3. Orphan check (best-effort):
+
 - Use the PID returned by `/api/pipeline/start` and verify it does not exist after stop.
 - Also verify the process group is gone (if tooling available).
 
 ## Acceptance Criteria Checks
+
 - Starting sets a running PID/run_id.
 - Stopping terminates the entire process group (no remaining PID).
 - Backend detects natural exit and updates `pipeline_runs` to `completed`/`failed` and `pipeline_state` to `stopped`.

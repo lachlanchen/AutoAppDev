@@ -1,6 +1,7 @@
 # Work Notes: 047 runner_meta_round_v0_loops
 
 ## Implementation Notes
+
 - Implemented runner-side support for `meta_round_v0` loops:
   - Controller task runs first (static IR).
   - Runner reads `task_list_path` (`autoappdev_task_list` v0 JSON) and loops the produced tasks.
@@ -12,6 +13,7 @@
 - Updated docs to describe runner meta-round behavior and conventions.
 
 ## Files Changed / Added
+
 - Updated:
   - `scripts/pipeline_codegen/templates/runner_v0.sh.tpl`
   - `scripts/pipeline_codegen/generate_runner_from_ir.py`
@@ -22,6 +24,7 @@
   - `scripts/pipeline_codegen/smoke_meta_round_v0.sh`
 
 ## Commands Run
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 timeout 10s python3 -m py_compile scripts/pipeline_codegen/generate_runner_from_ir.py
@@ -29,4 +32,3 @@ python3 -m json.tool examples/pipeline_ir_meta_round_v0_demo_v0.json >/dev/null
 timeout 10s python3 scripts/pipeline_codegen/generate_runner_from_ir.py --in examples/pipeline_ir_meta_round_v0_demo_v0.json --out /tmp/autoappdev_runner_meta_round_v0_tmp.sh
 bash -n /tmp/autoappdev_runner_meta_round_v0_tmp.sh
 ```
-

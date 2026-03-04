@@ -1,6 +1,7 @@
 # Summary: 009 inbox_messages_table_and_api
 
 ## What Changed
+
 - Added `inbox_messages` table to `backend/schema.sql`.
 - Added inbox persistence methods in `backend/storage.py`.
 - Added `/api/inbox` endpoints in `backend/app.py`:
@@ -10,9 +11,11 @@
 - Updated `docs/api-contracts.md` to document `/api/inbox`.
 
 ## Why
+
 This introduces a first-class inbox API and DB table for user guidance messages, while preserving the existing `/api/chat` behavior used by the current PWA.
 
 ## How To Verify
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 

@@ -13,7 +13,7 @@
 
     try {
       const res = await fetch(`${API_BASE_URL}${path}`, {
-        headers: { "Content-Type": "application/json", ...(headers || {}) },
+        headers: { "Content-Type": "application/json", ...headers },
         signal: ctrl.signal,
         ...rest,
       });
@@ -43,4 +43,3 @@
     requestJson,
   };
 })();
-

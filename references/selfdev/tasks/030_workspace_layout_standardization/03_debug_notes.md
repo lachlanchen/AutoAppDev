@@ -1,9 +1,11 @@
 # Debug Notes: 030 workspace_layout_standardization
 
 ## Verification (Smallest Smoke)
+
 - Verified the new doc exists, is linked from `README.md`, and mentions every required standard folder name.
 
 ## Commands + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -26,5 +28,5 @@ timeout 10s rg -n "auto-apps/" docs/workspace-layout.md >/dev/null && echo "fold
 ```
 
 ## Issues Found
-- None.
 
+- None.

@@ -1,11 +1,14 @@
 # Debug/Verify Notes: 003 add_env_loader_backend
 
 ## What I Verified
+
 Smallest possible startup smoke tests with timeouts:
+
 - Missing `DATABASE_URL` causes an immediate, clear error message and a non-zero exit.
 - `AUTOAPPDEV_RUNTIME_DIR` affects where the backend creates `runtime/logs/backend.log` (paths are computed after `.env` load).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -28,7 +31,9 @@ RT_DIR="$(mktemp -d)" && echo "RT_DIR=$RT_DIR" \
 ```
 
 ## Issues Found
+
 - None requiring code changes.
 
 ## Notes
+
 - The positive runtime-dir check used an invalid `DATABASE_URL` on purpose; the backend may fall back to file-based state if Postgres cannot be reached, but this task only requires a clear error when DB env is missing.

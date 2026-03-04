@@ -1,6 +1,7 @@
 # Summary: 019 controls_buttons_wiring
 
 ## What Changed
+
 - Added an inline control message area in the topbar to display pipeline control errors:
   - `pwa/index.html`: added `#ctrl-msg` next to Start/Pause/Resume/Stop.
   - `pwa/styles.css`: added `.ctrl-msg` styling (including `.ctrl-msg.is-error`).
@@ -12,10 +13,13 @@
   - `pwa/service-worker.js`: bumped `CACHE_NAME` to `autoappdev-shell-v3`.
 
 ## Why
+
 To make Start/Pause/Resume/Stop reflect valid pipeline transitions in the UI, and to surface backend HTTP 400 “invalid transition” errors directly in the PWA without disruptive alerts.
 
 ## How To Verify
+
 Static checks (safe in this sandbox):
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 rg -n 'id=\"ctrl-msg\"' pwa/index.html
@@ -27,6 +31,7 @@ timeout 5s node --check pwa/service-worker.js
 ```
 
 Manual UI verification (outside this sandbox, which cannot bind ports):
+
 1. Start backend + PWA:
    - Backend: `python3 -m backend.app`
    - PWA: `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
@@ -35,4 +40,3 @@ Manual UI verification (outside this sandbox, which cannot bind ports):
    - running: Pause/Stop enabled; Start/Resume disabled
    - paused: Resume/Stop enabled; Start/Pause disabled
 3. Trigger an invalid transition and confirm the HTTP 400 error renders inline in `#ctrl-msg`.
-

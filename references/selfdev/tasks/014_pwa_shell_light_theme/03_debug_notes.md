@@ -1,6 +1,7 @@
 # Debug Notes: 014 pwa_shell_light_theme
 
 ## What I Verified (Smallest Possible)
+
 Because this sandbox disallows creating/binding sockets, I could not serve `pwa/` over HTTP to do a real browser offline reload test. Verification here is limited to static checks (file presence, wiring, and JS syntax).
 
 ## Commands Run + Results
@@ -11,6 +12,7 @@ ls -la pwa
 ```
 
 Result (exit 0):
+
 ```text
 total 56
 drwxrwxr-x 2 lachlan lachlan 4096 Feb 15 17:18 .
@@ -31,6 +33,7 @@ bash -lc 'test -s pwa/service-worker.js && echo sw_ok'
 ```
 
 Result (exit 0):
+
 ```text
 manifest_ok
 sw_ok
@@ -45,6 +48,7 @@ rg -n '<body[^>]*data-theme="light"' pwa/index.html
 ```
 
 Result (exit 0):
+
 ```text
 8:    <link rel="manifest" href="manifest.json" />
 9:    <meta name="theme-color" content="#2767ff" />
@@ -60,6 +64,7 @@ timeout 5s node --check pwa/service-worker.js
 ```
 
 Result (exit 0):
+
 ```text
 v22.21.0
 ```
@@ -70,6 +75,7 @@ timeout 3s bash -lc 'cd pwa && python3 -m http.server 5173 --bind 127.0.0.1'
 ```
 
 Result (exit 1; sandbox restriction prevents sockets):
+
 ```text
 Traceback (most recent call last):
   File "/home/lachlan/miniconda3/lib/python3.10/runpy.py", line 196, in _run_module_as_main
@@ -88,13 +94,14 @@ PermissionError: [Errno 1] Operation not permitted
 ```
 
 ## Issue Found + Minimal Fix
+
 - Issue: `pwa/service-worker.js` originally had `"./"` in `PRECACHE_URLS`, and the `endsWith()` match logic made `isPrecached` true for all same-origin requests (because any string endsWith `""`).
 - Fix: removed `"./"` from `PRECACHE_URLS` so `isPrecached` only matches the intended shell assets.
 
 ## Manual Verification (Outside This Sandbox)
+
 1. `cd pwa && python3 -m http.server 5173 --bind 127.0.0.1`
 2. Open `http://127.0.0.1:5173/` in a browser.
 3. DevTools: Application -> Service Workers: confirm it installs.
 4. DevTools Network: toggle Offline, reload.
 5. Expect: the shell (top bar + panels) still loads offline (API calls may fail, but UI shell should render).
-

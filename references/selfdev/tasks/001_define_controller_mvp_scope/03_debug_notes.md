@@ -1,13 +1,16 @@
 # Debug/Verify Notes: 001 define_controller_mvp_scope
 
 ## What I Verified
+
 Doc-only smoke verification (no servers started) to confirm:
+
 - The new scope doc exists and is non-empty.
 - It explicitly names required screens and the default light theme.
 - It lists the minimal backend API endpoints.
 - `README.md` links to the new doc.
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -29,4 +32,5 @@ rg -n "/api/health|/api/config|/api/chat\?limit|/api/pipeline/status|/api/pipeli
 ```
 
 ## Issues Found
+
 - None.

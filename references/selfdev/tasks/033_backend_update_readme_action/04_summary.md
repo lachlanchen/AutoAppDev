@@ -1,15 +1,18 @@
 # Summary: 033 backend_update_readme_action
 
 ## What Changed
+
 - Implemented the `update_readme` backend execution endpoint:
   - New helpers in `backend/update_readme_action.py` for workspace slug validation, safe path resolution under `auto-apps/`, marker-based README upsert, and runtime artifact writing (before/after/diff/meta).
   - New Tornado handler + route in `backend/app.py`: `POST /api/actions/update-readme` which writes the README atomically and logs artifacts under `AUTOAPPDEV_RUNTIME_DIR/logs/update_readme/<id>/`.
 - Documented the endpoint in `docs/api-contracts.md`.
 
 ## Why
+
 To safely execute the common `ACTION.kind="update_readme"` contract from `docs/common-actions.md` without permitting arbitrary filesystem writes, while keeping changes auditable via runtime artifacts.
 
 ## How To Verify (Smallest Smoke)
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -53,4 +56,3 @@ PY
 
 timeout 10s rg -n "/api/actions/update-readme" backend/app.py docs/api-contracts.md
 ```
-

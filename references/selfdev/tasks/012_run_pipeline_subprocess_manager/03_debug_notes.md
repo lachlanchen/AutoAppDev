@@ -1,11 +1,13 @@
 # Debug/Verify Notes: 012 run_pipeline_subprocess_manager
 
 ## What I Verified
+
 - Static verification:
   - Backend compiles after subprocess manager hardening changes.
 - Live start/stop + orphan checks were skipped because no `.env` exists in this workspace (backend requires `DATABASE_URL` to start).
 
 ## Commands Run + Results
+
 ```bash
 cd /home/lachlan/ProjectsLFS/HeyCyan/AutoAppDev
 
@@ -49,4 +51,5 @@ fi
 ```
 
 ## Issues Found
+
 - None requiring code changes.
