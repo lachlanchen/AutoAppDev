@@ -88,7 +88,13 @@ source_path="$repo_root/$source_rel"
 i18n_path="$repo_root/$i18n_dir"
 work_root="$repo_root/.readme-translate-work"
 prompt_dir="$work_root/prompts"
-git_lock="$repo_root/.git/readme-translate-only.lock"
+git_common_dir="$(git -C "$repo_root" rev-parse --git-common-dir)"
+case "$git_common_dir" in
+  /*) ;;
+  *) git_common_dir="$repo_root/$git_common_dir" ;;
+esac
+mkdir -p "$git_common_dir"
+git_lock="$git_common_dir/readme-translate-only.lock"
 
 case "$reasoning" in
   low|medium|high|xhigh) ;;
