@@ -8,9 +8,9 @@
   "theme_color": "#2767ff",
   "icons": [
     {
-      "src": "lazyingart-logo.png",
-      "sizes": "1320x1045",
-      "type": "image/png",
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     }
   ]

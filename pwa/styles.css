@@ -18,7 +18,7 @@
   --b-release: #2f2f2f;
   --b-loop: #00a1ff;
   --b-input: #ffd6e7;
-  --topbar-h: 114px;
+  --topbar-h: 74px;
   --bottom-nav-h: 78px;
 }
 
@@ -94,9 +94,9 @@ body[data-theme="dark"] {
 }
 
 .logo {
-  width: 106px;
-  height: 84px;
-  border-radius: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
