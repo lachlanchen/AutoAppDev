@@ -85,16 +85,25 @@ body[data-theme="dark"] {
 }
 
 .logo {
-  width: 42px;
+  width: 118px;
   height: 42px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  background: linear-gradient(135deg, rgba(39, 103, 255, 0.95), rgba(255, 191, 47, 0.95));
-  color: white;
-  box-shadow: 0 14px 40px rgba(39, 103, 255, 0.18);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 40px rgba(46, 86, 45, 0.16);
+  border: 1px solid rgba(94, 143, 63, 0.18);
+  text-decoration: none;
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
 }
 
 .brand-name {

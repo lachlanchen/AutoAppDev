@@ -2,14 +2,14 @@
    Normal refresh should fetch fresh shell assets. Cache is only an offline fallback.
 */
 
-const CACHE_NAME = "autoappdev-shell-v11";
+const CACHE_NAME = "autoappdev-shell-v12";
 const PRECACHE_URLS = [
   "./index.html",
   "./styles.css",
   "./api-client.js",
   "./i18n.js",
   "./app.js",
-  "./favicon.svg",
+  "./lazyingart-logo.png",
   "./manifest.json",
 ];
 
