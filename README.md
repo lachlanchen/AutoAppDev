@@ -72,6 +72,7 @@ Do not edit content between the markers.
 - [🧭 Philosophy](#-philosophy)
 - [✨ Features](#-features)
 - [📌 At A Glance](#-at-a-glance)
+- [🖼️ Demos](#-demos)
 - [🏗️ Architecture](#-architecture)
 - [📚 Contents](#-contents)
 - [🗂️ Project Structure](#-project-structure)
@@ -174,6 +175,14 @@ The controller app aims to embody the same concepts as Scratch-like blocks/actio
 | Control flow   | Start / Pause / Resume / Stop lifecycle                              |
 | Dev mode       | Resumable self-dev loop + deterministic script/codegen workflows     |
 | README/i18n    | Automated README pipeline with `i18n/` scaffolding                   |
+
+## 🖼️ Demos
+
+### AutoNovelWriter Autopilot Setup
+
+AutoNovelWriter reuses AutoAppDev's Scratch-like pipeline ideas for a novel-writing studio: blocks on the left, a nested Autopilot Setup canvas in the center, live status/actions on the right, and a chat input below for guided updates.
+
+![AutoNovelWriter Autopilot Setup](demos/autonovelwriter-autopilot-setup.png)
 
 ## 🏗️ Architecture
 
