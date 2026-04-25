@@ -73,6 +73,15 @@ const els = {
   wsContextText: document.getElementById("ws-context-text"),
   wsContextPath: document.getElementById("ws-context-path"),
   wsMsg: document.getElementById("ws-msg"),
+
+  workspaceTabs: document.querySelectorAll(".workspace-tab"),
+  workspacePanels: document.querySelectorAll(".workspace-panel"),
+  studioAgentStatus: document.getElementById("studio-agent-status"),
+  notesPreview: document.getElementById("notes-preview"),
+  designPreview: document.getElementById("design-preview"),
+  loopPreview: document.getElementById("loop-preview"),
+  loopProposeCurrent: document.getElementById("loop-propose-current"),
+  loopAcceptProposed: document.getElementById("loop-accept-proposed"),
 };
 
 const UI_LANG_STORAGE_KEY = "autoappdev_ui_lang";
@@ -362,6 +371,49 @@ let actionsLoadedOnce = false;
 
 let workspaceSlug = "";
 let workspaceConfig = null;
+
+const WORKSPACE_STORAGE_KEY = "autoappdev_workspace_tab";
+const STUDIO_SESSION_STORAGE_KEY = "autoappdev_studio_sessions";
+const STUDIO_MODES = {
+  notes: {
+    panel: "notes",
+    preview: "notesPreview",
+    chatlog: "notes-chatlog",
+    input: "notes-chat-input",
+    send: "notes-chat-send",
+    newChat: "notes-chat-new",
+    delegate: "notes-chat-delegate",
+  },
+  design: {
+    panel: "design",
+    preview: "designPreview",
+    chatlog: "design-chatlog",
+    input: "design-chat-input",
+    send: "design-chat-send",
+    newChat: "design-chat-new",
+    delegate: "design-chat-delegate",
+  },
+  autopilot_loop: {
+    panel: "autopilot_loop",
+    preview: "loopPreview",
+    chatlog: "loop-chatlog",
+    input: "loop-chat-input",
+    send: "loop-chat-send",
+    newChat: "loop-chat-new",
+    delegate: "loop-chat-delegate",
+  },
+  setup: {
+    panel: "setup",
+    preview: "",
+    chatlog: "setup-chatlog",
+    input: "setup-chat-input",
+    send: "setup-chat-send",
+    newChat: "setup-chat-new",
+    delegate: "setup-chat-delegate",
+  },
+};
+let activeWorkspaceTab = "setup";
+let studioSessions = {};
 
 const BUILTIN_ACTION_ID_TO_STEP_TYPE = {
   // backend/builtin_actions.py (keep within JS safe integer range)
@@ -907,6 +959,299 @@ async function api(path, opts = {}) {
     throw new Error("api_client_not_loaded");
   }
   return await window.AutoAppDevApi.requestJson(path, opts);
+}
+
+function normalizeWorkspaceTab(raw) {
+  const mode = String(raw || "").trim();
+  if (mode === "notes" || mode === "design" || mode === "autopilot_loop" || mode === "setup") {
+    return mode;
+  }
+  if (mode === "autopilot_setup") {
+    return "setup";
+  }
+  return "setup";
+}
+
+function apiStudioMode(mode) {
+  return normalizeWorkspaceTab(mode) === "setup" ? "autopilot_setup" : normalizeWorkspaceTab(mode);
+}
+
+function studioEl(mode, key) {
+  const cfg = STUDIO_MODES[normalizeWorkspaceTab(mode)] || STUDIO_MODES.setup;
+  const id = cfg[key];
+  if (!id) {
+    return null;
+  }
+  if (els[id]) {
+    return els[id];
+  }
+  return document.getElementById(id);
+}
+
+function loadStudioSessions() {
+  try {
+    const raw = localStorage.getItem(STUDIO_SESSION_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    studioSessions = parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    studioSessions = {};
+  }
+}
+
+function saveStudioSessions() {
+  try {
+    localStorage.setItem(STUDIO_SESSION_STORAGE_KEY, JSON.stringify(studioSessions));
+  } catch {
+    // ignore
+  }
+}
+
+function studioSessionId(mode) {
+  return String(studioSessions[normalizeWorkspaceTab(mode)] || "");
+}
+
+function setStudioSessionId(mode, sessionId) {
+  const key = normalizeWorkspaceTab(mode);
+  studioSessions[key] = String(sessionId || "");
+  saveStudioSessions();
+}
+
+function renderStudioMessages(mode, messages) {
+  const log = studioEl(mode, "chatlog");
+  if (!log) {
+    return;
+  }
+  log.innerHTML = "";
+  const items = Array.isArray(messages) ? messages : [];
+  items.forEach((msg) => {
+    const role = String((msg && msg.role) || "system");
+    const div = document.createElement("div");
+    div.className = `msg msg--${role === "agent" ? "agent" : role === "assistant" ? "assistant" : role === "user" ? "user" : "system"}`;
+    const content = String((msg && msg.content) || "");
+    const meta = msg && typeof msg.meta === "object" ? msg.meta : {};
+    const jobId = meta && typeof meta.job_id === "string" ? meta.job_id : "";
+    div.textContent = jobId ? `${content}\n\njob: ${jobId}` : content;
+    log.appendChild(div);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
+function setStudioStatus(text, variant = "badge--unknown") {
+  if (!els.studioAgentStatus) {
+    return;
+  }
+  setBadge(els.studioAgentStatus, variant, text);
+}
+
+async function loadStudioAgentStatus() {
+  if (!els.studioAgentStatus) {
+    return;
+  }
+  try {
+    const res = await api("/api/studio/agent/status");
+    const counts = res.counts && typeof res.counts === "object" ? res.counts : {};
+    const running = Number(counts.running || 0);
+    const queued = Number(counts.queued || 0);
+    const failed = Number(counts.failed || 0);
+    if (running || queued) {
+      setStudioStatus(`agent ${running} running / ${queued} queued`, "badge--warn");
+    } else if (failed) {
+      setStudioStatus(`agent ${failed} failed recent`, "badge--err");
+    } else {
+      setStudioStatus("agent idle", "badge--ok");
+    }
+  } catch {
+    setStudioStatus("agent unknown", "badge--unknown");
+  }
+}
+
+async function loadStudioChat(mode) {
+  const key = normalizeWorkspaceTab(mode);
+  const sid = studioSessionId(key);
+  const query = new URLSearchParams({ mode: apiStudioMode(key) });
+  if (sid) {
+    query.set("session_id", sid);
+  }
+  try {
+    const res = await api(`/api/studio/chat?${query.toString()}`);
+    const session = res.session || {};
+    if (session.id) {
+      setStudioSessionId(key, session.id);
+    }
+    renderStudioMessages(key, res.messages || []);
+  } catch (e) {
+    renderStudioMessages(key, [{ role: "system", content: `chat unavailable: ${e.message || e}` }]);
+  }
+}
+
+async function startNewStudioChat(mode) {
+  const key = normalizeWorkspaceTab(mode);
+  try {
+    const res = await api("/api/studio/chat/new", {
+      method: "POST",
+      body: JSON.stringify({ mode: apiStudioMode(key) }),
+    });
+    const session = res.session || {};
+    setStudioSessionId(key, session.id || "");
+    renderStudioMessages(key, []);
+  } catch (e) {
+    renderStudioMessages(key, [{ role: "system", content: `new chat failed: ${e.message || e}` }]);
+  }
+}
+
+function studioContext(mode) {
+  let aaps = "";
+  try {
+    aaps = programToAapsScript(program, "Current AutoAppDev setup");
+  } catch {
+    aaps = "";
+  }
+  return {
+    workspace: {
+      slug: workspaceSlug || "",
+      config: workspaceConfig || {},
+      ui_tab: normalizeWorkspaceTab(mode),
+    },
+    program,
+    aaps_script: aaps,
+  };
+}
+
+async function sendStudioChat(mode) {
+  const key = normalizeWorkspaceTab(mode);
+  const input = studioEl(key, "input");
+  const send = studioEl(key, "send");
+  const delegate = studioEl(key, "delegate");
+  if (!input) {
+    return;
+  }
+  const message = String(input.value || "").trim();
+  if (!message) {
+    return;
+  }
+  input.value = "";
+  if (send) {
+    send.disabled = true;
+  }
+  renderStudioMessages(key, [
+    { role: "user", content: message },
+    { role: "system", content: "waiting for medium reply..." },
+  ]);
+  try {
+    const res = await api("/api/studio/chat", {
+      method: "POST",
+      timeout_ms: 240000,
+      body: JSON.stringify({
+        session_id: studioSessionId(key),
+        mode: apiStudioMode(key),
+        message,
+        assistant_enabled: Boolean(delegate && delegate.checked),
+        model: "gpt-5.5",
+        assistant_model: "gpt-5.5",
+        context: studioContext(key),
+      }),
+    });
+    const session = res.session || {};
+    if (session.id) {
+      setStudioSessionId(key, session.id);
+    }
+    renderStudioMessages(key, res.messages || []);
+    await loadStudioAgentStatus();
+    if (key === "autopilot_loop") {
+      await loadStudioPreview("autopilot_loop");
+    }
+  } catch (e) {
+    await loadStudioChat(key);
+    const log = studioEl(key, "chatlog");
+    if (log) {
+      const div = document.createElement("div");
+      div.className = "msg msg--system";
+      div.textContent = `send failed: ${e.message || e}`;
+      log.appendChild(div);
+    }
+  } finally {
+    if (send) {
+      send.disabled = false;
+    }
+  }
+}
+
+async function loadStudioPreview(mode) {
+  const key = normalizeWorkspaceTab(mode);
+  if (key === "setup") {
+    return;
+  }
+  const preview = studioEl(key, "preview");
+  if (!preview) {
+    return;
+  }
+  try {
+    const res = await api(`/api/studio/preview?mode=${encodeURIComponent(apiStudioMode(key))}`);
+    preview.textContent = String(res.markdown || "");
+  } catch (e) {
+    preview.textContent = `preview unavailable: ${e.message || e}`;
+  }
+}
+
+async function proposeCurrentSetup() {
+  try {
+    const script_text = programToAapsScript(program, "Current AutoAppDev setup");
+    const res = await api("/api/autopilot/loop/propose", {
+      method: "POST",
+      body: JSON.stringify({ source: "pwa-current-setup", script_text }),
+    });
+    if (els.loopPreview) {
+      els.loopPreview.textContent = JSON.stringify(res, null, 2);
+    }
+    await loadStudioPreview("autopilot_loop");
+  } catch (e) {
+    if (els.loopPreview) {
+      els.loopPreview.textContent = `propose failed: ${e.message || e}`;
+    }
+  }
+}
+
+async function acceptProposedLoop() {
+  try {
+    const res = await api("/api/autopilot/loop/accept", {
+      method: "POST",
+      body: JSON.stringify({ source: "pwa-accept" }),
+    });
+    if (els.loopPreview) {
+      els.loopPreview.textContent = JSON.stringify(res, null, 2);
+    }
+    await loadStudioPreview("autopilot_loop");
+  } catch (e) {
+    if (els.loopPreview) {
+      els.loopPreview.textContent = `accept failed: ${e.message || e}`;
+    }
+  }
+}
+
+function setWorkspaceTab(mode, { persist = true } = {}) {
+  const key = normalizeWorkspaceTab(mode);
+  activeWorkspaceTab = key;
+  if (persist) {
+    try {
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, key);
+    } catch {
+      // ignore
+    }
+  }
+  els.workspaceTabs.forEach((tab) => {
+    tab.classList.toggle("is-active", normalizeWorkspaceTab(tab.dataset.workspaceTab) === key);
+  });
+  els.workspacePanels.forEach((panel) => {
+    const on = normalizeWorkspaceTab(panel.dataset.workspacePanel) === key;
+    panel.hidden = !on;
+    panel.classList.toggle("is-active", on);
+  });
+  loadStudioPreview(key);
+  loadStudioChat(key);
+  loadStudioAgentStatus();
+  if (key === "setup") {
+    renderProgram();
+  }
 }
 
 function canSelectValue(selectEl, value) {
@@ -2478,6 +2823,36 @@ function bindTabs() {
   });
 }
 
+function bindWorkspaceTabs() {
+  els.workspaceTabs.forEach((tab) => {
+    tab.addEventListener("click", () => setWorkspaceTab(tab.dataset.workspaceTab || "setup"));
+  });
+  Object.keys(STUDIO_MODES).forEach((mode) => {
+    const send = studioEl(mode, "send");
+    const input = studioEl(mode, "input");
+    const newChat = studioEl(mode, "newChat");
+    if (send) {
+      send.addEventListener("click", () => sendStudioChat(mode));
+    }
+    if (input) {
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) {
+          sendStudioChat(mode);
+        }
+      });
+    }
+    if (newChat) {
+      newChat.addEventListener("click", () => startNewStudioChat(mode));
+    }
+  });
+  if (els.loopProposeCurrent) {
+    els.loopProposeCurrent.addEventListener("click", proposeCurrentSetup);
+  }
+  if (els.loopAcceptProposed) {
+    els.loopAcceptProposed.addEventListener("click", acceptProposedLoop);
+  }
+}
+
 async function loadChat() {
   try {
     const [inboxRes, outboxRes] = await Promise.all([
@@ -2772,22 +3147,63 @@ function bindControls() {
   }
 }
 
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator) || window.__AUTOAPPDEV_SW_REGISTERED__) {
+    return;
+  }
+  window.__AUTOAPPDEV_SW_REGISTERED__ = true;
+  const hadControllerAtStart = Boolean(navigator.serviceWorker.controller);
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadControllerAtStart || refreshing) {
+      return;
+    }
+    refreshing = true;
+    window.location.reload();
+  });
+
+  navigator.serviceWorker
+    .register("./service-worker.js", { updateViaCache: "none" })
+    .then((reg) => {
+      const activateWaiting = () => {
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
+      };
+      activateWaiting();
+      reg.addEventListener("updatefound", () => {
+        const worker = reg.installing;
+        if (!worker) {
+          return;
+        }
+        worker.addEventListener("statechange", () => {
+          if (worker.state === "installed" && navigator.serviceWorker.controller) {
+            worker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+      reg.update().catch(() => {});
+    })
+    .catch((e) => {
+      console.warn("service worker registration failed", e);
+    });
+}
+
 function boot() {
   setUiLang(loadUiLangFromStorage(), { persist: false });
+  loadStudioSessions();
 
   loadProgram();
   renderProgram();
   bindDnD();
   bindTabs();
+  bindWorkspaceTabs();
   bindControls();
   updateActionButtons("stopped");
   setLogFollow(true);
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch((e) => {
-      console.warn("service worker registration failed", e);
-    });
-  }
+  registerServiceWorker();
 
   const savedTheme = localStorage.getItem("autoappdev_theme");
   setTheme(savedTheme === "dark" ? "dark" : "light");
@@ -2804,6 +3220,7 @@ function boot() {
   refreshHealth();
   refreshStatus();
   loadChat();
+  setWorkspaceTab(localStorage.getItem(WORKSPACE_STORAGE_KEY) || "setup", { persist: false });
   refreshLogs({ reset: true });
   updateActionsButtons();
   refreshActionsList({ keepSelection: true });
@@ -2817,6 +3234,10 @@ function boot() {
     }
     if (!els.tabChat.hidden) {
       loadChat();
+    }
+    loadStudioAgentStatus();
+    if (activeWorkspaceTab !== "setup") {
+      loadStudioChat(activeWorkspaceTab);
     }
   }, 2500);
 }

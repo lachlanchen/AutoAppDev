@@ -98,9 +98,9 @@ tmux send-keys -t "$SESSION:dev.0" "cd \"$ROOT_DIR\" && export AUTOAPPDEV_HOST=\
 # Right pane: PWA static server
 tmux split-window -h -t "$SESSION:dev" -c "$ROOT_DIR/pwa"
 if command -v python3 >/dev/null 2>&1; then
-  tmux send-keys -t "$SESSION:dev.1" "cd \"$ROOT_DIR/pwa\" && python3 -m http.server \"$PWA_PORT\" --bind \"$PWA_HOST\"" C-m
+  tmux send-keys -t "$SESSION:dev.1" "cd \"$ROOT_DIR\" && python3 scripts/serve_pwa_no_cache.py --port \"$PWA_PORT\" --host \"$PWA_HOST\" --directory \"$ROOT_DIR/pwa\"" C-m
 else
-  tmux send-keys -t "$SESSION:dev.1" "cd \"$ROOT_DIR/pwa\" && conda run -n autoappdev python -m http.server \"$PWA_PORT\" --bind \"$PWA_HOST\"" C-m
+  tmux send-keys -t "$SESSION:dev.1" "cd \"$ROOT_DIR\" && conda run -n autoappdev python scripts/serve_pwa_no_cache.py --port \"$PWA_PORT\" --host \"$PWA_HOST\" --directory \"$ROOT_DIR/pwa\"" C-m
 fi
 
 tmux select-pane -t "$SESSION:dev.0" -T "backend" 2>/dev/null || true

@@ -16,6 +16,32 @@
       window.__AUTOAPPDEV_CONFIG__.API_BASE_URL =
         window.__AUTOAPPDEV_CONFIG__.API_BASE_URL || "http://127.0.0.1:8788";
     </script>
+    <script>
+      (function () {
+        if (!("serviceWorker" in navigator) || window.__AUTOAPPDEV_SW_REGISTERED__) {
+          return;
+        }
+        window.__AUTOAPPDEV_SW_REGISTERED__ = true;
+        const hadControllerAtStart = Boolean(navigator.serviceWorker.controller);
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+          if (!hadControllerAtStart || refreshing) {
+            return;
+          }
+          refreshing = true;
+          window.location.reload();
+        });
+        navigator.serviceWorker
+          .register("./service-worker.js", { updateViaCache: "none" })
+          .then(function (reg) {
+            if (reg.waiting) {
+              reg.waiting.postMessage({ type: "SKIP_WAITING" });
+            }
+            reg.update().catch(function () {});
+          })
+          .catch(function () {});
+      })();
+    </script>
     <script src="api-client.js" defer></script>
     <script src="i18n.js" defer></script>
     <script src="app.js" defer></script>
@@ -43,6 +69,7 @@
         <div class="select">
           <label data-i18n="ui.label.model">Model</label>
           <select id="model-select">
+            <option value="gpt-5.5" selected>gpt-5.5</option>
             <option value="gpt-5.3-codex">gpt-5.3-codex</option>
             <option value="gpt-5.3-codex-mini" disabled>gpt-5.3-codex-mini</option>
           </select>
@@ -73,7 +100,126 @@
       </div>
     </header>
 
-    <main class="layout">
+    <main class="workspace">
+      <section class="workspace-panel writing-screen" data-workspace-panel="notes" hidden>
+        <section class="panel writing-preview">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Notes</div>
+              <div class="panel-hint">Capture project facts, constraints, and decisions.</div>
+            </div>
+            <span class="badge badge--unknown" id="studio-agent-status">agent unknown</span>
+          </div>
+          <pre class="studio-preview" id="notes-preview"></pre>
+        </section>
+        <section class="panel writing-chat">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Notes Chat</div>
+              <div class="panel-hint">Medium reply; optional high-reasoning assistant handoff.</div>
+            </div>
+            <div class="studio-chat-tools">
+              <button class="btn btn--ghost" id="notes-chat-new">New Chat</button>
+              <label class="checkline">
+                <input id="notes-chat-delegate" type="checkbox" />
+                Delegate
+              </label>
+            </div>
+          </div>
+          <div class="chatlog studio-chatlog" id="notes-chatlog"></div>
+          <div class="studio-chatbar">
+            <textarea
+              class="input studio-input"
+              id="notes-chat-input"
+              placeholder="Ask for notes, constraints, project memory, or next steps..."
+              spellcheck="true"
+            ></textarea>
+            <button class="btn btn--primary" id="notes-chat-send">Send</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel writing-screen" data-workspace-panel="design" hidden>
+        <section class="panel writing-preview">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Design</div>
+              <div class="panel-hint">Product design, backend contracts, and UI architecture.</div>
+            </div>
+          </div>
+          <pre class="studio-preview" id="design-preview"></pre>
+        </section>
+        <section class="panel writing-chat">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Design Chat</div>
+              <div class="panel-hint">Ask for structured design outputs or implementation-ready specs.</div>
+            </div>
+            <div class="studio-chat-tools">
+              <button class="btn btn--ghost" id="design-chat-new">New Chat</button>
+              <label class="checkline">
+                <input id="design-chat-delegate" type="checkbox" />
+                Delegate
+              </label>
+            </div>
+          </div>
+          <div class="chatlog studio-chatlog" id="design-chatlog"></div>
+          <div class="studio-chatbar">
+            <textarea
+              class="input studio-input"
+              id="design-chat-input"
+              placeholder="Describe the app design, backend flow, or UX state you want..."
+              spellcheck="true"
+            ></textarea>
+            <button class="btn btn--primary" id="design-chat-send">Send</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel writing-screen" data-workspace-panel="autopilot_loop" hidden>
+        <section class="panel writing-preview">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">AutoPilot Loop</div>
+              <div class="panel-hint">Accepted and proposed AAPS schemas are grammar-checked.</div>
+            </div>
+            <div class="studio-chat-tools">
+              <button class="btn btn--ghost" id="loop-propose-current">Propose Current Setup</button>
+              <button class="btn btn--primary" id="loop-accept-proposed">Accept Proposed</button>
+            </div>
+          </div>
+          <pre class="studio-preview studio-preview--code" id="loop-preview"></pre>
+        </section>
+        <section class="panel writing-chat">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Loop Chat</div>
+              <div class="panel-hint">Assistant proposals must return valid AAPS before they can be accepted.</div>
+            </div>
+            <div class="studio-chat-tools">
+              <button class="btn btn--ghost" id="loop-chat-new">New Chat</button>
+              <label class="checkline">
+                <input id="loop-chat-delegate" type="checkbox" />
+                Delegate
+              </label>
+            </div>
+          </div>
+          <div class="chatlog studio-chatlog" id="loop-chatlog"></div>
+          <div class="studio-chatbar">
+            <textarea
+              class="input studio-input"
+              id="loop-chat-input"
+              placeholder="Ask to improve the loop; delegate to create a parseable AAPS proposal..."
+              spellcheck="true"
+            ></textarea>
+            <button class="btn btn--primary" id="loop-chat-send">Send</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel workspace-panel--setup is-active" data-workspace-panel="setup">
+        <div class="setup-shell">
+          <div class="layout">
       <section class="panel panel--toolbox">
         <div class="panel-head">
           <div class="panel-title" data-i18n="ui.panel.blocks.title">Blocks</div>
@@ -558,6 +704,46 @@
           </div>
         </div>
       </section>
+          </div>
+
+          <section class="panel setup-chat-panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">AutoPilot Setup Chat</div>
+                <div class="panel-hint">Edit the scratch-like pipeline by producing strict AAPS proposals.</div>
+              </div>
+              <div class="studio-chat-tools">
+                <button class="btn btn--ghost" id="setup-chat-new">New Chat</button>
+                <label class="checkline">
+                  <input id="setup-chat-delegate" type="checkbox" />
+                  Delegate
+                </label>
+              </div>
+            </div>
+            <div class="chatlog studio-chatlog studio-chatlog--compact" id="setup-chatlog"></div>
+            <div class="studio-chatbar">
+              <textarea
+                class="input studio-input"
+                id="setup-chat-input"
+                placeholder="Ask to modify the setup. Delegated edits are validated as AAPS before becoming proposed schema..."
+                spellcheck="true"
+              ></textarea>
+              <button class="btn btn--primary" id="setup-chat-send">Send</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <nav class="bottom-nav" aria-label="Workspace tabs">
+        <button class="workspace-tab" data-workspace-tab="notes" type="button">Notes</button>
+        <button class="workspace-tab" data-workspace-tab="design" type="button">Design</button>
+        <button class="workspace-tab" data-workspace-tab="autopilot_loop" type="button">
+          AutoPilot Loop
+        </button>
+        <button class="workspace-tab is-active" data-workspace-tab="setup" type="button">
+          AutoPilot Setup
+        </button>
+      </nav>
     </main>
   </body>
 </html>

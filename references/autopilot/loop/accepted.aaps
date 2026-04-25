@@ -1,0 +1,15 @@
+AUTOAPPDEV_PIPELINE 1
+
+TASK {"id":"meta","title":"Default AutoAppDev loop","meta":{"meta_round_v0":{"n_round":2,"goal":"Plan, implement, verify, summarize, and preserve recoverable versions.","task_list_path":"references/meta_round/tasks_v0.json","task_limit":10,"language":"en"}}}
+STEP {"id":"s1","title":"Plan the next safe change","block":"plan"}
+ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"Read project context, produce a small task list, and keep every change recoverable."}}
+STEP {"id":"s2","title":"Implement the smallest useful change","block":"work"}
+ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"Implement one bounded change set."}}
+STEP {"id":"s3","title":"Verify with bounded commands","block":"debug"}
+ACTION {"id":"a1","kind":"run","params":{"cmd":"timeout 30s python3 -m py_compile backend/app.py"}}
+STEP {"id":"s4","title":"Fix only if verification fails","block":"fix","meta":{"conditional":"on_debug_failure"}}
+ACTION {"id":"a1","kind":"codex_exec","params":{"prompt":"Apply minimal fixes, then rerun verification."}}
+STEP {"id":"s5","title":"Summarize and record recovery notes","block":"summary"}
+ACTION {"id":"a1","kind":"note","params":{"text":"Summarize changes, tests, and rollback path."}}
+STEP {"id":"s6","title":"Commit when policy allows","block":"commit_push"}
+ACTION {"id":"a1","kind":"note","params":{"text":"Commit/push is explicit and policy-driven; never hide schema changes."}}

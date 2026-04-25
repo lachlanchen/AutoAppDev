@@ -1,9 +1,8 @@
-/* Minimal shell caching for local dev.
-   NOTE: `python -m http.server` does not set all PWA-friendly headers; this is still
-   useful for quick offline reloads in modern browsers.
+/* Dev-friendly PWA shell cache.
+   Normal refresh should fetch fresh shell assets. Cache is only an offline fallback.
 */
 
-const CACHE_NAME = "autoappdev-shell-v9";
+const CACHE_NAME = "autoappdev-shell-v11";
 const PRECACHE_URLS = [
   "./index.html",
   "./styles.css",
@@ -32,6 +31,30 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  const data = event.data || {};
+  if (data && data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+async function cacheFreshResponse(req, fallbackUrl) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const res = await fetch(req, { cache: "no-store" });
+    if (res && res.ok) {
+      cache.put(req, res.clone()).catch(() => {});
+    }
+    return res;
+  } catch (e) {
+    return (
+      (await caches.match(req, { ignoreSearch: true })) ||
+      (fallbackUrl ? await caches.match(fallbackUrl, { ignoreSearch: true }) : undefined) ||
+      Response.error()
+    );
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -41,16 +64,16 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // For navigations, serve cached shell when offline.
+  // Network-first for navigations. Cache is only the offline fallback.
   if (req.mode === "navigate") {
-    event.respondWith(fetch(req).catch(() => caches.match("./index.html", { ignoreSearch: true })));
+    event.respondWith(cacheFreshResponse(req, "./index.html"));
     return;
   }
 
-  // Cache-first for known shell assets.
+  // Network-first for known shell assets so normal refresh sees current code.
   const isPrecached = PRECACHE_URLS.some((p) => url.pathname.endsWith(p.replace("./", "")));
   if (isPrecached) {
-    event.respondWith(caches.match(req, { ignoreSearch: true }).then((hit) => hit || fetch(req)));
+    event.respondWith(cacheFreshResponse(req));
     return;
   }
 

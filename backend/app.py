@@ -19,6 +19,9 @@ from .storage import Storage, safe_env
 from .pipeline_parser import ParseError, parse_aaps_v1
 from .pipeline_shell_import import ShellImportError, import_shell_annotated_to_ir
 from .llm_assisted_parse import LlmParseError, build_prompt, extract_aaps, make_request_id, run_codex_to_jsonl, write_artifacts
+from .autopilot_store import AutopilotStore, extract_aaps_artifacts
+from .codex_api import CodexJobError, CodexJobManager
+from .studio_chat import StudioChatStore, normalize_mode
 from .action_registry import ActionRegistryError, validate_action_create, validate_action_update
 from .builtin_actions import get_builtin_action, is_builtin_action_id, list_builtin_action_summaries
 from .update_readme_action import (
@@ -122,6 +125,14 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json; charset=utf-8")
         self.set_status(status)
         self.finish(json.dumps(obj, ensure_ascii=False))
+
+
+def _read_json_body(handler: tornado.web.RequestHandler) -> dict[str, Any] | None:
+    try:
+        body = json.loads(handler.request.body or b"{}")
+    except Exception:
+        return None
+    return body if isinstance(body, dict) else None
 
 
 class LogBuffer:
@@ -1080,6 +1091,391 @@ class OutboxHandler(BaseHandler):
         self.write_json({"ok": True})
 
 
+class CodexJobsHandler(BaseHandler):
+    def initialize(self, codex: CodexJobManager) -> None:
+        self.codex = codex
+
+    async def get(self) -> None:
+        limit = int(self.get_query_argument("limit", "20"))
+        session_id = self.get_query_argument("session_id", "")
+        self.write_json({"jobs": self.codex.list_jobs(limit=limit, session_id=session_id or None)})
+
+    async def post(self) -> None:
+        body = _read_json_body(self)
+        if body is None:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        try:
+            wait = bool(body.pop("wait", False))
+            wait_seconds = float(body.pop("wait_seconds", 0 if not wait else 120))
+            job = self.codex.submit_job(body, start=True)
+            if wait:
+                await self.codex.wait_job(str(job["job"]["id"]), timeout_s=wait_seconds)
+                job = self.codex.job_status(str(job["job"]["id"]), include_logs=True, include_output=True)
+            self.write_json({"ok": True, **job})
+        except CodexJobError as e:
+            self.write_json(e.to_dict(), status=400)
+
+
+class CodexJobHandler(BaseHandler):
+    def initialize(self, codex: CodexJobManager) -> None:
+        self.codex = codex
+
+    async def get(self) -> None:
+        job_id = self.get_query_argument("id", "")
+        try:
+            self.write_json({"ok": True, **self.codex.job_status(job_id, include_logs=True, include_output=True)})
+        except CodexJobError as e:
+            self.write_json(e.to_dict(), status=404 if e.code == "unknown_job" else 400)
+
+
+class CodexResultHandler(BaseHandler):
+    def initialize(self, codex: CodexJobManager) -> None:
+        self.codex = codex
+
+    async def get(self) -> None:
+        job_id = self.get_query_argument("id", "")
+        try:
+            payload = self.codex.job_status(job_id, include_logs=False, include_output=True)
+        except CodexJobError as e:
+            self.write_json(e.to_dict(), status=404 if e.code == "unknown_job" else 400)
+            return
+        if "output" not in payload and "output_text" not in payload:
+            self.write_json({"ok": False, "error": "result_not_ready", **payload}, status=202)
+            return
+        self.write_json({"ok": True, **payload})
+
+
+class CodexRespondHandler(BaseHandler):
+    def initialize(self, codex: CodexJobManager) -> None:
+        self.codex = codex
+
+    async def post(self) -> None:
+        body = _read_json_body(self)
+        if body is None:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        try:
+            payload = await self.codex.respond(body)
+            status = 200 if str(payload.get("job", {}).get("status")) == "succeeded" else 500
+            self.write_json({"ok": status == 200, **payload}, status=status)
+        except CodexJobError as e:
+            self.write_json(e.to_dict(), status=400)
+
+
+def _codex_answer(output: Any) -> str:
+    if isinstance(output, dict):
+        answer = output.get("answer")
+        if isinstance(answer, str) and answer.strip():
+            return answer.strip()
+        summary = output.get("summary")
+        if isinstance(summary, str) and summary.strip():
+            return summary.strip()
+    return ""
+
+
+def _studio_prompt(*, mode: str, message: str, transcript: str, context: dict[str, Any]) -> str:
+    mode_label = {
+        "notes": "Notes",
+        "design": "Design",
+        "autopilot_loop": "AutoPilot Loop",
+        "autopilot_setup": "AutoPilot Setup",
+    }.get(mode, mode)
+    current_aaps = str(context.get("aaps_script") or "").strip()
+    workspace = context.get("workspace") if isinstance(context.get("workspace"), dict) else {}
+    return (
+        f"AutoAppDev Studio mode: {mode_label}\n\n"
+        "Recent chat transcript:\n"
+        f"{transcript or '(empty)'}\n\n"
+        "Workspace/context JSON:\n"
+        f"{json.dumps(workspace, ensure_ascii=False, indent=2)}\n\n"
+        "Current AAPS script, if provided:\n"
+        f"{current_aaps or '(not provided)'}\n\n"
+        "User request:\n"
+        f"{message}\n"
+    )
+
+
+async def _complete_assistant_chat_job(
+    *,
+    codex: CodexJobManager,
+    chat_store: StudioChatStore,
+    autopilot: AutopilotStore,
+    session_id: str,
+    mode: str,
+    job_id: str,
+) -> None:
+    await codex.run_job(job_id)
+    payload = codex.job_status(job_id, include_logs=True, include_output=True)
+    job = payload.get("job") if isinstance(payload.get("job"), dict) else {}
+    output = payload.get("output") if isinstance(payload.get("output"), dict) else {}
+    if str(job.get("status")) == "succeeded":
+        answer = _codex_answer(output) or "Assistant job completed."
+        chat_store.append_message(session_id, role="agent", content=answer, meta={"job_id": job_id, "mode": mode})
+        if mode in {"autopilot_loop", "autopilot_setup"}:
+            for artifact in extract_aaps_artifacts(output):
+                res = autopilot.propose(
+                    artifact["content"],
+                    source=f"assistant:{artifact['name']}",
+                    job_id=job_id,
+                    chat_session_id=session_id,
+                )
+                detail = "valid" if res.get("ok") else f"invalid: {res.get('error')}"
+                chat_store.append_message(
+                    session_id,
+                    role="system",
+                    content=f"AutoPilot proposal from {artifact['name']}: {detail}.",
+                    meta={"job_id": job_id, "autopilot": res},
+                )
+    else:
+        detail = str(job.get("detail") or job.get("error") or "assistant job failed")
+        chat_store.append_message(session_id, role="system", content=detail, meta={"job_id": job_id, "mode": mode})
+
+
+class StudioChatNewHandler(BaseHandler):
+    def initialize(self, chat_store: StudioChatStore) -> None:
+        self.chat_store = chat_store
+
+    async def post(self) -> None:
+        body = _read_json_body(self) or {}
+        session = self.chat_store.create_session(mode=normalize_mode(body.get("mode")), title=str(body.get("title") or ""))
+        self.write_json({"ok": True, "session": session, "messages": []})
+
+
+class StudioChatHandler(BaseHandler):
+    def initialize(self, chat_store: StudioChatStore, codex: CodexJobManager, autopilot: AutopilotStore) -> None:
+        self.chat_store = chat_store
+        self.codex = codex
+        self.autopilot = autopilot
+
+    async def get(self) -> None:
+        session_id = self.get_query_argument("session_id", "")
+        mode = normalize_mode(self.get_query_argument("mode", "notes"))
+        session = self.chat_store.get_or_create_session(session_id=session_id, mode=mode)
+        messages = self.chat_store.list_messages(str(session["id"]), limit=120)
+        self.write_json({"ok": True, "session": session, "messages": messages})
+
+    async def post(self) -> None:
+        body = _read_json_body(self)
+        if body is None:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        mode = normalize_mode(body.get("mode"))
+        message = str(body.get("message") or body.get("content") or "").strip()
+        if not message:
+            self.write_json({"ok": False, "error": "empty_message"}, status=400)
+            return
+        if len(message) > 40_000:
+            self.write_json({"ok": False, "error": "message_too_large"}, status=400)
+            return
+
+        session = self.chat_store.get_or_create_session(session_id=str(body.get("session_id") or ""), mode=mode)
+        session_id = str(session["id"])
+        context = body.get("context") if isinstance(body.get("context"), dict) else {}
+        self.chat_store.append_message(session_id, role="user", content=message, meta={"mode": mode})
+        transcript = self.chat_store.transcript(session_id, limit=28)
+        prompt = _studio_prompt(mode=mode, message=message, transcript=transcript, context=context)
+        mock = bool(body.get("mock", False))
+
+        reply_result: dict[str, Any] | None = None
+        try:
+            reply_result = await self.codex.respond(
+                {
+                    "tool": "response",
+                    "mode": mode,
+                    "session_id": session_id,
+                    "prompt": prompt,
+                    "input": {"message": message, "context": context},
+                    "model": str(body.get("model") or safe_env("AUTOAPPDEV_STUDIO_MODEL", "gpt-5.5")),
+                    "reasoning": "medium",
+                    "allow_edits": False,
+                    "timeout_s": float(body.get("reply_timeout_s") or 180),
+                    "mock": mock,
+                }
+            )
+            output = reply_result.get("output") if isinstance(reply_result.get("output"), dict) else {}
+            answer = _codex_answer(output) or "No answer was returned."
+            self.chat_store.append_message(
+                session_id,
+                role="assistant",
+                content=answer,
+                meta={"job": reply_result.get("job"), "mode": mode},
+            )
+        except Exception as e:
+            self.chat_store.append_message(
+                session_id,
+                role="system",
+                content=f"Response failed: {type(e).__name__}: {e}",
+                meta={"mode": mode},
+            )
+
+        assistant_job: dict[str, Any] | None = None
+        if bool(body.get("assistant_enabled", False)):
+            assistant_payload = self.codex.submit_job(
+                {
+                    "tool": "assistant",
+                    "mode": mode,
+                    "session_id": session_id,
+                    "prompt": prompt,
+                    "input": {"message": message, "context": context},
+                    "model": str(body.get("assistant_model") or safe_env("AUTOAPPDEV_ASSISTANT_MODEL", "gpt-5.5")),
+                    "reasoning": "high",
+                    "allow_edits": True,
+                    "timeout_s": float(body.get("assistant_timeout_s") or 900),
+                    "mock": mock,
+                },
+                start=False,
+            )
+            assistant_job = assistant_payload.get("job") if isinstance(assistant_payload.get("job"), dict) else {}
+            job_id = str(assistant_job.get("id") or "")
+            if job_id:
+                self.chat_store.append_message(
+                    session_id,
+                    role="system",
+                    content=f"Delegated assistant job queued: {job_id}",
+                    meta={"job_id": job_id, "mode": mode},
+                )
+                asyncio.create_task(
+                    _complete_assistant_chat_job(
+                        codex=self.codex,
+                        chat_store=self.chat_store,
+                        autopilot=self.autopilot,
+                        session_id=session_id,
+                        mode=mode,
+                        job_id=job_id,
+                    )
+                )
+
+        messages = self.chat_store.list_messages(session_id, limit=120)
+        self.write_json(
+            {
+                "ok": True,
+                "session": session,
+                "messages": messages,
+                "reply_job": reply_result.get("job") if isinstance(reply_result, dict) else None,
+                "assistant_job": assistant_job,
+            }
+        )
+
+
+class StudioPreviewHandler(BaseHandler):
+    def initialize(self, autopilot: AutopilotStore, codex: CodexJobManager) -> None:
+        self.autopilot = autopilot
+        self.codex = codex
+
+    async def get(self) -> None:
+        mode = normalize_mode(self.get_query_argument("mode", "notes"))
+        if mode == "autopilot_loop":
+            loop = self.autopilot.preview()
+            markdown = (
+                "# AutoPilot Loop\n\n"
+                f"Accepted: `{loop['paths']['accepted']}`\n\n"
+                f"Proposed: `{loop['paths']['proposed']}`\n\n"
+                f"Git status: {len(loop.get('git_status') or [])} changed loop files\n\n"
+                "## Accepted AAPS\n\n"
+                f"{loop.get('accepted') or ''}\n"
+            )
+            self.write_json({"ok": True, "mode": mode, "markdown": markdown, "loop": loop})
+            return
+        if mode == "autopilot_setup":
+            self.write_json(
+                {
+                    "ok": True,
+                    "mode": mode,
+                    "markdown": (
+                        "# AutoPilot Setup\n\n"
+                        "Use the Scratch-like AAPS canvas below to build a strict pipeline. "
+                        "Assistant proposals are accepted only after backend AAPS v1 parsing succeeds."
+                    ),
+                }
+            )
+            return
+        if mode == "design":
+            self.write_json(
+                {
+                    "ok": True,
+                    "mode": mode,
+                    "markdown": (
+                        "# Design\n\n"
+                        "Design chat should produce app structure, UX logic, backend contracts, and AAPS proposals as artifacts. "
+                        "Keep source-control recovery in mind before accepting loop edits."
+                    ),
+                }
+            )
+            return
+        jobs = self.codex.list_jobs(limit=8)
+        self.write_json(
+            {
+                "ok": True,
+                "mode": "notes",
+                "markdown": (
+                    "# Notes\n\n"
+                    "Capture product notes, implementation constraints, and open questions here. "
+                    f"Recent Codex jobs visible to the backend: {len(jobs)}."
+                ),
+                "jobs": jobs,
+            }
+        )
+
+
+class StudioAgentStatusHandler(BaseHandler):
+    def initialize(self, codex: CodexJobManager) -> None:
+        self.codex = codex
+
+    async def get(self) -> None:
+        jobs = self.codex.list_jobs(limit=12)
+        counts: dict[str, int] = {}
+        for job in jobs:
+            st = str(job.get("status") or "unknown")
+            counts[st] = counts.get(st, 0) + 1
+        self.write_json({"ok": True, "jobs": jobs, "counts": counts})
+
+
+class AutopilotLoopHandler(BaseHandler):
+    def initialize(self, autopilot: AutopilotStore) -> None:
+        self.autopilot = autopilot
+
+    async def get(self) -> None:
+        self.write_json(self.autopilot.preview())
+
+
+class AutopilotLoopProposeHandler(BaseHandler):
+    def initialize(self, autopilot: AutopilotStore) -> None:
+        self.autopilot = autopilot
+
+    async def post(self) -> None:
+        body = _read_json_body(self)
+        if body is None:
+            self.write_json({"ok": False, "error": "invalid_json"}, status=400)
+            return
+        script_text = body.get("script_text")
+        if not isinstance(script_text, str):
+            self.write_json({"ok": False, "error": "invalid_script_text"}, status=400)
+            return
+        res = self.autopilot.propose(script_text, source=str(body.get("source") or "manual"))
+        self.write_json(res, status=200 if res.get("ok") else 400)
+
+
+class AutopilotLoopAcceptHandler(BaseHandler):
+    def initialize(self, autopilot: AutopilotStore) -> None:
+        self.autopilot = autopilot
+
+    async def post(self) -> None:
+        body = _read_json_body(self) or {}
+        res = self.autopilot.accept(source=str(body.get("source") or "manual"))
+        self.write_json(res, status=200 if res.get("ok") else 400)
+
+
+class AutopilotLoopRestoreHandler(BaseHandler):
+    def initialize(self, autopilot: AutopilotStore) -> None:
+        self.autopilot = autopilot
+
+    async def post(self) -> None:
+        body = _read_json_body(self) or {}
+        res = self.autopilot.restore(str(body.get("revision_file") or ""))
+        self.write_json(res, status=200 if res.get("ok") else 400)
+
+
 class PipelineStatusHandler(BaseHandler):
     def initialize(self, storage: Storage) -> None:
         self.storage = storage
@@ -1409,6 +1805,14 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
 
     controller = PipelineControl(storage=storage, runtime_dir=runtime_dir, log_dir=log_dir)
     tornado.ioloop.PeriodicCallback(lambda: asyncio.create_task(controller.maybe_collect_exit()), 500).start()
+    codex = CodexJobManager(
+        repo_root=REPO_ROOT,
+        runtime_dir=runtime_dir,
+        prompt_path=REPO_ROOT / "prompts" / "autoappdev-codex-response.md",
+        schema_path=REPO_ROOT / "schemas" / "autoappdev_codex_response.schema.json",
+    )
+    autopilot = AutopilotStore(repo_root=REPO_ROOT, base_dir=REPO_ROOT / "references" / "autopilot" / "loop")
+    chat_store = StudioChatStore(root=runtime_dir / "studio-chats")
 
     log_buffer = LogBuffer(max_entries=2000)
     tailers = [
@@ -1456,6 +1860,18 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
             (r"/api/actions/([0-9]+)/clone", ActionCloneHandler, {"storage": storage}),
             (r"/api/actions/([0-9]+)", ActionHandler, {"storage": storage}),
             (r"/api/actions/update-readme", UpdateReadmeHandler, {"runtime_dir": runtime_dir}),
+            (r"/api/codex/jobs", CodexJobsHandler, {"codex": codex}),
+            (r"/api/codex/job", CodexJobHandler, {"codex": codex}),
+            (r"/api/codex/result", CodexResultHandler, {"codex": codex}),
+            (r"/api/codex/respond", CodexRespondHandler, {"codex": codex}),
+            (r"/api/studio/chat/new", StudioChatNewHandler, {"chat_store": chat_store}),
+            (r"/api/studio/chat", StudioChatHandler, {"chat_store": chat_store, "codex": codex, "autopilot": autopilot}),
+            (r"/api/studio/preview", StudioPreviewHandler, {"autopilot": autopilot, "codex": codex}),
+            (r"/api/studio/agent/status", StudioAgentStatusHandler, {"codex": codex}),
+            (r"/api/autopilot/loop", AutopilotLoopHandler, {"autopilot": autopilot}),
+            (r"/api/autopilot/loop/propose", AutopilotLoopProposeHandler, {"autopilot": autopilot}),
+            (r"/api/autopilot/loop/accept", AutopilotLoopAcceptHandler, {"autopilot": autopilot}),
+            (r"/api/autopilot/loop/restore", AutopilotLoopRestoreHandler, {"autopilot": autopilot}),
             (r"/api/chat", ChatHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/inbox", InboxHandler, {"storage": storage, "runtime_dir": runtime_dir}),
             (r"/api/outbox", OutboxHandler, {"storage": storage}),

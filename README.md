@@ -178,6 +178,12 @@ The controller app aims to embody the same concepts as Scratch-like blocks/actio
 
 ## 🖼️ Demos
 
+### AutoAppDev Studio
+
+The current AutoAppDev Studio PWA organizes work into bottom tabs for Notes, Design, AutoPilot Loop, and AutoPilot Setup. The setup tab keeps the Scratch-like pipeline editor available while the Studio chat can request medium-reasoning replies or delegate high-reasoning assistant jobs.
+
+![AutoAppDev Studio](demos/autoappdev-studio-2026-04-25.png)
+
 ### AutoNovelWriter Autopilot Setup
 
 AutoNovelWriter reuses AutoAppDev's Scratch-like pipeline ideas for a novel-writing studio: blocks on the left, a nested Autopilot Setup canvas in the center, live status/actions on the right, and a chat input below for guided updates.
