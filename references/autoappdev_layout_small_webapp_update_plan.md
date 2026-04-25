@@ -4,6 +4,8 @@ Date: 2026-04-25
 
 This is a planning reference only. It learns from the recent AutoNovelWriter layout, chat, live-sync, and toast updates, but it does not implement them. Use this document to guide a later AutoAppDev task with small, reviewable commits.
 
+Implementation follow-up: see `references/autoappdev_webapp_mobile_desktop_update_notes.md` for the actual AutoAppDev desktop/mobile layout, chat, toast, live-sync, fallback, and logo changes implemented after this plan.
+
 ## Source Notes Read
 
 - `/home/lachlan/ProjectsLFS/AutoNovelWriter/references/ui_layout_chat_update_notes.md`
