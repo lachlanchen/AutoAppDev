@@ -34,6 +34,11 @@ html,
 body {
   height: 100%;
   margin: 0;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+body {
   overflow: hidden;
   font-family:
     ui-rounded,
@@ -75,6 +80,10 @@ body[data-theme="dark"] {
   backdrop-filter: blur(12px);
   background: color-mix(in srgb, var(--panel) 80%, transparent);
   border-bottom: 1px solid var(--stroke);
+}
+
+.settings-toggle {
+  display: none;
 }
 
 .brand {
@@ -185,6 +194,36 @@ textarea {
   color: var(--red);
 }
 
+.toast-stack {
+  position: fixed;
+  right: 18px;
+  top: calc(var(--topbar-h) + 12px);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  width: min(360px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--blue) 32%, var(--stroke));
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  pointer-events: auto;
+}
+
+.toast--error {
+  border-color: color-mix(in srgb, var(--red) 45%, var(--stroke));
+  background: color-mix(in srgb, var(--red) 12%, var(--panel));
+}
+
 .btn--primary {
   background: linear-gradient(180deg, rgba(39, 103, 255, 0.96), rgba(39, 103, 255, 0.86));
   color: white;
@@ -213,13 +252,15 @@ textarea {
 
 .writing-screen {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(260px, 36vh);
+  grid-template-columns: minmax(360px, 0.92fr) minmax(430px, 1.08fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 14px;
   padding: 14px;
 }
 
 .writing-preview,
 .writing-chat {
+  min-width: 0;
   min-height: 0;
 }
 
@@ -248,6 +289,24 @@ textarea {
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
+}
+
+.writing-actions {
+  flex: 0 1 auto;
+  max-width: 58%;
+}
+
+.writing-actions .btn,
+.studio-chat-tools .btn {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-toggle {
+  display: none;
 }
 
 .checkline {
@@ -362,17 +421,28 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   border-bottom: 1px solid var(--stroke);
+}
+
+.panel-head > div:first-child {
+  min-width: 0;
 }
 
 .panel-title {
   font-weight: 950;
   font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .panel-hint {
   font-size: 12px;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .panel-actions {
@@ -612,24 +682,36 @@ body[data-theme="dark"] .canvas {
 
 .msg {
   border: 1px solid var(--stroke);
-  border-radius: 14px;
-  padding: 10px 10px;
+  border-radius: 18px;
+  padding: 10px 12px;
   font-size: 12px;
   line-height: 1.45;
   background: color-mix(in srgb, var(--panel) 90%, transparent);
+  max-width: min(84%, 760px);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  box-shadow: 0 10px 26px rgba(12, 18, 28, 0.06);
 }
 
 .msg--user {
-  border-left: 4px solid rgba(39, 103, 255, 0.75);
+  align-self: flex-end;
+  border-color: color-mix(in srgb, var(--blue) 28%, var(--stroke));
+  background: linear-gradient(180deg, rgba(39, 103, 255, 0.16), rgba(39, 103, 255, 0.08));
 }
 .msg--system {
-  border-left: 4px solid rgba(255, 191, 47, 0.85);
+  align-self: flex-start;
+  border-color: color-mix(in srgb, var(--b-plan) 36%, var(--stroke));
+  background: linear-gradient(180deg, rgba(255, 191, 47, 0.16), rgba(255, 191, 47, 0.08));
 }
 .msg--assistant {
-  border-left: 4px solid rgba(0, 184, 156, 0.8);
+  align-self: flex-start;
+  border-color: color-mix(in srgb, var(--b-debug) 32%, var(--stroke));
+  background: linear-gradient(180deg, rgba(0, 184, 156, 0.12), rgba(0, 184, 156, 0.06));
 }
 .msg--agent {
-  border-left: 4px solid rgba(141, 91, 255, 0.85);
+  align-self: flex-start;
+  border-color: color-mix(in srgb, var(--b-summary) 34%, var(--stroke));
+  background: linear-gradient(180deg, rgba(141, 91, 255, 0.13), rgba(141, 91, 255, 0.06));
 }
 
 .chatbar {
@@ -777,13 +859,11 @@ html[dir="rtl"] .kv {
 }
 
 html[dir="rtl"] .msg--user {
-  border-right: 4px solid rgba(39, 103, 255, 0.75);
-  border-left: 1px solid var(--stroke);
+  align-self: flex-start;
 }
 
 html[dir="rtl"] .msg--system {
-  border-right: 4px solid rgba(255, 191, 47, 0.85);
-  border-left: 1px solid var(--stroke);
+  align-self: flex-end;
 }
 
 @media (max-width: 1200px) {
@@ -797,8 +877,41 @@ html[dir="rtl"] .msg--system {
 }
 
 @media (max-width: 780px) {
+  html,
+  body {
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
   body {
     overflow: auto;
+    touch-action: pan-y;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .settings-toggle {
+    display: inline-flex;
+  }
+  .brand {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .brand-sub {
+    display: none;
+  }
+  .controls {
+    display: none;
+    width: 100%;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-top: 6px;
+  }
+  body.settings-open .controls {
+    display: flex;
   }
   .workspace {
     height: auto;
@@ -807,7 +920,35 @@ html[dir="rtl"] .msg--system {
   .writing-screen,
   .setup-shell {
     height: auto;
-    grid-template-rows: auto auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(58vh, auto);
+    padding: 10px;
+    gap: 10px;
+  }
+  .writing-screen.is-preview-collapsed {
+    grid-template-rows: auto minmax(68vh, auto);
+  }
+  .writing-screen.is-preview-collapsed .studio-preview {
+    display: none;
+  }
+  .preview-toggle {
+    display: inline-flex;
+  }
+  .writing-preview {
+    min-height: auto;
+  }
+  .writing-chat {
+    min-height: 58vh;
+  }
+  .studio-chatbar {
+    grid-template-columns: 1fr;
+  }
+  .studio-input,
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px;
   }
   .layout {
     grid-template-columns: 1fr;
@@ -818,14 +959,24 @@ html[dir="rtl"] .msg--system {
     width: 100%;
     border-radius: 20px 20px 0 0;
     gap: 4px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
   .workspace-tab {
     font-size: 10px;
   }
-  .brand {
-    min-width: 0;
+  .writing-actions {
+    max-width: 54%;
+    flex-wrap: nowrap;
   }
-  .controls {
-    justify-content: flex-start;
+  .writing-actions .btn {
+    max-width: 118px;
+  }
+  .toast-stack {
+    left: 12px;
+    right: 12px;
+    top: calc(var(--topbar-h) + 8px);
+  }
+  .toast {
+    width: auto;
   }
 }

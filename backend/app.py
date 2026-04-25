@@ -230,7 +230,8 @@ class HealthHandler(BaseHandler):
             t = await self.storage.get_server_time_iso()
             db = {"ok": True, "time": t}
         except Exception as e:
-            db = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+            detail = self.storage.database_error or f"{type(e).__name__}: {e}"
+            db = {"ok": False, "fallback": "runtime_json", "error": detail}
         self.write_json({"ok": True, "service": "autoappdev-backend", "db": db})
 
 
@@ -1310,6 +1311,7 @@ class StudioChatHandler(BaseHandler):
             )
 
         assistant_job: dict[str, Any] | None = None
+        notice: dict[str, Any] | None = None
         if bool(body.get("assistant_enabled", False)):
             assistant_payload = self.codex.submit_job(
                 {
@@ -1329,12 +1331,11 @@ class StudioChatHandler(BaseHandler):
             assistant_job = assistant_payload.get("job") if isinstance(assistant_payload.get("job"), dict) else {}
             job_id = str(assistant_job.get("id") or "")
             if job_id:
-                self.chat_store.append_message(
-                    session_id,
-                    role="system",
-                    content=f"Delegated assistant job queued: {job_id}",
-                    meta={"job_id": job_id, "mode": mode},
-                )
+                notice = {
+                    "kind": "assistant_queued",
+                    "text": f"Delegated assistant job queued: {job_id}",
+                    "job_id": job_id,
+                }
                 asyncio.create_task(
                     _complete_assistant_chat_job(
                         codex=self.codex,
@@ -1354,6 +1355,7 @@ class StudioChatHandler(BaseHandler):
                 "messages": messages,
                 "reply_job": reply_result.get("job") if isinstance(reply_result, dict) else None,
                 "assistant_job": assistant_job,
+                "notice": notice,
             }
         )
 
@@ -1799,9 +1801,12 @@ async def make_app(runtime_dir: Path, log_dir: Path) -> tornado.web.Application:
     await storage.start()
     schema_path = Path(__file__).with_name("schema.sql")
     await storage.ensure_schema(schema_path.read_text("utf-8"))
-    # Smoke check: prove DB is reachable by fetching server time during startup.
-    db_time = await storage.get_server_time_iso()
-    print(f"DB time: {db_time}")
+    if storage.database_error:
+        print(f"DB unavailable; using runtime JSON fallback: {storage.database_error}", file=sys.stderr)
+    else:
+        # Smoke check: prove DB is reachable by fetching server time during startup.
+        db_time = await storage.get_server_time_iso()
+        print(f"DB time: {db_time}")
 
     controller = PipelineControl(storage=storage, runtime_dir=runtime_dir, log_dir=log_dir)
     tornado.ioloop.PeriodicCallback(lambda: asyncio.create_task(controller.maybe_collect_exit()), 500).start()

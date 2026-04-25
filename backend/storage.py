@@ -26,6 +26,7 @@ class Storage:
         self._database_url = database_url
         self._runtime_dir = runtime_dir
         self._pool: Optional[asyncpg.Pool] = None
+        self._database_error = ""
         self._state_path = runtime_dir / "state.json"
 
     async def start(self) -> None:
@@ -36,9 +37,13 @@ class Storage:
             self._pool = await asyncpg.create_pool(dsn=self._database_url, min_size=1, max_size=5, timeout=2.0)
         except Exception as e:
             self._pool = None
-            raise RuntimeError(
+            self._database_error = (
                 f"failed to create Postgres pool (DATABASE_URL is set): {type(e).__name__}: {e}"
-            ) from e
+            )
+
+    @property
+    def database_error(self) -> str:
+        return self._database_error
 
     def require_pool(self) -> asyncpg.Pool:
         if not self._pool:

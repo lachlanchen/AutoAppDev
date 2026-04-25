@@ -7,7 +7,9 @@ const els = {
   pause: document.getElementById("btn-pause"),
   resume: document.getElementById("btn-resume"),
   stop: document.getElementById("btn-stop"),
+  settings: document.getElementById("btn-settings"),
   ctrlMsg: document.getElementById("ctrl-msg"),
+  topbar: document.querySelector(".topbar"),
   backendHealth: document.getElementById("backend-health"),
   dbHealth: document.getElementById("db-health"),
   pipelineStatus: document.getElementById("pipeline-status"),
@@ -76,6 +78,7 @@ const els = {
 
   workspaceTabs: document.querySelectorAll(".workspace-tab"),
   workspacePanels: document.querySelectorAll(".workspace-panel"),
+  previewToggles: document.querySelectorAll("[data-preview-toggle]"),
   studioAgentStatus: document.getElementById("studio-agent-status"),
   notesPreview: document.getElementById("notes-preview"),
   designPreview: document.getElementById("design-preview"),
@@ -374,6 +377,8 @@ let workspaceConfig = null;
 
 const WORKSPACE_STORAGE_KEY = "autoappdev_workspace_tab";
 const STUDIO_SESSION_STORAGE_KEY = "autoappdev_studio_sessions";
+const PREVIEW_COLLAPSE_STORAGE_KEY = "autoappdev_preview_collapsed";
+const MOBILE_QUERY = "(max-width: 780px)";
 const STUDIO_MODES = {
   notes: {
     panel: "notes",
@@ -414,6 +419,9 @@ const STUDIO_MODES = {
 };
 let activeWorkspaceTab = "setup";
 let studioSessions = {};
+let previewCollapsed = {};
+let liveSyncBusy = false;
+let viewportFrame = 0;
 
 const BUILTIN_ACTION_ID_TO_STEP_TYPE = {
   // backend/builtin_actions.py (keep within JS safe integer range)
@@ -988,6 +996,139 @@ function studioEl(mode, key) {
   return document.getElementById(id);
 }
 
+function isMobileViewport() {
+  return Boolean(window.matchMedia && window.matchMedia(MOBILE_QUERY).matches);
+}
+
+function setViewportVars() {
+  if (!els.topbar) {
+    return;
+  }
+  const rect = els.topbar.getBoundingClientRect();
+  const h = Math.max(1, Math.ceil(rect.height));
+  document.documentElement.style.setProperty("--topbar-h", `${h}px`);
+}
+
+function queueViewportVars() {
+  if (viewportFrame) {
+    window.cancelAnimationFrame(viewportFrame);
+  }
+  viewportFrame = window.requestAnimationFrame(() => {
+    viewportFrame = 0;
+    setViewportVars();
+    window.requestAnimationFrame(setViewportVars);
+    window.setTimeout(setViewportVars, 120);
+  });
+}
+
+function setSettingsOpen(open) {
+  document.body.classList.toggle("settings-open", Boolean(open));
+  if (els.settings) {
+    els.settings.setAttribute("aria-expanded", open ? "true" : "false");
+    els.settings.textContent = open ? "Hide Settings" : "Settings";
+  }
+  queueViewportVars();
+}
+
+function loadPreviewCollapsedPrefs() {
+  try {
+    const raw = localStorage.getItem(PREVIEW_COLLAPSE_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    previewCollapsed = parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    previewCollapsed = {};
+  }
+}
+
+function savePreviewCollapsedPrefs() {
+  try {
+    localStorage.setItem(PREVIEW_COLLAPSE_STORAGE_KEY, JSON.stringify(previewCollapsed));
+  } catch {
+    // ignore
+  }
+}
+
+function previewIsCollapsed(mode) {
+  const key = normalizeWorkspaceTab(mode);
+  if (key === "setup" || !isMobileViewport()) {
+    return false;
+  }
+  if (Object.prototype.hasOwnProperty.call(previewCollapsed, key)) {
+    return Boolean(previewCollapsed[key]);
+  }
+  return true;
+}
+
+function applyPreviewState(mode) {
+  const key = normalizeWorkspaceTab(mode);
+  const panel = document.querySelector(`[data-workspace-panel="${key}"]`);
+  if (!panel) {
+    return;
+  }
+  const collapsed = previewIsCollapsed(key);
+  panel.classList.toggle("is-preview-collapsed", collapsed);
+  els.previewToggles.forEach((btn) => {
+    if (normalizeWorkspaceTab(btn.dataset.previewToggle) !== key) {
+      return;
+    }
+    btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    btn.textContent = collapsed ? "Preview" : "Hide";
+  });
+}
+
+function applyAllPreviewStates() {
+  Object.keys(STUDIO_MODES).forEach(applyPreviewState);
+}
+
+function setPreviewCollapsed(mode, collapsed) {
+  const key = normalizeWorkspaceTab(mode);
+  if (key === "setup") {
+    return;
+  }
+  previewCollapsed[key] = Boolean(collapsed);
+  savePreviewCollapsedPrefs();
+  applyPreviewState(key);
+  queueViewportVars();
+}
+
+function showToast(message, { error = false, duration = 3600 } = {}) {
+  const text = String(message || "").trim();
+  if (!text) {
+    return;
+  }
+  let stack = document.querySelector(".toast-stack");
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.className = "toast-stack";
+    stack.setAttribute("aria-live", "polite");
+    document.body.appendChild(stack);
+  }
+  const toast = document.createElement("div");
+  toast.className = `toast${error ? " toast--error" : ""}`;
+  toast.textContent = text;
+  stack.appendChild(toast);
+  window.setTimeout(() => {
+    toast.remove();
+    if (stack && !stack.children.length) {
+      stack.remove();
+    }
+  }, duration);
+}
+
+function showResponseNotice(res) {
+  const notice = res && typeof res.notice === "object" ? res.notice : null;
+  const text = notice && typeof notice.text === "string" ? notice.text.trim() : "";
+  if (text) {
+    showToast(text, { error: notice.kind === "error" });
+    return;
+  }
+  const job = res && typeof res.assistant_job === "object" ? res.assistant_job : null;
+  const jobId = job && typeof job.id === "string" ? job.id : "";
+  if (jobId) {
+    showToast(`Assistant job queued: ${jobId}`);
+  }
+}
+
 function loadStudioSessions() {
   try {
     const raw = localStorage.getItem(STUDIO_SESSION_STORAGE_KEY);
@@ -1155,6 +1296,7 @@ async function sendStudioChat(mode) {
     if (session.id) {
       setStudioSessionId(key, session.id);
     }
+    showResponseNotice(res);
     renderStudioMessages(key, res.messages || []);
     await loadStudioAgentStatus();
     if (key === "autopilot_loop") {
@@ -1169,6 +1311,7 @@ async function sendStudioChat(mode) {
       div.textContent = `send failed: ${e.message || e}`;
       log.appendChild(div);
     }
+    showToast(`Send failed: ${e.message || e}`, { error: true });
   } finally {
     if (send) {
       send.disabled = false;
@@ -1203,11 +1346,15 @@ async function proposeCurrentSetup() {
     if (els.loopPreview) {
       els.loopPreview.textContent = JSON.stringify(res, null, 2);
     }
+    showToast(res.ok ? "Current setup proposed as an AutoPilot Loop." : "AutoPilot proposal failed.", {
+      error: !res.ok,
+    });
     await loadStudioPreview("autopilot_loop");
   } catch (e) {
     if (els.loopPreview) {
       els.loopPreview.textContent = `propose failed: ${e.message || e}`;
     }
+    showToast(`Propose failed: ${e.message || e}`, { error: true });
   }
 }
 
@@ -1220,11 +1367,15 @@ async function acceptProposedLoop() {
     if (els.loopPreview) {
       els.loopPreview.textContent = JSON.stringify(res, null, 2);
     }
+    showToast(res.ok ? "Proposed AutoPilot Loop accepted." : "Accept proposed loop failed.", {
+      error: !res.ok,
+    });
     await loadStudioPreview("autopilot_loop");
   } catch (e) {
     if (els.loopPreview) {
       els.loopPreview.textContent = `accept failed: ${e.message || e}`;
     }
+    showToast(`Accept failed: ${e.message || e}`, { error: true });
   }
 }
 
@@ -1246,12 +1397,14 @@ function setWorkspaceTab(mode, { persist = true } = {}) {
     panel.hidden = !on;
     panel.classList.toggle("is-active", on);
   });
+  applyPreviewState(key);
   loadStudioPreview(key);
   loadStudioChat(key);
   loadStudioAgentStatus();
   if (key === "setup") {
     renderProgram();
   }
+  queueViewportVars();
 }
 
 function canSelectValue(selectEl, value) {
@@ -2688,6 +2841,13 @@ async function refreshHealth() {
     const db = data.db || {};
     if (db.ok) {
       setBadge(els.dbHealth, "badge--ok", t("ui.health.ok"), db.time ? `time: ${db.time}` : "");
+    } else if (db.fallback) {
+      setBadge(
+        els.dbHealth,
+        "badge--warn",
+        "fallback",
+        db.error ? `${db.fallback}: ${db.error}` : String(db.fallback),
+      );
     } else {
       setBadge(
         els.dbHealth,
@@ -2851,6 +3011,12 @@ function bindWorkspaceTabs() {
   if (els.loopAcceptProposed) {
     els.loopAcceptProposed.addEventListener("click", acceptProposedLoop);
   }
+  els.previewToggles.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = normalizeWorkspaceTab(btn.dataset.previewToggle);
+      setPreviewCollapsed(key, !previewIsCollapsed(key));
+    });
+  });
 }
 
 async function loadChat() {
@@ -2907,8 +3073,10 @@ async function sendChat() {
   els.chatInput.value = "";
   try {
     await api("/api/inbox", { method: "POST", body: JSON.stringify({ content }) });
+    showToast("Inbox message saved.");
   } catch (e) {
     console.warn(e);
+    showToast(`Inbox save failed: ${e.message || e}`, { error: true });
   }
   await loadChat();
 }
@@ -2999,6 +3167,12 @@ function bindControls() {
     const cur = document.body.dataset.theme || "light";
     setTheme(cur === "light" ? "dark" : "light");
   });
+
+  if (els.settings) {
+    els.settings.addEventListener("click", () =>
+      setSettingsOpen(!document.body.classList.contains("settings-open")),
+    );
+  }
 
   if (els.uiLang) {
     els.uiLang.addEventListener("change", () => setUiLang(els.uiLang.value));
@@ -3190,9 +3364,54 @@ function registerServiceWorker() {
     });
 }
 
+async function liveSync({ force = false } = {}) {
+  if (liveSyncBusy) {
+    return;
+  }
+  if (!force && document.hidden) {
+    return;
+  }
+  liveSyncBusy = true;
+  try {
+    const jobs = [refreshHealth(), refreshStatus(), loadStudioAgentStatus()];
+    if (els.tabLogs && !els.tabLogs.hidden) {
+      jobs.push(refreshLogs());
+    }
+    if (els.tabChat && !els.tabChat.hidden) {
+      jobs.push(loadChat());
+    }
+    jobs.push(loadStudioChat(activeWorkspaceTab));
+    if (activeWorkspaceTab !== "setup") {
+      jobs.push(loadStudioPreview(activeWorkspaceTab));
+    }
+    await Promise.allSettled(jobs);
+  } finally {
+    liveSyncBusy = false;
+  }
+}
+
+function bindViewportBehavior() {
+  window.addEventListener("resize", () => {
+    applyAllPreviewStates();
+    queueViewportVars();
+  });
+  window.addEventListener("orientationchange", () => {
+    applyAllPreviewStates();
+    queueViewportVars();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      liveSync({ force: true });
+      applyAllPreviewStates();
+      queueViewportVars();
+    }
+  });
+}
+
 function boot() {
   setUiLang(loadUiLangFromStorage(), { persist: false });
   loadStudioSessions();
+  loadPreviewCollapsedPrefs();
 
   loadProgram();
   renderProgram();
@@ -3200,8 +3419,11 @@ function boot() {
   bindTabs();
   bindWorkspaceTabs();
   bindControls();
+  bindViewportBehavior();
   updateActionButtons("stopped");
   setLogFollow(true);
+  applyAllPreviewStates();
+  queueViewportVars();
 
   registerServiceWorker();
 
@@ -3225,21 +3447,7 @@ function boot() {
   updateActionsButtons();
   refreshActionsList({ keepSelection: true });
 
-  window.setInterval(refreshHealth, 2000);
-  window.setInterval(refreshStatus, 2000);
-  window.setInterval(() => {
-    // keep logs reasonably fresh while running
-    if (!els.tabLogs.hidden) {
-      refreshLogs();
-    }
-    if (!els.tabChat.hidden) {
-      loadChat();
-    }
-    loadStudioAgentStatus();
-    if (activeWorkspaceTab !== "setup") {
-      loadStudioChat(activeWorkspaceTab);
-    }
-  }, 2500);
+  window.setInterval(() => liveSync(), 2500);
 }
 
 boot();

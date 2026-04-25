@@ -58,6 +58,10 @@
         </div>
       </div>
 
+      <button class="btn btn--ghost settings-toggle" id="btn-settings" type="button" aria-expanded="false">
+        Settings
+      </button>
+
       <div class="controls">
         <div class="select">
           <label data-i18n="ui.label.agent">Agent</label>
@@ -104,13 +108,18 @@
 
     <main class="workspace">
       <section class="workspace-panel writing-screen" data-workspace-panel="notes" hidden>
-        <section class="panel writing-preview">
+        <section class="panel writing-preview" data-preview-panel="notes">
           <div class="panel-head">
             <div>
               <div class="panel-title">Notes</div>
               <div class="panel-hint">Capture project facts, constraints, and decisions.</div>
             </div>
-            <span class="badge badge--unknown" id="studio-agent-status">agent unknown</span>
+            <div class="studio-chat-tools writing-actions">
+              <span class="badge badge--unknown" id="studio-agent-status">agent unknown</span>
+              <button class="btn btn--ghost preview-toggle" data-preview-toggle="notes" type="button">
+                Preview
+              </button>
+            </div>
           </div>
           <pre class="studio-preview" id="notes-preview"></pre>
         </section>
@@ -142,11 +151,16 @@
       </section>
 
       <section class="workspace-panel writing-screen" data-workspace-panel="design" hidden>
-        <section class="panel writing-preview">
+        <section class="panel writing-preview" data-preview-panel="design">
           <div class="panel-head">
             <div>
               <div class="panel-title">Design</div>
               <div class="panel-hint">Product design, backend contracts, and UI architecture.</div>
+            </div>
+            <div class="studio-chat-tools writing-actions">
+              <button class="btn btn--ghost preview-toggle" data-preview-toggle="design" type="button">
+                Preview
+              </button>
             </div>
           </div>
           <pre class="studio-preview" id="design-preview"></pre>
@@ -179,13 +193,16 @@
       </section>
 
       <section class="workspace-panel writing-screen" data-workspace-panel="autopilot_loop" hidden>
-        <section class="panel writing-preview">
+        <section class="panel writing-preview" data-preview-panel="autopilot_loop">
           <div class="panel-head">
             <div>
               <div class="panel-title">AutoPilot Loop</div>
               <div class="panel-hint">Accepted and proposed AAPS schemas are grammar-checked.</div>
             </div>
-            <div class="studio-chat-tools">
+            <div class="studio-chat-tools writing-actions">
+              <button class="btn btn--ghost preview-toggle" data-preview-toggle="autopilot_loop" type="button">
+                Preview
+              </button>
               <button class="btn btn--ghost" id="loop-propose-current">Propose Current Setup</button>
               <button class="btn btn--primary" id="loop-accept-proposed">Accept Proposed</button>
             </div>
