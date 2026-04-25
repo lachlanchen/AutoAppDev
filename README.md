@@ -24,6 +24,8 @@
 
 Reusable scripts + guides for building apps step-by-step from screenshots/markdown with Codex as a non-interactive tool.
 
+![AutoAppDev Studio](demos/autoappdev-studio-2026-04-25.png)
+
 > 🎯 **Mission:** Make app-development pipelines deterministic, resumable, and artifact-driven.
 >
 > 🧩 **Design principle:** Plan -> Work -> Verify -> Summary -> Commit/Push.
